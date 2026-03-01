@@ -32,7 +32,10 @@ game.pushInputController(new InfoPopupController(game));
 game.state.computeFov();
 game.start();
 
-window.addEventListener("keydown", (e) => { if (e.key === "Tab") e.preventDefault(); game.queueInput(e); });
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Tab" || e.key === "/") e.preventDefault();
+  game.queueInput(e);
+});
 
 let lastTime = 0;
 function gameLoop(timestamp: number): void {
