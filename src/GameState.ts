@@ -1,5 +1,6 @@
 import * as ROT from "rot-js";
 import { Actor } from "./Actor";
+import { Device } from "./Device";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
 import { Player } from "./Player";
@@ -8,16 +9,14 @@ import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
 import { NUM_LVLS } from "./Utils";
 
-import { lerpLine, adj8Locs } from "./Utils";
-
 export class GameState {
-  
   readonly width: number;
   readonly height: number;
   currLevel: number = 0;
   player!: Player;
 
   maps: Record<string, TerrainType>[] = [];
+  devices: Record<string, Device>[] = Array.from({ length: NUM_LVLS }, () => ({}));
   freeCells: string[] = [];
   visible: Record<string, boolean> = {};
   explored: Record<string, boolean> = {};

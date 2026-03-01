@@ -1,3 +1,4 @@
+import { Terminal } from "./Device";
 import { Game } from "./Game";
 import { Player } from "./Player";
 import { Terrain, type TerrainType } from "./Terrain";
@@ -22,7 +23,7 @@ export function setupWorld(game: Game): void {
   overworld["50,14"] = Terrain.Wall;
   overworld["51,14"] = Terrain.Wall;
 
-  overworld["49,15"] = Terrain.Wall;
+  overworld["49,15"] = Terrain.Floor;
   overworld["50,15"] = Terrain.Wall;
   overworld["51,15"] = Terrain.Wall;
 
@@ -39,6 +40,8 @@ export function setupWorld(game: Game): void {
   overworld["51,18"] = Terrain.Wall;
 
   game.state.maps.push(overworld);
+  
+  game.state.devices[0]["49,15"] = new Terminal();
 
   game.state.player = new Player(44, 16, 'b', "#005260");
 }

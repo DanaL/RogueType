@@ -62,6 +62,17 @@ export class Renderer {
         const cell = { glyph: def.glyph, fg: "#222", bg: null, sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
       }
+
+      if (state.devices[state.currLevel][key]) {
+        const device = state.devices[state.currLevel][key];
+        if (state.visible[key]) {
+          const cell = { glyph: device.ch, fg: device.colour, bg: null, sx: sx, sy: sy};
+          cells[`${sx},${sy}`] = cell;
+        } else if (state.explored[key]) {
+          const cell = { glyph: device.ch, fg: "#222", bg: null, sx: sx, sy: sy};
+          cells[`${sx},${sy}`] = cell;
+        }
+      } 
     }
 
     for (const cell of Object.values(cells)) {
