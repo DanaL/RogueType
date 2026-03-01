@@ -1,13 +1,17 @@
 import * as ROT from "rot-js";
+import { Actor } from "./Actor";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
 import { Player } from "./Player";
 import { InfoPopupController } from "./InputController";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
+import { NUM_LVLS } from "./Utils";
+
 import { lerpLine, adj8Locs } from "./Utils";
 
 export class GameState {
+  
   readonly width: number;
   readonly height: number;
   currLevel: number = 0;
@@ -17,6 +21,7 @@ export class GameState {
   freeCells: string[] = [];
   visible: Record<string, boolean> = {};
   explored: Record<string, boolean> = {};
+  downLifts: boolean[] = Array(NUM_LVLS).fill(false);
 
   examinedLoc: string = "";
   isAnimating: boolean = false;
@@ -50,6 +55,34 @@ export class GameState {
         this.explored[key] = true;
       }
     });
+  }
+
+  tryMove(dx: number, dy: number, game: Game | null, actor: Actor): void {
+    const nx = actor.x + dx;
+    const ny = actor.y + dy;
+    const key = `${nx},${ny}`;
+    const terrain = this.maps[this.currLevel][key];
+
+    if (terrain === undefined || !TERRAIN_DEF[terrain].walkable) {
+      if (actor instanceof Player)
+        this.addMessage("You cannot go that way!");
+      return;
+    } 
+    else if (terrain == Terrain.LiftDown && !this.downLifts[this.currLevel]) {
+      const msg = "The lift is currently disabled."
+      this.addMessage(msg);
+      game?.pushPopup(new Popup("", "\n" + msg, 3, 10, 31));
+      game?.pushInputController(new InfoPopupController(game));
+    }
+    
+    actor.x = nx;
+    actor.y = ny;
+
+    // else if (this.occupied(nx, ny)) {
+    //   if (actor instanceof Player)
+    //     this.addMessage("There's someone in your way!");
+    //   return;
+    // } 
   }
 
   floodFill(startX: number, startY: number, radius: number): Set<string> {

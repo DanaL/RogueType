@@ -11,7 +11,7 @@ export class LineScanner {
   private currentColour: string;
   private readonly defaultColour: string;
 
-  constructor(source: string, defaultColour: string = "#fff") {
+  constructor(source: string, defaultColour: string = "#009d4a") {
     this.source = source;
     this.currentColour = defaultColour;
     this.defaultColour = defaultColour;

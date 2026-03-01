@@ -18,12 +18,25 @@ export function setupWorld(game: Game): void {
     }
   }
 
+  overworld["49,14"] = Terrain.Wall;
+  overworld["50,14"] = Terrain.Wall;
+  overworld["51,14"] = Terrain.Wall;
+
   overworld["49,15"] = Terrain.Wall;
   overworld["50,15"] = Terrain.Wall;
+  overworld["51,15"] = Terrain.Wall;
+
   overworld["49,16"] = Terrain.LiftDown;
   overworld["50,16"] = Terrain.Wall;
+  overworld["51,16"] = Terrain.Wall;
+  
   overworld["49,17"] = Terrain.Wall;
   overworld["50,17"] = Terrain.Wall;
+  overworld["51,17"] = Terrain.Wall;
+
+  overworld["49,18"] = Terrain.Wall;
+  overworld["50,18"] = Terrain.Wall;
+  overworld["51,18"] = Terrain.Wall;
 
   game.state.maps.push(overworld);
 

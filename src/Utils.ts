@@ -1,5 +1,6 @@
 export const MAP_WIDTH = 100;
 export const MAP_ROWS = 32;
+export const NUM_LVLS = 9;
 
 export const MOVE_KEYS: Record<string, [number, number]> = {
   ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
