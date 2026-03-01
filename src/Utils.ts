@@ -81,11 +81,11 @@ export async function randomTextExcerpt(wordCount: number): Promise<string> {
   const endsAtSentence = /[.!?]["']?$/.test(slice[slice.length - 1]);
 
   let excerpt = slice.join(' ');
-  if (!startsAtSentence) 
+  if (!startsAtSentence)
     excerpt = '...' + excerpt;
-  if (!endsAtSentence) 
+  if (!endsAtSentence)
     excerpt = excerpt + '...';
 
-  return excerpt;
+  return excerpt.trim().replace(/\n/g, ' ');
 }
 
