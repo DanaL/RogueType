@@ -14,6 +14,7 @@ export class Game {
   private inputQueue: KeyboardEvent[] = [];
   private engine: ROT.Engine;
   readonly scheduler: Scheduler;
+  readonly wpm: number;
 
   constructor(state: GameState, renderer: Renderer) {
     this.state = state;
@@ -22,6 +23,8 @@ export class Game {
 
     this.scheduler = new ROT.Scheduler.Simple();
     this.engine = new ROT.Engine(this.scheduler);
+
+    this.wpm = 60;
   }
 
   start(): void {
@@ -65,6 +68,8 @@ export class Game {
   }
 
   update(_deltaMs: number): void {
+    this.currentController?.update(_deltaMs);
+
     if (!this.isAnimating && this.inputQueue.length > 0) {
       const e = this.inputQueue.shift()!;
       this.currentController?.handleInput(e);

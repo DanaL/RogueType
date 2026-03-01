@@ -29,7 +29,9 @@ export class TypingTestController extends InputController {
   }
 
   update(deltaMs: number): void {
-    // check if we are past the deadline
+    if (Date.now() > this.deadline) {
+      console.log("failure!");
+    }
   }
 }
 
@@ -54,13 +56,16 @@ export class TypingTestPopup extends Popup {
     let col = this.openContentRow(renderer, row);
     let i = 0;
 
+    const trailingEllipses = this.text.endsWith('...');
+    const end = trailingEllipses ? this.text.length - 3 : this.text.length;
+    
     if (this.text.startsWith('...')) {
       for (let j = 0; j < 3; j++)
         renderer.drawChar(row, col++, '.', '#4e6ea8', '#000');
       i = 3;
     }
 
-    while (i < this.text.length) {
+    while (i < end) {
       // Find end of next word
       let wordEnd = i;
       while (wordEnd < this.text.length && this.text[wordEnd] !== ' ' && this.text[wordEnd] !== '\n') {
@@ -93,6 +98,12 @@ export class TypingTestPopup extends Popup {
         renderer.drawChar(row, col++, ' ', '#009d4a', bg);
         ++i;
       }
+    }
+
+    if (trailingEllipses) {
+      col -= 3;
+      for (let j = 0; j < 3; j++)
+        renderer.drawChar(row, col++, '.', '#4e6ea8', '#000');
     }
 
     this.closeContentRow(renderer, row++, col);
