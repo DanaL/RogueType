@@ -86,6 +86,6 @@ export async function randomTextExcerpt(wordCount: number): Promise<string> {
   if (!endsAtSentence)
     excerpt = excerpt + '...';
 
-  return excerpt.trim().replace(/\n/g, ' ');
+  return excerpt.trim().replace(/\n/g, ' ').replace(/  +/g, ' ');
 }
 
