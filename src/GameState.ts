@@ -1,6 +1,7 @@
 import * as ROT from "rot-js";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
+import { Player } from "./Player";
 import { InfoPopupController } from "./InputController";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
@@ -9,8 +10,10 @@ import { lerpLine, adj8Locs } from "./Utils";
 export class GameState {
   readonly width: number;
   readonly height: number;
+  currLevel: number = 0;
+  player!: Player;
 
-  map: Record<string, TerrainType> = {};
+  maps: Record<string, TerrainType>[] = [];
   freeCells: string[] = [];
   visible: Record<string, boolean> = {};
   explored: Record<string, boolean> = {};
@@ -21,16 +24,32 @@ export class GameState {
   turn = 0;
   messages: string[] = [];
 
-  //fov: InstanceType<typeof ROT.FOV.PreciseShadowcasting>;
+  fov: InstanceType<typeof ROT.FOV.PreciseShadowcasting>;
   game!: Game;
 
   constructor() {
     this.width = 80;
     this.height = 25;
+
+    this.fov = new ROT.FOV.PreciseShadowcasting((x, y) => {
+      if (x === this.player.x && y === this.player.y) 
+        return true;
+      const terrain = this.maps[this.currLevel][`${x},${y}`];
+      return terrain !== undefined && !TERRAIN_DEF[terrain].opaque;
+    });
   }
 
   computeFov(): void {
-    
+    for (const k in this.visible) 
+      delete this.visible[k];
+
+    this.fov.compute(this.player.x, this.player.y, this.fovRadius, (x: number, y: number, _r: number, visibility: number) => {
+      if (visibility) {
+        const key = `${x},${y}`;
+        this.visible[key] = true;
+        this.explored[key] = true;
+      }
+    });
   }
 
   floodFill(startX: number, startY: number, radius: number): Set<string> {
@@ -52,12 +71,12 @@ export class GameState {
         if (visited.has(key)) 
           continue;
         visited.add(key);
-        const terrain = this.map[key];
+        const terrain = this.maps[this.currLevel][key];
 
         // Doors are passable but will block sound
         if (terrain === undefined || terrain === Terrain.Door) 
           continue;
-        if (TERRAIN_DEF[terrain].walkable || terrain === Terrain.Water) {
+        if (TERRAIN_DEF[terrain].walkable) {
           queue.push([nx, ny, dist + 1]);
         }
       }

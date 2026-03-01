@@ -33,10 +33,9 @@ export class Renderer {
   cameraFor(state: GameState): { camX: number, camY: number, vpW: number, vpH: number } {
     const vpW = this.width;
     const vpH = this.height - this.MAP_Y - 3;
-    const camX = 10;
-    const camY = 10;
-    //const camX = Math.max(0, Math.min(state.width  - vpW, state.player.x - Math.floor(vpW / 2)));
-    //const camY = Math.max(0, Math.min(state.height - vpH, state.player.y - Math.floor(vpH / 2)));
+    const camX = Math.max(0, Math.min(state.width  - vpW, state.player.x - Math.floor(vpW / 2)));
+    const camY = Math.max(0, Math.min(state.height - vpH, state.player.y - Math.floor(vpH / 2)));
+
     return { camX, camY, vpW, vpH };
   }
 
@@ -47,14 +46,14 @@ export class Renderer {
     const cells: Record<string, Cell> = {};
     const barkCells: Record<string, Cell> = {};
 
-    for (const key in state.map) {
+    for (const key in state.maps[state.currLevel]) {
       const [wx, wy] = key.split(",").map(Number);
       const sx = wx - camX;
       const sy = wy - camY;
       if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH)
         continue;
 
-      const def = TERRAIN_DEF[state.map[key]];
+      const def = TERRAIN_DEF[state.maps[state.currLevel][key]];
 
       if (state.visible[key]) {
         const cell = { glyph: def.glyph, fg: def.fg, bg: null, sx: sx, sy: sy};
@@ -73,7 +72,7 @@ export class Renderer {
       this.display.draw(cell.sx, cell.sy + this.MAP_Y, cell.glyph, cell.fg, cell.bg);
     }
 
-    //this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y, "@", "#b45252", null);
+    this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y,  state.player.ch, "#000", state.player.colour);
   }
 
   drawUi(state: GameState): void {

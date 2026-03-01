@@ -4,30 +4,33 @@ import { Renderer } from "./Renderer";
 import { Popup } from "./Popup";
 import { InfoPopupController } from "./InputController";
 import { PlayerCommandController } from "./PlayerCommandController";
+import { MAP_ROWS, MAP_WIDTH } from "./Utils";
+import { setupWorld } from "./WorldSetup";
+
 import { randomTextExcerpt } from "./Utils";
 import { TypingTestPopup, TypingTestController } from "./TypingTest";
 
-const WIDTH = 120;
-const MAP_ROWS = 32;
 const NUM_MSG_ROWS = 3;
 const DISPLAY_HEIGHT = 1 + MAP_ROWS + NUM_MSG_ROWS;
 
 const state = new GameState();
-state.fovRadius = Math.ceil(Math.hypot(WIDTH / 2, MAP_ROWS / 2));
-const renderer = new Renderer(WIDTH, DISPLAY_HEIGHT, 18);
+state.fovRadius = Math.ceil(Math.hypot(MAP_WIDTH / 2, MAP_ROWS / 2));
+const renderer = new Renderer(MAP_WIDTH, DISPLAY_HEIGHT, 18);
 const game = new Game(state, renderer);
+
+setupWorld(game);
 
 document.getElementById("app")!.appendChild(renderer.getContainer());
 
-//game.pushInputController(new PlayerCommandController(game));
-const txt = await randomTextExcerpt(15);
-const popup = new TypingTestPopup(txt, 3, 20, 50);
-const controller = new TypingTestController(game, 16_000, txt, popup);
+game.pushInputController(new PlayerCommandController(game));
+//const txt = await randomTextExcerpt(15);
+//const popup = new TypingTestPopup(txt, 3, 20, 50);
+//const controller = new TypingTestController(game, 16_000, txt, popup);
 
 // Greetings pop-up
-//const popup = new Popup("[#009d4a welcome to rogue type]", "> remote c[#ac29ce o]nnection established at 127.0.0.-1...\n> robot control prot[#ac29ce o]col active on remote h[#ac29ce o]st...\n> RO[#4e6ea8 V] class: Burrito B[#ac29ce o]t 3000\n\n-- press any key to begin infiltratio[#4e6ea8 n] --", 3, 10, 50);
+const popup = new Popup("[#009d4a welcome to rogue type]", "> remote c[#ac29ce o]nnection established at 127.0.0.-1...\n> robot control prot[#ac29ce o]col active on remote h[#ac29ce o]st...\n> RO[#4e6ea8 V] class: Burrito B[#ac29ce o]t 3000\n\n-- press any key to begin infiltratio[#4e6ea8 n] --", 3, 10, 50);
 game.pushPopup(popup);
-game.pushInputController(controller);
+game.pushInputController(new InfoPopupController(game));
 game.state.computeFov();
 game.start();
 

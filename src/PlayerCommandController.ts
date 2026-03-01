@@ -22,5 +22,8 @@ export class PlayerCommandController extends InputController {
     //   this.game.state.computeFov();
     //   this.game.state.player.endTurn();
     // }
+
+    this.game.state.computeFov();
+    this.game.state.player.endTurn();
   }
 }
