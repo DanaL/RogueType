@@ -4,6 +4,7 @@ import { Renderer } from "./Renderer";
 import { Popup } from "./Popup";
 import { InfoPopupController } from "./InputController";
 import { PlayerCommandController } from "./PlayerCommandController";
+import { randomTextExcerpt } from "./Utils";
 
 const WIDTH = 120;
 const MAP_ROWS = 32;
@@ -18,6 +19,7 @@ const game = new Game(state, renderer);
 document.getElementById("app")!.appendChild(renderer.getContainer());
 
 //game.pushInputController(new PlayerCommandController(game));
+const txt = await randomTextExcerpt(40);
 
 // Greetings pop-up
 const popup = new Popup("[#009d4a welcome to rogue type]", "> remote c[#ac29ce o]nnection established at 127.0.0.-1...\n> robot control prot[#ac29ce o]col active on remote h[#ac29ce o]st...\n> RO[#4e6ea8 V] class: Burrito B[#ac29ce o]t 3000\n\n-- press any key to begin infiltratio[#4e6ea8 n] --", 3, 10, 50);

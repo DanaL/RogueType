@@ -52,3 +52,40 @@ export function adj8Locs(x: number, y: number): [number, number][] {
   return adj8.map(([dx, dy]) => [x + dx, y + dy]);
 }
 
+const TEXT_FILES = ['alice.txt', 'frank.txt', 'janeeyre.txt', 'moby.txt', '20kleagues.txt'];
+const textCache = new Map<string, string[]>();
+
+async function loadTextWords(filename: string): Promise<string[]> {
+  if (textCache.has(filename)) 
+    return textCache.get(filename)!;
+  const response = await fetch(`/texts/${filename}`);
+  const text = await response.text();
+  const words = text.split(/\s+/).filter(w => w.length > 0);
+  textCache.set(filename, words);
+
+  return words;
+}
+
+export async function randomTextExcerpt(wordCount: number): Promise<string> {
+  const file = TEXT_FILES[Math.floor(Math.random() * TEXT_FILES.length)];
+  const words = await loadTextWords(file);
+
+  if (words.length <= wordCount) 
+    return words.join(' ');
+
+  const startIdx = Math.floor(Math.random() * (words.length - wordCount));
+  const slice = words.slice(startIdx, startIdx + wordCount);
+
+  const prevWord = startIdx > 0 ? words[startIdx - 1] : null;
+  const startsAtSentence = prevWord === null || /[.!?]["']?$/.test(prevWord);
+  const endsAtSentence = /[.!?]["']?$/.test(slice[slice.length - 1]);
+
+  let excerpt = slice.join(' ');
+  if (!startsAtSentence) 
+    excerpt = '...' + excerpt;
+  if (!endsAtSentence) 
+    excerpt = excerpt + '...';
+
+  return excerpt;
+}
+
