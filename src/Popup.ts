@@ -103,6 +103,19 @@ export class Popup {
     renderer.drawChar(row, col, '│', "#009d4a", "#000");
   }
 
+  protected drawYesNo(renderer: Renderer, row: number): number {
+    const prompt = "____[#fff (][#ac29ce y][#fff )]es    [#fff (][#ac29ce n][#fff )]o";
+    const tokens = new LineScanner(prompt).scan();
+    let col = this.openContentRow(renderer, row);
+    for (const token of tokens) {
+      for (const ch of token.text) {
+        renderer.drawChar(row, col++, ch, token.colour, "#000");
+      }
+    }
+    this.closeContentRow(renderer, row++, col);
+    return row;
+  }
+
   protected drawBlankRow(renderer: Renderer, row: number): void {
     let col = this.col;
     renderer.drawChar(row, col++, '│', "#009d4a", "#000");
@@ -110,5 +123,15 @@ export class Popup {
       renderer.drawChar(row, col++, ' ', "#009d4a", "#000");
     }
     renderer.drawChar(row, col, '│', "#009d4a", "#000");
+  }
+}
+
+export class YesNoPopup extends Popup {
+  protected drawContent(renderer: Renderer, row: number): number {
+    row = super.drawContent(renderer, row);
+    this.drawBlankRow(renderer, row++);
+    row = this.drawYesNo(renderer, row);
+    
+    return row;
   }
 }

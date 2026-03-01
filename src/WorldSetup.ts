@@ -1,4 +1,4 @@
-import { Terminal } from "./Device";
+import { LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
 import { Player } from "./Player";
 import { Terrain, type TerrainType } from "./Terrain";
@@ -41,7 +41,7 @@ export function setupWorld(game: Game): void {
 
   game.state.maps.push(overworld);
   
-  game.state.devices[0]["49,15"] = new Terminal();
+  game.state.devices[0]["49,15"] = new Terminal(LIFT_ACCESS);
 
   game.state.player = new Player(44, 16, 'b', "#005260");
 }

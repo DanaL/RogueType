@@ -7,35 +7,56 @@ export class TypingTestController extends InputController {
   // 0 = in progress, 1 = success, 2 = failed
   state: number = 0;
 
+  private game: Game;
   private deadline: number;
   private pos: number;
+  private endPos: number;
   private text: string;
   private popup: TypingTestPopup;
+  private onComplete: (success: boolean) => void;
 
-  constructor(game: Game, timeLimitMS: number, text: string, popup: TypingTestPopup) {
+  constructor(game: Game, timeLimitMS: number, text: string, popup: TypingTestPopup, onComplete: (success: boolean) => void) {
     super();
+    this.game = game;
     this.deadline = Date.now() + timeLimitMS;
     this.pos = text.startsWith("...") ? 3 : 0;
+    this.endPos = text.endsWith("...") ? text.length - 3 : text.length;
     this.text = text;
     this.popup = popup;
     this.popup.pos = this.pos;
+    this.onComplete = onComplete;
   }
 
   handleInput(e: KeyboardEvent): void {
-    if (this.state != 0)
+    if (this.state === 2) {
+      if (e.key === "Enter" || e.key === "Escape") {
+        this.game.popPopup();
+        this.game.popInputController();
+        this.onComplete(false);
+      }
       return;
-    
-    if (e.key == this.text[this.pos]) {
+    }
+
+    if (this.state === 1)
+      return;
+
+    if (e.key === this.text[this.pos]) {
       ++this.pos;
       this.popup.pos = this.pos;
-    } 
-    else if (e.key != "Shift") {
+
+      if (this.pos >= this.endPos) {
+        this.state = 1;
+        this.game.popPopup();
+        this.game.popInputController();
+        this.onComplete(true);
+      }
+    } else if (e.key !== "Shift") {
       this.popup.showError(this.pos);
     }
   }
 
-  update(deltaMs: number): void {
-    if (Date.now() > this.deadline) {
+  update(_deltaMs: number): void {
+    if (this.state === 0 && Date.now() > this.deadline) {
       this.state = 2;
       this.popup.failed = true;
     }

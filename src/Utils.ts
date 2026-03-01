@@ -70,11 +70,8 @@ async function loadTextWords(filename: string): Promise<string[]> {
   return words;
 }
 
-export async function randomTextExcerpt(wordCount: number): Promise<string> {
-  const file = TEXT_FILES[Math.floor(Math.random() * TEXT_FILES.length)];
-  const words = await loadTextWords(file);
-
-  if (words.length <= wordCount) 
+function excerptFromWords(words: string[], wordCount: number): string {
+  if (words.length <= wordCount)
     return words.join(' ');
 
   const startIdx = Math.floor(Math.random() * (words.length - wordCount));
@@ -91,5 +88,22 @@ export async function randomTextExcerpt(wordCount: number): Promise<string> {
     excerpt = excerpt + '...';
 
   return excerpt.trim().replace(/\n/g, ' ').replace(/  +/g, ' ');
+}
+
+export async function warmTextCache(): Promise<void> {
+  await Promise.all(TEXT_FILES.map(loadTextWords));
+}
+
+export function randomTextExcerptSync(wordCount: number): string {
+  const file = TEXT_FILES[Math.floor(Math.random() * TEXT_FILES.length)];
+  const words = textCache.get(file);
+  if (!words) throw new Error(`Text cache not warmed: ${file}`);
+  return excerptFromWords(words, wordCount);
+}
+
+export async function randomTextExcerpt(wordCount: number): Promise<string> {
+  const file = TEXT_FILES[Math.floor(Math.random() * TEXT_FILES.length)];
+  const words = await loadTextWords(file);
+  return excerptFromWords(words, wordCount);
 }
 

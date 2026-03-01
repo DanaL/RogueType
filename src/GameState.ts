@@ -1,13 +1,14 @@
 import * as ROT from "rot-js";
 import { Actor } from "./Actor";
-import { Device } from "./Device";
+import { Device, Terminal } from "./Device";
 import { Game } from "./Game";
-import { Popup } from "./Popup";
+import { Popup, YesNoPopup } from "./Popup";
 import { Player } from "./Player";
-import { InfoPopupController } from "./InputController";
+import { InfoPopupController, YesNoController } from "./InputController";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { NUM_LVLS } from "./Utils";
+import { randomTextExcerptSync, NUM_LVLS } from "./Utils";
+import { TypingTestPopup, TypingTestController } from "./TypingTest";
 
 export class GameState {
   readonly width: number;
@@ -77,11 +78,44 @@ export class GameState {
     actor.x = nx;
     actor.y = ny;
 
+    if (this.devices[this.currLevel][key]) {
+      this.handleDevice(actor, this.devices[this.currLevel][key])
+    }
     // else if (this.occupied(nx, ny)) {
     //   if (actor instanceof Player)
     //     this.addMessage("There's someone in your way!");
     //   return;
     // } 
+  }
+
+  private handleDevice(_actor: Actor, device: Device): void {
+    if (device instanceof Terminal) {
+      this.game.pushPopup(new YesNoPopup("", "\nAccess terminal?", 5, 10, 30));
+      this.game.pushInputController(new YesNoController(this.game, (yes) => {
+        if (yes) 
+          this.startTerminalHack(device);
+      }));
+    }
+  }
+
+  private startTerminalHack(device: Terminal): void {
+    const excerpt = randomTextExcerptSync(Math.round(this.game.wpm / 4));
+    const popup = new TypingTestPopup(excerpt, 3, 20, 50);
+    // 16 seconds gives the player a moment to read before typing
+    const controller = new TypingTestController(this.game, 26_000, excerpt, popup, (success) => {
+      if (success) 
+        this.openTerminalAccess(device);
+      else         
+        device.accessFailures++;
+    });
+
+    this.game.pushPopup(popup);
+    this.game.pushInputController(controller);
+  }
+
+  private openTerminalAccess(_device: Terminal): void {
+    this.addMessage("\"I'm in.\"");
+    // TODO
   }
 
   floodFill(startX: number, startY: number, radius: number): Set<string> {

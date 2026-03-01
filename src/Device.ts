@@ -12,8 +12,14 @@ export abstract class Device {
   }
 }
 
+export const LIFT_ACCESS = 0b000000001;
+
 export class Terminal extends Device {
-  constructor() {
+  readonly functions: number = 0;
+  accessFailures: number = 0;
+  
+  constructor(functions: number) {    
     super("Terminal", "A computer terminal. It will have local access functions and perhaps some interestsing files.", "=", "#fff");
+    this.functions = functions;
   }
 }

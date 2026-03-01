@@ -5,6 +5,26 @@ export abstract class InputController {
   update(_deltaMs: number): void {}
 }
 
+export class YesNoController extends InputController {
+  private game: Game;
+  private onChoice: (yes: boolean) => void;
+
+  constructor(game: Game, onChoice: (yes: boolean) => void) {
+    super();
+    this.game = game;
+    this.onChoice = onChoice;
+  }
+
+  handleInput(e: KeyboardEvent): void {
+    if (e.key !== 'y' && e.key !== 'n') 
+      return;
+    
+    this.game.popPopup();
+    this.game.popInputController();
+    this.onChoice(e.key === 'y');
+  }
+}
+
 export class InfoPopupController extends InputController {
   private game: Game;
   private onDismiss: (() => void) | null;

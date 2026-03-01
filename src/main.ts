@@ -4,11 +4,8 @@ import { Renderer } from "./Renderer";
 import { Popup } from "./Popup";
 import { InfoPopupController } from "./InputController";
 import { PlayerCommandController } from "./PlayerCommandController";
-import { MAP_ROWS, MAP_WIDTH } from "./Utils";
+import { MAP_ROWS, MAP_WIDTH, warmTextCache } from "./Utils";
 import { setupWorld } from "./WorldSetup";
-
-import { randomTextExcerpt } from "./Utils";
-import { TypingTestPopup, TypingTestController } from "./TypingTest";
 
 const NUM_MSG_ROWS = 3;
 const DISPLAY_HEIGHT = 1 + MAP_ROWS + NUM_MSG_ROWS;
@@ -19,6 +16,7 @@ const renderer = new Renderer(MAP_WIDTH, DISPLAY_HEIGHT, 18);
 const game = new Game(state, renderer);
 
 setupWorld(game);
+warmTextCache();
 
 document.getElementById("app")!.appendChild(renderer.getContainer());
 
