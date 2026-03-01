@@ -2,7 +2,6 @@ import { Game } from "./Game";
 import { InputController } from "./InputController";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
-import { LineScanner } from "./LineScanner";
 
 export class TypingTestController extends InputController {
   private deadline: number;
@@ -49,28 +48,9 @@ export class TypingTestPopup extends Popup {
   }
 
   protected drawContent(renderer: Renderer, row: number): number {
-    let col = this.col;
-    if (this.title != "") {
-      const titleTokens = new LineScanner(this.title).scan();
-      col = this.col;
-      renderer.drawChar(row, col++, '│', "#009d4a", "#000");
-      renderer.drawChar(row, col++, ' ', "#009d4a", "#000");
+    row = this.drawTitle(renderer, row);
 
-      for (const token of titleTokens) {
-        for (const ch of token.text) {
-          renderer.drawChar(row, col++, ch, token.colour, "#000");
-        }
-      }
-
-      while (col <= this.col + this.maxWidth + 2) {
-        renderer.drawChar(row, col++, ' ', "#009d4a", "#000");
-      }
-      renderer.drawChar(row, col++, '│', "#009d4a", "#000");
-      row++;
-      this.drawBlankRow(renderer, row++);
-    }
-
-    col = this.openContentRow(renderer, row);
+    let col = this.openContentRow(renderer, row);
     let i = 0;
 
     if (this.text.startsWith('...')) {

@@ -39,31 +39,35 @@ export class Popup {
     renderer.drawChar(row, col++, '┘', "#009d4a", "#000");
   }
 
-  protected drawContent(renderer: Renderer, row: number): number {
+  protected drawTitle(renderer: Renderer, row: number): number {
+    if (this.title === "") return row;
+
     const titleTokens = new LineScanner(this.title).scan();
-    const textTokens = new LineScanner(this.text).scan();
-    let col: number;
+    let col = this.col;
+    renderer.drawChar(row, col++, '│', "#009d4a", "#000");
+    renderer.drawChar(row, col++, ' ', "#009d4a", "#000");
 
-    if (this.title !== "") {
-      col = this.col;
-      renderer.drawChar(row, col++, '│', "#009d4a", "#000");
-      renderer.drawChar(row, col++, ' ', "#009d4a", "#000");
-
-      for (const token of titleTokens) {
-        for (const ch of token.text) {
-          renderer.drawChar(row, col++, ch, token.colour, "#000");
-        }
+    for (const token of titleTokens) {
+      for (const ch of token.text) {
+        renderer.drawChar(row, col++, ch, token.colour, "#000");
       }
-
-      while (col <= this.col + this.maxWidth + 2) {
-        renderer.drawChar(row, col++, ' ', "#009d4a", "#000");
-      }
-      renderer.drawChar(row, col++, '│', "#009d4a", "#000");
-      row++;
-      this.drawBlankRow(renderer, row++);
     }
 
-    col = this.openContentRow(renderer, row);
+    while (col <= this.col + this.maxWidth + 2) {
+      renderer.drawChar(row, col++, ' ', "#009d4a", "#000");
+    }
+    renderer.drawChar(row, col++, '│', "#009d4a", "#000");
+    row++;
+    this.drawBlankRow(renderer, row++);
+    return row;
+  }
+
+  protected drawContent(renderer: Renderer, row: number): number {
+    const textTokens = new LineScanner(this.text).scan();
+
+    row = this.drawTitle(renderer, row);
+
+    let col = this.openContentRow(renderer, row);
     for (const token of textTokens) {
       if (token.text === '\n') {
         this.closeContentRow(renderer, row++, col);
