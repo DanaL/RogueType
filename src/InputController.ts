@@ -2,6 +2,7 @@ import { Game } from "./Game";
 
 export abstract class InputController {
   abstract handleInput(e: KeyboardEvent): void;
+  update(_deltaMs: number): void {}
 }
 
 export class InfoPopupController extends InputController {

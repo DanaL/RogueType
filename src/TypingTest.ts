@@ -2,6 +2,7 @@ import { Game } from "./Game";
 import { InputController } from "./InputController";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
+import { LineScanner } from "./LineScanner";
 
 export class TypingTestController extends InputController {
   private deadline: number;
@@ -21,7 +22,9 @@ export class TypingTestController extends InputController {
   handleInput(e: KeyboardEvent): void {
     if (e.key == this.text[this.pos]) {
       ++this.pos;
-      this.popup .pos = this.pos;
+      this.popup.pos = this.pos;
+    } else {
+      this.popup.showError(this.pos);
     }
   }
 
@@ -32,17 +35,42 @@ export class TypingTestController extends InputController {
 
 export class TypingTestPopup extends Popup {
   pos: number;
+  private errorPos: number = -1;
+  private errorUntil: number = 0;
 
   constructor(text: string, row: number, col: number, maxWidth: number) {
-    super("", text, row, col, maxWidth);
+    super("[#009d4a >] [#ac29ce hack the system:]", text, row, col, maxWidth);
     this.pos = text.startsWith('...') ? 3 : 0;
   }
 
-  protected drawContent(renderer: Renderer, row: number): number {
-    const startEllipses = this.text.startsWith('...') ? 3 : 0;
-    const endEllipses = this.text.endsWith('...') ? this.text.length - 3 : this.text.length;
+  showError(pos: number): void {
+    this.errorPos = pos;
+    this.errorUntil = Date.now() + 250;
+  }
 
-    let col = this.openContentRow(renderer, row);
+  protected drawContent(renderer: Renderer, row: number): number {
+    let col = this.col;
+    if (this.title != "") {
+      const titleTokens = new LineScanner(this.title).scan();
+      col = this.col;
+      renderer.drawChar(row, col++, '│', "#009d4a", "#000");
+      renderer.drawChar(row, col++, ' ', "#009d4a", "#000");
+
+      for (const token of titleTokens) {
+        for (const ch of token.text) {
+          renderer.drawChar(row, col++, ch, token.colour, "#000");
+        }
+      }
+
+      while (col <= this.col + this.maxWidth + 2) {
+        renderer.drawChar(row, col++, ' ', "#009d4a", "#000");
+      }
+      renderer.drawChar(row, col++, '│', "#009d4a", "#000");
+      row++;
+      this.drawBlankRow(renderer, row++);
+    }
+
+    col = this.openContentRow(renderer, row);
     let i = 0;
 
     if (this.text.startsWith('...')) {
@@ -67,26 +95,27 @@ export class TypingTestPopup extends Popup {
 
       // Draw word character by character
       for (let j = 0; j < word.length; j++) {
-        let fg = '#009d4a';
-        if (i + j == this.pos)
-          fg = '#000';
-        else if (i + j < this.pos)
-          fg = '#0aff52';
+        const idx = i + j;
+        const isError = idx === this.errorPos && Date.now() < this.errorUntil;
+        const isCursor = idx === this.pos;
 
-        const bg = i + j == this.pos ? '#0aff52' : '#000';
+        const fg = isError || isCursor ? '#000' : idx < this.pos ? '#0aff52' : '#009d4a';
+        const bg = isError ? '#ff004e' : isCursor ? '#0aff52' : '#000';
 
         renderer.drawChar(row, col++, word[j], fg, bg);
       }
       i = wordEnd;
 
       if (this.text[i] == ' ') {
-        const bg = i == this.pos ? '#0aff52' : '#000';
+        const isError = i === this.errorPos && Date.now() < this.errorUntil;
+        const bg = isError ? '#ff004e' : i === this.pos ? '#0aff52' : '#000';
         renderer.drawChar(row, col++, ' ', '#009d4a', bg);
         ++i;
       }
     }
 
     this.closeContentRow(renderer, row++, col);
+
     return row;
   }
 }
