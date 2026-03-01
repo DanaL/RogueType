@@ -4,6 +4,9 @@ import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
 
 export class TypingTestController extends InputController {
+  // 0 = in progress, 1 = success, 2 = failed
+  state: number = 0;
+
   private deadline: number;
   private pos: number;
   private text: string;
@@ -19,6 +22,9 @@ export class TypingTestController extends InputController {
   }
 
   handleInput(e: KeyboardEvent): void {
+    if (this.state != 0)
+      return;
+    
     if (e.key == this.text[this.pos]) {
       ++this.pos;
       this.popup.pos = this.pos;
@@ -30,13 +36,15 @@ export class TypingTestController extends InputController {
 
   update(deltaMs: number): void {
     if (Date.now() > this.deadline) {
-      console.log("failure!");
+      this.state = 2;
+      this.popup.failed = true;
     }
   }
 }
 
 export class TypingTestPopup extends Popup {
   pos: number;
+  failed: boolean = false;
   private errorPos: number = -1;
   private errorUntil: number = 0;
 
@@ -52,6 +60,7 @@ export class TypingTestPopup extends Popup {
 
   protected drawContent(renderer: Renderer, row: number): number {
     row = this.drawTitle(renderer, row);
+    const contentStartRow = row;
 
     let col = this.openContentRow(renderer, row);
     let i = 0;
@@ -107,6 +116,17 @@ export class TypingTestPopup extends Popup {
     }
 
     this.closeContentRow(renderer, row++, col);
+
+    if (this.failed) {
+      const msg = "   >! FAILURE !<   ";
+      const centerRow = contentStartRow + Math.floor((row - contentStartRow) / 2);
+      const startCol = this.col + 2 + Math.floor((this.maxWidth + 1 - msg.length - 2) / 2);
+      
+      for (let k = 0; k < msg.length; k++)
+        renderer.drawChar(centerRow - 1, startCol + 1 + k, ' ', '#ff004e', '#000');
+      for (let k = 0; k < msg.length; k++)
+        renderer.drawChar(centerRow, startCol + 1 + k, msg[k], '#ff004e', '#000');
+    }
 
     return row;
   }
