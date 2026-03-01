@@ -22,7 +22,8 @@ export class TypingTestController extends InputController {
     if (e.key == this.text[this.pos]) {
       ++this.pos;
       this.popup.pos = this.pos;
-    } else {
+    } 
+    else if (e.key != "Shift") {
       this.popup.showError(this.pos);
     }
   }

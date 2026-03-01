@@ -20,7 +20,7 @@ const game = new Game(state, renderer);
 document.getElementById("app")!.appendChild(renderer.getContainer());
 
 //game.pushInputController(new PlayerCommandController(game));
-const txt = await randomTextExcerpt(40);
+const txt = await randomTextExcerpt(15);
 const popup = new TypingTestPopup(txt, 3, 10, 50);
 const controller = new TypingTestController(game, 10_000, txt, popup);
 
