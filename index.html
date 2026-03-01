@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rogue type -- a cyberpunk roguelike adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+      body { margin: 0; padding: 8px; background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+      #layout { display: flex; flex-direction: row; align-items: flex-start; gap: 28px; }
+      #game-col { display: flex; flex-direction: column; align-items: center; }
+      h1 { color: #aaa; font-family: 'Share Tech Mono', monospace; margin: 0 0 8px 0; letter-spacing: 2px; }
+      #app { border: 2px solid #888; }
+      #help { font-family: monospace; color: #aaa; margin-top: 32px; min-width: 180px; font-size: 1.2em; }
+      #help h2 { color: #ccc; font-size: 0.9em; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 12px 0; border-bottom: 1px solid #333; padding-bottom: 6px; }
+      #help table { border-collapse: collapse; width: 100%; }
+      #help tr { line-height: 1.8; }
+      #help td { vertical-align: top; }
+      #help .key { color: #b45252; padding-right: 12px; white-space: nowrap; }
+      #help .sep { border-top: 1px solid #222; height: 8px; }
+    </style>
+  </head>
+  <body>
+    <div id="layout">
+      <div id="game-col">
+        <h1>type rogue</h1>
+        <div id="app"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
