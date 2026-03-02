@@ -56,7 +56,7 @@ export function adj8Locs(x: number, y: number): [number, number][] {
   return adj8.map(([dx, dy]) => [x + dx, y + dy]);
 }
 
-const TEXT_FILES = ['alice.txt', 'frank.txt', 'janeeyre.txt', 'moby.txt', '20kleagues.txt'];
+const TEXT_FILES = ['alice.txt', 'frank.txt', 'janeeyre.txt', 'moby.txt', '20kleagues.txt', 'warworlds.txt'];
 const textCache = new Map<string, string[]>();
 
 async function loadTextWords(filename: string): Promise<string[]> {
