@@ -9,6 +9,7 @@ import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
 import { randomTextExcerptSync, NUM_LVLS } from "./Utils";
 import { TypingTestPopup, TypingTestController } from "./TypingTest";
+import { TerminalController } from "./Terminal";
 
 export class GameState {
   readonly width: number;
@@ -113,9 +114,10 @@ export class GameState {
     this.game.pushInputController(controller);
   }
 
-  private openTerminalAccess(_device: Terminal): void {
+  private openTerminalAccess(device: Terminal): void {
     this.addMessage("\"I'm in.\"");
-    // TODO
+    const controller = new TerminalController(this, device);
+    this.game.pushInputController(controller);
   }
 
   floodFill(startX: number, startY: number, radius: number): Set<string> {
