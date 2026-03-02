@@ -24,7 +24,7 @@ export class GameState {
   explored: Record<string, boolean> = {};
   downLifts: boolean[] = Array(NUM_LVLS).fill(false);
 
-  examinedLoc: string = "";
+  highlightedLoc: string = "";
   isAnimating: boolean = false;
   fovRadius = 10;
   turn = 0;

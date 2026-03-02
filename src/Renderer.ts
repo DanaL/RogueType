@@ -1,7 +1,6 @@
 import * as ROT from "rot-js";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
-import { lerpLine, distance } from "./Utils";
 
 type Cell = { glyph: string; fg: string; bg: string | null; sx: number; sy: number };
 
@@ -39,36 +38,47 @@ export class Renderer {
     return { camX, camY, vpW, vpH };
   }
 
-  drawGameArea(state: GameState): void {
+  drawGameArea(gs: GameState): void {
     this.display.clear();
 
-    const { camX, camY, vpW, vpH } = this.cameraFor(state);
+    const { camX, camY, vpW, vpH } = this.cameraFor(gs);
     const cells: Record<string, Cell> = {};
     const barkCells: Record<string, Cell> = {};
 
-    for (const key in state.maps[state.currLevel]) {
+    for (const key in gs.maps[gs.currLevel]) {
       const [wx, wy] = key.split(",").map(Number);
       const sx = wx - camX;
       const sy = wy - camY;
       if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH)
         continue;
 
-      const def = TERRAIN_DEF[state.maps[state.currLevel][key]];
+      const def = TERRAIN_DEF[gs.maps[gs.currLevel][key]];
 
-      if (state.visible[key]) {
+      if (key == gs.highlightedLoc) {
+        const cell = { glyph: def.glyph, fg: "#fff", bg: "#ff5cff", sx: sx, sy: sy};
+        cells[`${sx},${sy}`] = cell;
+      } else if (gs.visible[key]) {
         const cell = { glyph: def.glyph, fg: def.fg, bg: null, sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
-      } else if (state.explored[key]) {
+      } else if (gs.explored[key]) {
         const cell = { glyph: def.glyph, fg: "#222", bg: null, sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
       }
 
-      if (state.devices[state.currLevel][key]) {
-        const device = state.devices[state.currLevel][key];
-        if (state.visible[key]) {
+      if (gs.devices[gs.currLevel][key]) {
+        const visible = gs.visible[key];
+        const explored = gs.explored[key];
+        if (!(visible || explored))
+          continue;
+
+        const device = gs.devices[gs.currLevel][key];        
+        if (key === gs.highlightedLoc) {
+          const cell = { glyph: device.ch, fg: "#fff", bg: "#ff5cff", sx: sx, sy: sy};
+          cells[`${sx},${sy}`] = cell;
+        } else if (visible) {
           const cell = { glyph: device.ch, fg: device.colour, bg: null, sx: sx, sy: sy};
           cells[`${sx},${sy}`] = cell;
-        } else if (state.explored[key]) {
+        } else if (explored) {
           const cell = { glyph: device.ch, fg: "#222", bg: null, sx: sx, sy: sy};
           cells[`${sx},${sy}`] = cell;
         }
@@ -83,7 +93,7 @@ export class Renderer {
       this.display.draw(cell.sx, cell.sy + this.MAP_Y, cell.glyph, cell.fg, cell.bg);
     }
 
-    this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y,  state.player.ch, "#000", state.player.colour);
+    this.display.draw(gs.player.x - camX, gs.player.y - camY + this.MAP_Y,  gs.player.ch, "#000", gs.player.colour);
   }
 
   drawUI(gs: GameState): void {
@@ -113,7 +123,7 @@ export class Renderer {
     for (; count < 20; count++) {
       this.display.draw(col++, 0, '=', "#4e6ea8","#111");
     }
-    
+
     // Write message log
     const msgColors = ["#444", "#777", "#bbb"]; // oldest → newest
     const msgStartY = this.height - 3;

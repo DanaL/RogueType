@@ -20,7 +20,7 @@ export class Terminal extends Device {
   accessFailures: number = 0;
 
   constructor(functions: number) {    
-    super("Terminal", "A computer terminal. It will have local access functions and perhaps some interestsing files.", "=", "#fff");
+    super("Terminal", "A computer terminal. It will have local access functions and perhaps some interesting files.", "=", "#fff");
     this.functions = functions;
   }
 

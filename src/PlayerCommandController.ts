@@ -1,5 +1,8 @@
 import { InputController } from "./InputController";
 import { Game } from "./Game";
+import type { Examinable } from "./ExamineController";
+import { ExamineController } from "./ExamineController";
+import { Terrain } from "./Terrain";
 import { indefArticle, MOVE_KEYS } from "./Utils";
 
 export class PlayerCommandController extends InputController {
@@ -10,7 +13,40 @@ export class PlayerCommandController extends InputController {
     this.game = game;
   }
 
-  handleInput(e: KeyboardEvent): void {    
+  handleInput(e: KeyboardEvent): void {
+    if (e.key === "x") {
+      const { gs } = this.game;
+      
+      const targets: Examinable[] = Object.entries(gs.devices[gs.currLevel])
+        .filter(([key]) => gs.visible[key] || gs.explored[key])
+        .map(([key, device]) => {
+          const [x, y] = key.split(',').map(Number);
+          return { x, y, name: device.name, desc: device.desc };
+        });
+
+      for (const [key, terrain] of Object.entries(gs.maps[gs.currLevel])) {
+        if (!(gs.visible[key] || gs.explored[key]))
+          continue;
+
+        const [x, y] = key.split(',').map(Number);
+        switch (terrain) {
+          case Terrain.LiftDown:
+            targets.push({ x, y, name: "Down Elevator", desc: "For security reasons, elevators in the Facility only go between two floors each." });
+            break;
+          case Terrain.LiftUp:
+            targets.push({ x, y, name: "Up Elevator", desc: "For security reasons, elevators in the Facility only go between two floors each." });
+            break;
+        }
+      }
+
+      if (targets.length > 0) {
+        this.game.pushInputController(new ExamineController(this.game, targets));
+      } else {
+        gs.addMessage("There is nothing interesting to examine.");
+      }
+      return;
+    }
+
     const dir = MOVE_KEYS[e.key];
     if (dir) {
       e.preventDefault();
