@@ -3,7 +3,7 @@ import type { TerrainType } from "./Terrain";
 import { Device } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
-import { MAP_ROWS, MAP_WIDTH, rngRange as rndRange } from "./Utils";
+import { distance, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange } from "./Utils";
 
 export class LevelInfo {
   height: number;
@@ -21,7 +21,115 @@ export class LevelInfo {
   }
 }
 
-export function debugDumpMap(level: LevelInfo): void {
+export function generateMap(h: number, w: number, levelNum: number): LevelInfo {
+  const level = new LevelInfo(h, w);
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      level.map[`${x},${y}`] = Terrain.Wall;
+    }
+  }
+
+  // Place the chokePoint near the centre of the map
+  let nextRoomId = 1;
+  const chokePoint = LOG_JAMS[rndRange(LOG_JAMS.length)];
+  const row = MAP_ROWS / 2 - 5 + rndRange(10);
+  const col = MAP_WIDTH / 2 - 5 + rndRange(10);
+  stampTiles(level, chokePoint.tiles, row, col, nextRoomId++, 1);
+
+  // Compute the absolute gate position — it forms the boundary between the two halves.
+  // The arrival side is on the opposite side of the map from chokePoint.restricted.
+  // The restricted side starts at the gate column (inclusive) and extends to the map edge.
+  const gateAbsRow = row + chokePoint.gate.row;
+  const gateAbsCol = col + chokePoint.gate.col;
+  const gateIdx = gateAbsRow * w + gateAbsCol;
+
+  const [arrColMin, arrColMax, resColMin, resColMax] =
+    chokePoint.restricted === "East"
+      ? [1, gateAbsCol - 1, gateAbsCol, w - 2]
+      : [gateAbsCol + 1, w - 2, 1, gateAbsCol];
+
+  const maxRow = MAP_ROWS - 2;
+
+  // Arrival side
+  const numArrivalRooms = rndRange(4, 6);
+  for (let j = 0; j < numArrivalRooms; j++) {
+    const roomTemplate = ROOMS[rndRange(ROOMS.length)];
+    const maxCol = arrColMax - roomTemplate.width + 1;
+    // Try up to 25 times to place room without overlap
+    for (let k = 0; k < 25; k++) {
+      const rc = rndRange(arrColMin, maxCol);
+      const rr = rndRange(1, maxRow - roomTemplate.height);
+      if (!overlapsExistingRoom(level, roomTemplate.tiles, rr, rc)) {
+        stampTiles(level, roomTemplate.tiles, rr, rc, nextRoomId++, 2);
+        break;
+      }
+    }
+  }
+
+  // Resitrcted side
+  const numRestrictedRooms = rndRange(3, 5);
+  for (let j = 0; j < numRestrictedRooms; j++) {
+    const roomTemplate = ROOMS[rndRange(ROOMS.length)];
+    const maxCol = resColMax - roomTemplate.width + 1;
+    // Try up to 25 times to place room without overlap
+    for (let k = 0; k < 25; k++) {
+      const rc = rndRange(resColMin, maxCol);
+      const rr = rndRange(1, maxRow - roomTemplate.height);
+      if (!overlapsExistingRoom(level, roomTemplate.tiles, rr, rc)) {
+        stampTiles(level, roomTemplate.tiles, rr, rc, nextRoomId++, 3);
+        break;
+      }
+    }
+  }
+  
+  carveHallways(level, arrColMin, arrColMax);
+  carveHallways(level, resColMin, resColMax, [gateIdx]);
+
+  joinDisjointRegions(level, arrColMin, arrColMax);
+  joinDisjointRegions(level, resColMin, resColMax);
+
+  setStairs(level, gateIdx, levelNum);
+
+  debugDumpMap(level);
+
+  return level;
+}
+
+function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
+  //const { width: W, height: H } = level;
+  const upCandidates: { k: string; d: number }[] = [];
+  const downCandidates: { k: string; d: number }[] = [];
+
+  const gy = Math.floor(gateIdx / MAP_WIDTH);
+  const gx = gateIdx - gy * MAP_WIDTH;
+
+  for (let i = 0; i < level.roomMask.length; i++) {
+    const y = Math.floor(i / MAP_WIDTH);
+    const x = i - y * MAP_WIDTH;
+    const k = `${x},${y}`;
+    if (level.roomMask[i] === 2 && level.map[k] === Terrain.Floor) {      
+      upCandidates.push({ k: k, d: distance(x, y, gx, gy)})
+    }
+    if (level.roomMask[i] === 3 && level.map[k] === Terrain.Floor) {      
+      downCandidates.push({ k: k, d: distance(x, y, gx, gy)})
+    }
+  }
+
+  upCandidates.sort((a, b) => b.d - a.d);
+  let top = upCandidates.slice(0, 10);
+  const uk = top[rndRange(top.length)].k;
+  level.map[uk] = Terrain.LiftUp;
+
+  if (levelNum < NUM_LVLS - 1) {
+    downCandidates.sort((a, b) => b.d - a.d);
+    top = downCandidates.slice(0, 10);
+    const dk = top[rndRange(top.length)].k;
+    level.map[dk] = Terrain.LiftDown;
+  }
+}
+
+function debugDumpMap(level: LevelInfo): void {
   const rows: string[] = [];
   for (let y = 0; y < level.height; y++) {
     let row = '';
@@ -42,28 +150,64 @@ export function debugDumpMap(level: LevelInfo): void {
 const ROOM_GAP = 2;
 const NEIGHBORS_4: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
+// Generic BFS flood fill. Visits each reachable cell once, calling onVisit(idx, distance).
+// canVisit(ni, nx, ny) controls which neighbours are expanded.
+function floodFill(
+  level: LevelInfo,
+  seeds: number[],
+  canVisit: (ni: number, nx: number, ny: number) => boolean,
+  onVisit: (ni: number, dist: number) => void
+): void {
+  const { width: W, height: H } = level;
+  const dist = new Int32Array(H * W).fill(-1);
+  const queue: number[] = [];
+
+  for (const s of seeds) {
+    if (dist[s] !== -1) continue;
+    dist[s] = 0;
+    onVisit(s, 0);
+    queue.push(s);
+  }
+
+  for (let qi = 0; qi < queue.length; qi++) {
+    const cur = queue[qi];
+    const cx = cur % W, cy = Math.floor(cur / W);
+    for (const [dx, dy] of NEIGHBORS_4) {
+      const nx = cx + dx, ny = cy + dy;
+      const ni = ny * W + nx;
+      if (dist[ni] !== -1) continue;
+      if (!canVisit(ni, nx, ny)) continue;
+      dist[ni] = dist[cur] + 1;
+      onVisit(ni, dist[ni]);
+      queue.push(ni);
+    }
+  }
+}
+
 function overlapsExistingRoom(level: LevelInfo, tiles: TerrainType[][], originRow: number, originCol: number): boolean {
   const rMin = originRow - ROOM_GAP;
   const rMax = originRow + tiles.length - 1 + ROOM_GAP;
   const cMin = originCol - ROOM_GAP;
   const cMax = originCol + tiles[0].length - 1 + ROOM_GAP;
 
-  for (let r = rMin; r <= rMax; r++)
-    for (let c = cMin; c <= cMax; c++)
+  for (let r = rMin; r <= rMax; r++) {
+    for (let c = cMin; c <= cMax; c++) {
       if (level.map[`${c},${r}`] !== Terrain.Wall)
         return true;
+    }
+  }
 
   return false;
 }
 
-function stampTiles(level: LevelInfo, tiles: TerrainType[][], originRow: number, originCol: number, id: number): void {
+function stampTiles(level: LevelInfo, tiles: TerrainType[][], originRow: number, originCol: number, id: number, region: number): void {
   for (let r = 0; r < tiles.length; r++) {
     for (let c = 0; c < tiles[r].length; c++) {
       const x = originCol + c;
       const y = originRow + r;
       const i = y * level.width + x;
       level.map[`${x},${y}`] = tiles[r][c];
-      level.roomMask[i] = 1;
+      level.roomMask[i] = region;
       level.roomId[i] = id;
     }
   }
@@ -175,21 +319,15 @@ function joinDisjointRegions(level: LevelInfo, colMin: number, colMax: number): 
         if (comp[i] !== -1) continue;
         const t = level.map[`${x},${y}`];
         if (t !== Terrain.Floor && t !== Terrain.Door) continue;
-        comp[i] = id;
-        const q = [i];
-        for (let qi = 0; qi < q.length; qi++) {
-          const cx = q[qi] % W, cy = Math.floor(q[qi] / W);
-          for (const [dx, dy] of NEIGHBORS_4) {
-            const nx = cx + dx, ny = cy + dy;
-            if (nx < colMin || nx > colMax || ny <= 0 || ny >= H - 1) continue;
-            const ni = ny * W + nx;
-            if (comp[ni] !== -1) continue;
+        floodFill(level, [i],
+          (ni, nx, ny) => {
+            if (nx < colMin || nx > colMax || ny <= 0 || ny >= H - 1) return false;
+            if (comp[ni] !== -1) return false;
             const nt = level.map[`${nx},${ny}`];
-            if (nt !== Terrain.Floor && nt !== Terrain.Door) continue;
-            comp[ni] = id;
-            q.push(ni);
-          }
-        }
+            return nt === Terrain.Floor || nt === Terrain.Door;
+          },
+          (ni) => { comp[ni] = id; }
+        );
         id++;
       }
     }
@@ -216,7 +354,8 @@ function joinDisjointRegions(level: LevelInfo, colMin: number, colMax: number): 
         for (let x2 = x + 1; x2 <= colMax; x2++) {
           const ni = y * W + x2;
           const t = level.map[`${x2},${y}`];
-          if (level.roomMask[ni] && t !== Terrain.Floor && t !== Terrain.Door) break;
+          if (level.roomMask[ni] && t !== Terrain.Floor && t !== Terrain.Door) 
+            break;
           const ci2 = region[ni];
           if (ci2 !== -1) {
             if (ci2 !== ci && x2 - x < bestLen) {
@@ -230,7 +369,8 @@ function joinDisjointRegions(level: LevelInfo, colMin: number, colMax: number): 
         for (let y2 = y + 1; y2 < H - 1; y2++) {
           const ni = y2 * W + x;
           const t = level.map[`${x},${y2}`];
-          if (level.roomMask[ni] && t !== Terrain.Floor && t !== Terrain.Door) break;
+          if (level.roomMask[ni] && t !== Terrain.Floor && t !== Terrain.Door) 
+            break;
           const ci2 = region[ni];
           if (ci2 !== -1) {
             if (ci2 !== ci && y2 - y < bestLen) {
@@ -256,77 +396,6 @@ function joinDisjointRegions(level: LevelInfo, colMin: number, colMax: number): 
           level.map[`${bestX1},${y}`] = Terrain.Floor;
     }
   }
-}
-
-export function generateMap(h: number, w: number): LevelInfo {
-  const level = new LevelInfo(h, w);
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      level.map[`${x},${y}`] = Terrain.Wall;
-    }
-  }
-
-  // Place the chokePoint near the centre of the map
-  let nextRoomId = 1;
-  const chokePoint = LOG_JAMS[rndRange(LOG_JAMS.length)];
-  const row = MAP_ROWS / 2 - 5 + rndRange(10);
-  const col = MAP_WIDTH / 2 - 5 + rndRange(10);
-  stampTiles(level, chokePoint.tiles, row, col, nextRoomId++);
-
-  // Compute the absolute gate position — it forms the boundary between the two halves.
-  // The arrival side is on the opposite side of the map from chokePoint.restricted.
-  // The restricted side starts at the gate column (inclusive) and extends to the map edge.
-  const gateAbsRow = row + chokePoint.gate.row;
-  const gateAbsCol = col + chokePoint.gate.col;
-  const gateIdx = gateAbsRow * w + gateAbsCol;
-
-  const [arrColMin, arrColMax, resColMin, resColMax] =
-    chokePoint.restricted === "East"
-      ? [1, gateAbsCol - 1, gateAbsCol, w - 2]
-      : [gateAbsCol + 1, w - 2, 1, gateAbsCol];
-
-  const maxRow = MAP_ROWS - 2;
-
-  // Arrival side
-  const numArrivalRooms = rndRange(4, 6);
-  for (let j = 0; j < numArrivalRooms; j++) {
-    const roomTemplate = ROOMS[rndRange(ROOMS.length)];
-    const maxCol = arrColMax - roomTemplate.width + 1;
-    // Try up to 25 times to place room without overlap
-    for (let k = 0; k < 25; k++) {
-      const rc = rndRange(arrColMin, maxCol);
-      const rr = rndRange(1, maxRow - roomTemplate.height);
-      if (!overlapsExistingRoom(level, roomTemplate.tiles, rr, rc)) {
-        stampTiles(level, roomTemplate.tiles, rr, rc, nextRoomId++);
-        break;
-      }
-    }
-  }
-
-  // Resitrcted side
-  const numRestrictedRooms = rndRange(3, 5);
-  for (let j = 0; j < numRestrictedRooms; j++) {
-    const roomTemplate = ROOMS[rndRange(ROOMS.length)];
-    const maxCol = resColMax - roomTemplate.width + 1;
-    // Try up to 25 times to place room without overlap
-    for (let k = 0; k < 25; k++) {
-      const rc = rndRange(resColMin, maxCol);
-      const rr = rndRange(1, maxRow - roomTemplate.height);
-      if (!overlapsExistingRoom(level, roomTemplate.tiles, rr, rc)) {
-        stampTiles(level, roomTemplate.tiles, rr, rc, nextRoomId++);
-        break;
-      }
-    }
-  }
-  
-  carveHallways(level, arrColMin, arrColMax);
-  carveHallways(level, resColMin, resColMax, [gateIdx]);
-
-  joinDisjointRegions(level, arrColMin, arrColMax);
-  joinDisjointRegions(level, resColMin, resColMax);
-
-  return level;
 }
 
 // Room coordinates are stored as (row, col) pairs in the template files.
