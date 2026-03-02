@@ -103,11 +103,13 @@ export class GameState {
     const excerpt = randomTextExcerptSync(Math.round(this.game.wpm / 4));
     const popup = new TypingTestPopup(excerpt, 3, 20, 50);
     // 16 seconds gives the player a moment to read before typing
-    const controller = new TypingTestController(this.game, 26_000, excerpt, popup, (success) => {
-      if (success) 
+    const controller = new TypingTestController(this.game, 16_000, excerpt, popup, (success) => {
+      if (success) {
         this.openTerminalAccess(device);
-      else         
+      } else {
         device.accessFailures++;
+        this.player.currFirewall = Math.max(0, this.player.currFirewall - 1);
+      }
     });
 
     this.game.pushPopup(popup);
