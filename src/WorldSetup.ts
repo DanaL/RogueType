@@ -53,5 +53,6 @@ export function setupWorld(game: Game): void {
   game.gs.player.maxHull = 10;
   game.gs.player.currHull = 10;
 
-  generateMap(MAP_ROWS, MAP_WIDTH, 1);
+  const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);
+  game.gs.maps.push(levelInfo.map);
 }

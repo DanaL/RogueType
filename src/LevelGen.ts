@@ -97,7 +97,6 @@ export function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 }
 
 function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
-  //const { width: W, height: H } = level;
   const upCandidates: { k: string; d: number }[] = [];
   const downCandidates: { k: string; d: number }[] = [];
 
@@ -150,8 +149,6 @@ function debugDumpMap(level: LevelInfo): void {
 const ROOM_GAP = 2;
 const NEIGHBORS_4: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
-// Generic BFS flood fill. Visits each reachable cell once, calling onVisit(idx, distance).
-// canVisit(ni, nx, ny) controls which neighbours are expanded.
 function floodFill(
   level: LevelInfo,
   seeds: number[],
@@ -398,33 +395,32 @@ function joinDisjointRegions(level: LevelInfo, colMin: number, colMax: number): 
   }
 }
 
-// Room coordinates are stored as (row, col) pairs in the template files.
-export type RoomCoord = { row: number; col: number };
+type RoomCoord = { row: number; col: number };
 
-export interface RoomTemplate {
+interface RoomTemplate {
   width: number;
   height: number;
-  tiles: TerrainType[][];  // tiles[row][col]
-  entrances: RoomCoord[];      // positions of door tiles that connect to other rooms
-  terminals: RoomCoord[];      // positions of terminal devices (floor tile)
+  tiles: TerrainType[][]; 
+  entrances: RoomCoord[]; 
+  terminals: RoomCoord[]; 
 }
 
-export interface LogJamTemplate {
+interface LogJamTemplate {
   width: number;
   height: number;
-  tiles: TerrainType[][];  // tiles[row][col]
-  entrances:  RoomCoord[];      // door tile entrances
-  gate: RoomCoord;        // gate tile position
-  triggers: RoomCoord[];      // positions where weapon triggers will be placed
-  restricted: string;           // direction this logjam may not connect toward (e.g. "East")
+  tiles: TerrainType[][];
+  entrances:  RoomCoord[];
+  gate: RoomCoord;
+  triggers: RoomCoord[]; 
+  restricted: string;
 }
 
 const CHAR_TO_TERRAIN: Record<string, TerrainType> = {
   '#': Terrain.Wall,
   '_': Terrain.Wall,
   '.': Terrain.Floor,
-  '=': Terrain.Floor,  // terminal device — floor tile, device placed separately
-  '1': Terrain.Floor,  // trigger location — floor tile, trigger placed separately
+  '=': Terrain.Floor,
+  '1': Terrain.Floor,
   '+': Terrain.Door,
   'G': Terrain.Gate,
 };
@@ -458,7 +454,7 @@ function splitBlocks(text: string): string[] {
   return text.split('----------').map(b => b.trim()).filter(b => b.length > 0);
 }
 
-export function parseRooms(text: string): RoomTemplate[] {
+function parseRooms(text: string): RoomTemplate[] {
   return splitBlocks(text).map(block => {
     const { tiles, meta } = parseTemplateBlock(block);
     return {
@@ -471,7 +467,7 @@ export function parseRooms(text: string): RoomTemplate[] {
   });
 }
 
-export function parseLogJams(text: string): LogJamTemplate[] {
+function parseLogJams(text: string): LogJamTemplate[] {
   return splitBlocks(text).map(block => {
     const { tiles, meta } = parseTemplateBlock(block);
     const gateCoords = parseCoords(meta['Gate'] ?? '');
@@ -487,5 +483,5 @@ export function parseLogJams(text: string): LogJamTemplate[] {
   });
 }
 
-export const ROOMS = parseRooms(roomsText);
-export const LOG_JAMS = parseLogJams(logJamsText);
+const ROOMS = parseRooms(roomsText);
+const LOG_JAMS = parseLogJams(logJamsText);

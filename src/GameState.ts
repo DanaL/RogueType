@@ -58,6 +58,19 @@ export class GameState {
     });
   }
 
+  private takeLiftDown(): void {
+    ++this.currLevel;
+    
+    for (const [key, terrain] of Object.entries(this.maps[this.currLevel])) { 
+      if (terrain === Terrain.LiftUp) {
+        const [x, y] = key.split(',').map(Number);
+        this.player.x = x;
+        this.player.y = y;
+        break;
+      }
+    }
+  }
+
   tryMove(dx: number, dy: number, game: Game | null, actor: Actor): void {
     const nx = actor.x + dx;
     const ny = actor.y + dy;
@@ -68,17 +81,19 @@ export class GameState {
       if (actor instanceof Player)
         this.addMessage("You cannot go that way!");
       return;
-    } 
-    else if (terrain == Terrain.LiftDown && !this.downLifts[this.currLevel]) {
+    } else if (terrain == Terrain.LiftDown && !this.downLifts[this.currLevel]) {
       const msg = "The lift is currently disabled."
       this.addMessage(msg);
       game?.pushPopup(new Popup("", "\n" + msg, 3, 10, 31));
       game?.pushInputController(new InfoPopupController(game));
+    } else if (terrain == Terrain.LiftDown && this.downLifts[this.currLevel]) {
+      this.takeLiftDown();
+    }
+    else {
+      actor.x = nx;
+      actor.y = ny;
     }
     
-    actor.x = nx;
-    actor.y = ny;
-
     if (this.devices[this.currLevel][key]) {
       this.handleDevice(actor, this.devices[this.currLevel][key])
     }
