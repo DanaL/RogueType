@@ -3,6 +3,7 @@ import { Game } from "./Game";
 import { Player } from "./Player";
 import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH } from "./Utils";
+import { generateMap } from "./LevelGen";
 
 export function setupWorld(game: Game): void {
   let overworld: Record<string, TerrainType> = {};
@@ -51,4 +52,6 @@ export function setupWorld(game: Game): void {
   game.gs.player.currFirewall = 10;
   game.gs.player.maxHull = 10;
   game.gs.player.currHull = 10;
+
+  generateMap(MAP_ROWS, MAP_WIDTH);
 }
