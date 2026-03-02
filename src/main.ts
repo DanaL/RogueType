@@ -33,7 +33,7 @@ game.state.computeFov();
 game.start();
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Tab" || e.key === "/") e.preventDefault();
+  if (e.key === "Tab" || e.key === "/" || e.key === "'") e.preventDefault();
   game.queueInput(e);
 });
 
