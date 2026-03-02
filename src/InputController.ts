@@ -16,12 +16,11 @@ export class YesNoController extends InputController {
   }
 
   handleInput(e: KeyboardEvent): void {
-    if (e.key !== 'y' && e.key !== 'n') 
-      return;
-    
-    this.game.popPopup();
-    this.game.popInputController();
-    this.onChoice(e.key === 'y');
+    if (e.key === 'y' || e.key === 'n' || e.key === 'Escape') {
+      this.game.popPopup();
+      this.game.popInputController();
+      this.onChoice(e.key === 'y');
+    }
   }
 }
 
