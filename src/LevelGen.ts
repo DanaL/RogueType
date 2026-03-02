@@ -4,7 +4,7 @@ import type { TerrainType } from "./Terrain";
 import { Device } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
-import { MAP_ROWS, MAP_WIDTH, rngRange } from "./Utils";
+import { MAP_ROWS, MAP_WIDTH, rngRange as rndRange } from "./Utils";
 
 export class LevelInfo {
   height: number;
@@ -60,15 +60,15 @@ export function generateMap(h: number, w: number): LevelInfo {
   }
 
   // place the chokePoint for the map
-  const chokePoint = LOG_JAMS[Math.round(ROT.RNG.getUniform() * LOG_JAMS.length)];
-  const row = MAP_ROWS / 2 - 5 + Math.round(ROT.RNG.getUniform() * 10);
-  const col = MAP_WIDTH / 2 - 5 + Math.round(ROT.RNG.getUniform() * 10);
+  const chokePoint = LOG_JAMS[rndRange(LOG_JAMS.length)];
+  const row = MAP_ROWS / 2 - 5 + rndRange(10);
+  const col = MAP_WIDTH / 2 - 5 + rndRange(10);
   stampTiles(level, chokePoint.tiles, row, col);
 
   // place 4 to 6 rooms on the 'arrival' side of the map
-  const numRoooms = 4 + Math.round(ROT.RNG.getUniform() * 3);
+  const numRoooms = rndRange(4, 6);
   for (let j = 0; j < numRoooms; j++) {
-    const roomTemplate = ROOMS[rngRange(ROOMS.length)];
+    const roomTemplate = ROOMS[rndRange(ROOMS.length)];
     // Try up to 10 times to place room
     for (let k = 0; k < 10; k++) {
       let minCol: number, maxCol: number;    
@@ -82,8 +82,8 @@ export function generateMap(h: number, w: number): LevelInfo {
       const minRow = 1;
       const maxRow = MAP_ROWS - roomTemplate.height - 1;
 
-      const rc = rngRange(minCol, maxCol);
-      const rr = rngRange(minRow, maxRow);
+      const rc = rndRange(minCol, maxCol);
+      const rr = rndRange(minRow, maxRow);
 
       if (!overlapsExistingRoom(level, roomTemplate.tiles, rr, rc)) {
         stampTiles(level, roomTemplate.tiles, rr, rc);

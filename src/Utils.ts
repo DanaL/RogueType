@@ -14,9 +14,8 @@ export function rngRange(n: number): number;
 export function rngRange(min: number, max: number): number;
 export function rngRange(minOrN: number, max?: number): number {
   if (max === undefined)
-    return Math.round(ROT.RNG.getUniform() * minOrN);
-  
-  return minOrN + Math.round(ROT.RNG.getUniform() * (max - minOrN));
+    return Math.floor(ROT.RNG.getUniform() * minOrN);
+  return minOrN + Math.floor(ROT.RNG.getUniform() * (max - minOrN + 1));
 }
 
 function diagDistance(x0: number, y0: number, x1: number, y1: number): number {
