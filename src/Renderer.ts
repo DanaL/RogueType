@@ -12,7 +12,7 @@ export class Renderer {
   constructor(width: number, height: number, fontSize: number) {
     this.width = width;
     this.height = height;
-    this.display = new ROT.Display({ width, height, fontSize, fontFamily: '"Share Tech Mono", monospace' });
+    this.display = new ROT.Display({ width, height, fontSize, fontFamily: '"Share Tech Mono"' });
   }
 
   getContainer(): HTMLElement {
