@@ -86,22 +86,39 @@ export class Renderer {
     this.display.draw(state.player.x - camX, state.player.y - camY + this.MAP_Y,  state.player.ch, "#000", state.player.colour);
   }
 
-  drawUi(state: GameState): void {
+  drawUI(gs: GameState): void {
     let col = 1;
-
-    // for (const ch of "Health: ") {
-    //   this.display.draw(col++, 0, ch, "#f2f0e5", "#111");
-    // }
-    // for (let i = 0; i < 3; i++) {
-    //   const filled = true;
-    //   this.display.draw(col++, 0, filled ? "\u2665" : "\u2661", filled ? "#b45252" : "#500", "#111");
-    // }
-
+    const hullRatio = gs.player.currHull / gs.player.maxHull;
+    const hullBars = Math.round(20 * hullRatio);
+    for (const ch of "hull: ") {
+      this.display.draw(col++, 0, ch, "#009d4a", "#111");
+    }
+    let count = 0;
+    for (; count < hullBars; count++) {
+      this.display.draw(col++, 0, '=',"#ff004e", "#111");
+    }
+    for (; count < 20; count++) {
+      this.display.draw(col++, 0, '=', "#4e6ea8","#111");
+    }
+    col += 3;
+    for (const ch of "firewall: ") {
+      this.display.draw(col++, 0, ch, "#009d4a", "#111");
+    }
+    const fwRatio = gs.player.currFirewall / gs.player.maxFirewall;
+    const fwBars = Math.round(20 * fwRatio);
+    count = 0;
+    for (; count < fwBars; count++) {
+      this.display.draw(col++, 0, '=',"#60ff64", "#111");
+    }
+    for (; count < 20; count++) {
+      this.display.draw(col++, 0, '=', "#4e6ea8","#111");
+    }
+    
     // Write message log
     const msgColors = ["#444", "#777", "#bbb"]; // oldest → newest
     const msgStartY = this.height - 3;
     for (let age = 0; age < 3; age++) {
-      const msg = state.messages[age] ?? "";
+      const msg = gs.messages[age] ?? "";
       const row = msgStartY + (2 - age); // age 0 (newest) → bottom row
       const color = msgColors[2 - age];  // age 0 (newest) → brightest color
       for (let j = 0; j < Math.min(msg.length, this.width); j++) {

@@ -21,15 +21,12 @@ warmTextCache();
 document.getElementById("app")!.appendChild(renderer.getContainer());
 
 game.pushInputController(new PlayerCommandController(game));
-//const txt = await randomTextExcerpt(15);
-//const popup = new TypingTestPopup(txt, 3, 20, 50);
-//const controller = new TypingTestController(game, 16_000, txt, popup);
 
 // Greetings pop-up
 const popup = new Popup("[#009d4a welcome to rogue type]", "> remote c[#ac29ce o]nnection established at 127.0.0.-1...\n> robot control prot[#ac29ce o]col active on remote h[#ac29ce o]st...\n> RO[#4e6ea8 V] class: Burrito B[#ac29ce o]t 3000\n\n-- press any key to begin infiltratio[#4e6ea8 n] --", 3, 10, 50);
 game.pushPopup(popup);
 game.pushInputController(new InfoPopupController(game));
-game.state.computeFov();
+game.gs.computeFov();
 game.start();
 
 window.addEventListener("keydown", (e) => {

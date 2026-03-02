@@ -6,7 +6,7 @@ import { Popup } from "./Popup";
 import type Scheduler from "rot-js/lib/scheduler/scheduler";
 
 export class Game {
-  readonly state: GameState;
+  readonly gs: GameState;
   readonly renderer: Renderer;
 
   private controllerStack: InputController[] = [];
@@ -17,7 +17,7 @@ export class Game {
   readonly wpm: number;
 
   constructor(state: GameState, renderer: Renderer) {
-    this.state = state;
+    this.gs = state;
     this.renderer = renderer;
     state.game = this;
 
@@ -52,8 +52,8 @@ export class Game {
   }
 
   render(): void {
-    this.renderer.drawGameArea(this.state);
-    this.renderer.drawUi(this.state);
+    this.renderer.drawGameArea(this.gs);
+    this.renderer.drawUI(this.gs);
     for (const popup of this.popupStack) {
       popup.draw(this.renderer);
     }
@@ -64,7 +64,7 @@ export class Game {
   }
 
   get isAnimating(): boolean {
-    return this.state.isAnimating;
+    return this.gs.isAnimating;
   }
 
   update(_deltaMs: number): void {
