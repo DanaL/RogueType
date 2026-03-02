@@ -61,6 +61,8 @@ export class TerminalController extends InputController {
       this.setState(this.options[this.currRow].flag);
     } else if (e.key === 'Enter' && this.state === LIFT_ACCESS) {
       this.gs.downLifts[this.gs.currLevel] = !this.gs.downLifts[this.gs.currLevel];
+      const s = this.gs.downLifts[this.gs.currLevel] ? "Elevator enabled" : "Elevator disabled";
+      this.gs.addMessage(s);
     } else if (e.key === 'Enter' && this.state === FILE_SYSTEM) {
       this.popup.selectedFile = this.currRow;
       this.setState(FILE_VIEW);
@@ -136,6 +138,7 @@ export class TerminalPopup extends Popup {
     for (const ch of msg)
       renderer.drawChar(row, col++, ch, '#000', '#fff');
     this.closeContentRow(renderer, row++, col);
+
     return row;
   }
 
