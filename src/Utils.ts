@@ -1,3 +1,5 @@
+import * as ROT from "rot-js";
+
 export const MAP_WIDTH = 100;
 export const MAP_ROWS = 32;
 export const NUM_LVLS = 9;
@@ -74,7 +76,7 @@ function excerptFromWords(words: string[], wordCount: number): string {
   if (words.length <= wordCount)
     return words.join(' ');
 
-  const startIdx = Math.floor(Math.random() * (words.length - wordCount));
+  const startIdx = Math.floor(ROT.RNG.getUniform() * (words.length - wordCount));
   const slice = words.slice(startIdx, startIdx + wordCount);
 
   const prevWord = startIdx > 0 ? words[startIdx - 1] : null;
@@ -95,14 +97,14 @@ export async function warmTextCache(): Promise<void> {
 }
 
 export function randomTextExcerptSync(wordCount: number): string {
-  const file = TEXT_FILES[Math.floor(Math.random() * TEXT_FILES.length)];
+  const file = TEXT_FILES[Math.floor(ROT.RNG.getUniform() * TEXT_FILES.length)];
   const words = textCache.get(file);
   if (!words) throw new Error(`Text cache not warmed: ${file}`);
   return excerptFromWords(words, wordCount);
 }
 
 export async function randomTextExcerpt(wordCount: number): Promise<string> {
-  const file = TEXT_FILES[Math.floor(Math.random() * TEXT_FILES.length)];
+  const file = TEXT_FILES[Math.floor(ROT.RNG.getUniform() * TEXT_FILES.length)];
   const words = await loadTextWords(file);
   return excerptFromWords(words, wordCount);
 }
