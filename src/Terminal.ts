@@ -124,12 +124,11 @@ export class TerminalPopup extends Popup {
         renderer.drawChar(row, col++, ch, selected ? '#000' : '#009d4a', selected ? '#fff' : '#000');
       this.closeContentRow(renderer, row++, col);
     }
-    
+
     return row;
   }
 
   private liftAccess(renderer: Renderer, row: number): number {
-    this.drawBlankRow(renderer, row++);
     const msg = this.gs.downLifts[this.gs.currLevel] ? "deactivate lift" : "activate lift";
     let col = this.openContentRow(renderer, row);
     renderer.drawChar(row, col++, '>', '#009d4a', '#000');
