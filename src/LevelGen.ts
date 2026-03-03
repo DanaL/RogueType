@@ -84,7 +84,7 @@ export function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   }
   
   carveHallways(level, arrColMin, arrColMax);
-  carveHallways(level, resColMin, resColMax, [gateIdx]);
+  carveHallways(level, resColMin, resColMax, gateIdx);
 
   joinDisjointRegions(level, arrColMin, arrColMax);
   joinDisjointRegions(level, resColMin, resColMax);
@@ -212,11 +212,10 @@ function stampTiles(level: LevelInfo, tiles: TerrainType[][], originRow: number,
 
 // extraDoors: additional map indices (e.g. a logjam gate) treated as door endpoints.
 // They can be reached and started from, but are never erased on failure.
-function carveHallways(level: LevelInfo, colMin: number, colMax: number, extraDoors: number[] = []): void {
+function carveHallways(level: LevelInfo, colMin: number, colMax: number, gateIdx: number = -1): void {
   const { width: W, height: H } = level;
   const INF = 0x7fffffff;
-  const extraDoorSet = new Set(extraDoors);
-
+  
   // Collect door positions within the column range, then add any extra doors
   const doors: number[] = [];
   for (let y = 0; y < H; y++) {
@@ -225,16 +224,15 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, extraDo
         doors.push(y * W + x);
     }
   }
-  doors.unshift(...extraDoors);
+  if (gateIdx !== -1) {
+    doors.splice(0, 0, gateIdx);
+  }
 
   const unconnected = new Set<number>(doors);
 
   for (const startIdx of doors) {
     if (!unconnected.has(startIdx))
       continue;
-
-    const startX = startIdx % W;
-    const startY = Math.floor(startIdx / W);
 
     // BFS through background (non-roomMask) cells, staying within the column range
     const dist = new Int32Array(H * W).fill(INF);
@@ -269,9 +267,7 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, extraDo
 
         // Stop at: an existing hallway floor, an extra door (e.g. gate),
         // or a door belonging to a different room
-        if (terrain === Terrain.Floor ||
-            extraDoorSet.has(ni) ||
-            (terrain === Terrain.Door && level.roomId[ni] !== level.roomId[startIdx])) {
+        if (terrain === Terrain.Floor || terrain === Terrain.Gate || (terrain === Terrain.Door && level.roomId[ni] !== level.roomId[startIdx])) {
           endIdx = ni;
           break bfs;
         }
@@ -280,10 +276,8 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, extraDo
       }
     }
 
-    if (endIdx === -1) {
-      // No endpoint found — erase the door (but never erase an extra door like the gate)
-      if (!extraDoorSet.has(startIdx))
-        level.map[`${startX},${startY}`] = Terrain.Wall;
+    // No endpoint found — erase the door
+    if (endIdx === -1) {      
       unconnected.delete(startIdx);
       continue;
     }
@@ -293,14 +287,16 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, extraDo
     while (cur !== startIdx && cur !== -1) {
       const cx = cur % W;
       const cy = Math.floor(cur / W);
-      if (level.map[`${cx},${cy}`] !== Terrain.Door)
+      if (level.map[`${cx},${cy}`] !== Terrain.Door) {
         level.map[`${cx},${cy}`] = Terrain.Floor;
+      }
       cur = prev[cur];
     }
 
     unconnected.delete(startIdx);
-    if (level.map[`${endIdx % W},${Math.floor(endIdx / W)}`] === Terrain.Door)
+    if (level.map[`${endIdx % W},${Math.floor(endIdx / W)}`] === Terrain.Door) {
       unconnected.delete(endIdx);
+    }
   }
 }
 

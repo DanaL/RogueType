@@ -4,7 +4,6 @@ import { Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH } from "./Utils";
 import { generateMap } from "./LevelGen";
-import { Room } from "rot-js/lib/map/features";
 
 export function setupWorld(game: Game): void {
   let overworld: Record<string, TerrainType> = {};
