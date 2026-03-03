@@ -57,7 +57,7 @@ export function setupWorld(game: Game): void {
   burritoBot.maxHull = 5;
   burritoBot.currHull = 5;
   burritoBot.memorySize = 8;
-  burritoBot.software.push(new Software("Emergency Burrito Procedures", SoftwareCategory.Data, true, 1, 5));
+  burritoBot.software.push(new Software("Emergency Burrito Procedures", SoftwareCategory.Data, true, 1, 4));
   burritoBot.software.push(new Software("Norton AntiVirus 414.10.13.14", SoftwareCategory.ICE, false, 1, 2));
   burritoBot.software.push(new Software("DW Move Protocal", SoftwareCategory.Behaviour, false, 1, 1));
   burritoBot.currFirewall = 10;
