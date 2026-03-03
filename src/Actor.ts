@@ -2,8 +2,7 @@ import * as ROT from "rot-js";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
 import { ActionResult, ICELevel } from "./Utils";
-import { Software } from "./Software";
-import type { Game } from "./Game";
+import { Software, SoftwareCategory } from "./Software";
 
 export abstract class Actor {
   x: number;
@@ -20,8 +19,7 @@ export abstract class Actor {
   abstract get maxFirewall(): number;
   abstract get currFirewall(): number;
   abstract set currFirewall(val: number);
-  abstract set maxFirewall(val: number);
-
+  
   securityClearance: number = 0;
 
   constructor(x: number, y: number, ch: string, colour: string) {
@@ -67,11 +65,7 @@ export class Player extends Actor {
     if (this.hackedRobot)
       this.hackedRobot.currFirewall = val;
   }
-  set maxFirewall(val: number) {
-    if (this.hackedRobot)
-      this.hackedRobot.maxFirewall = val;
-  }
-
+  
   // not sure if this will be needed for rogue type
   private _endTurn: (() => void) | null = null;
 
@@ -94,7 +88,8 @@ export abstract class Robot extends Actor {
   accuracy: number = 0.0;
   software: Software[] = [];
   ice = ICELevel.Weak;
-  
+  memorySize = 0;
+
   protected _maxHull: number = 0;
   get maxHull() { return this._maxHull; }
   protected _currHull: number = 0;
@@ -102,13 +97,16 @@ export abstract class Robot extends Actor {
   set currHull(val: number) { this._currHull = Math.min(val, this.maxHull) };
   set maxHull(val: number) { this._maxHull = val };
 
-  protected _maxFirewall: number = 0;
-  get maxFirewall() { return this._maxFirewall }
+  get maxFirewall() {
+    return this.software
+      .filter(sw => sw.cat === SoftwareCategory.ICE)
+      .reduce((sum, sw) => sum + 5 * sw.level, 0);
+  }
+
   protected _currFirewall: number = 0;
   get currFirewall() { return this._currFirewall }
   set currFirewall(val: number) { this._currFirewall = Math.min(val, this.maxFirewall) }
-  set maxFirewall(val: number) { this._maxFirewall = val };
-
+  
   protected gs: GameState
 
   constructor(x: number, y: number, ch: string, colour: string, gs: GameState) {
@@ -139,12 +137,15 @@ export class Roomba extends Robot {
     this.desc = "A standard cleaning bot. Conveniently innocuous.";
     this.x = x;
     this.y = y;
-    this._maxHull = 3;
-    this._maxFirewall = 5;
-    this.currHull = 3;
-    this.currFirewall = 5;    
+    this._maxHull = 3;    
+    this.currHull = 3;    
     this.accuracy = 0.80;
     this.securityClearance = 1;
+    this.memorySize = 3;
+
+    this.software.push(new Software("Facility Firewall Gold Edition", SoftwareCategory.ICE, false, 1, 1));
+    this.software.push(new Software("DW Move Protocal", SoftwareCategory.Behaviour, false, 1, 1));
+    this.currFirewall = 5;    
   }
 
   act(): Promise<void> {

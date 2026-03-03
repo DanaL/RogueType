@@ -1,7 +1,7 @@
 const SoftwareCategory = {
   ICE: 0, ICEBreaker: 1, Behaviour: 2, Data: 3
 }
-export type SoftwareCategory = (typeof SoftwareCategory)[keyof typeof SoftwareCategory];
+type SoftwareCategory = (typeof SoftwareCategory)[keyof typeof SoftwareCategory];
 
 export class Software {
   name: string;
@@ -18,3 +18,5 @@ export class Software {
     this.size = size;
   }
 }
+
+export { SoftwareCategory }

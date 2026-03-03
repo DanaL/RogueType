@@ -4,6 +4,7 @@ import { BasicBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH } from "./Utils";
 import { generateMap } from "./LevelGen";
+import { Software, SoftwareCategory } from "./Software";
 
 export function setupWorld(game: Game): void {
   let overworld: Record<string, TerrainType> = {};
@@ -48,17 +49,18 @@ export function setupWorld(game: Game): void {
   game.gs.devices[0]["49,15"] = terminal;
 
   game.gs.player = new Player(44, 16, 'b', "#005260");
-  game.gs.player.maxFirewall = 10;
-  game.gs.player.currFirewall = 10;
   game.gs.player.maxHull = 5;
   game.gs.player.currHull = 5;
   game.scheduler.add(game.gs.player, true);
   
-  let burritoBot = new BasicBot('burrito bot', "Corpo food delivery bot. Its chassis is battered and grafitti-ed.", 'b', '#005260', 0, 0, game.gs);
-  burritoBot.maxFirewall = 10;
-  burritoBot.currFirewall = 10;
+  let burritoBot = new BasicBot('burrito bot', "Corpo food delivery bot. Its chassis is battered and grafitti-ed.", 'b', '#005260', 0, 0, game.gs);    
   burritoBot.maxHull = 5;
   burritoBot.currHull = 5;
+  burritoBot.memorySize = 8;
+  burritoBot.software.push(new Software("Emergency Burrito Procedures", SoftwareCategory.Data, true, 1, 5));
+  burritoBot.software.push(new Software("Norton AntiVirus 414.10.13.14", SoftwareCategory.ICE, false, 1, 2));
+  burritoBot.software.push(new Software("DW Move Protocal", SoftwareCategory.Behaviour, false, 1, 1));
+  burritoBot.currFirewall = 10;
   game.gs.player.hackedRobot = burritoBot;
 
   const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);

@@ -202,10 +202,7 @@ export class GameState {
         this.player.y = robot.y;
         this.player.ch = robot.ch;
         this.player.colour = robot.colour;
-        this.player.maxHull = robot.maxHull;
-        this.player.currHull = robot.currHull;
-        this.player.maxFirewall = robot.maxFirewall;
-        this.player.currFirewall = Math.round(robot.maxFirewall / 3);
+        robot.currFirewall = Math.round(robot.maxFirewall / 3);
         this.player.hackedRobot = robot;
         this.player.currRobotId = robot.id;
         this.player.securityClearance = robot.securityClearance;
