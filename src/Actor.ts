@@ -54,10 +54,17 @@ export class Player extends Actor {
 }
 
 export abstract class Robot extends Actor {
+  static #nextId = 2;
+  readonly id: number;
   name: string = "";
   desc: string = "";
   accuracy: number = 0.0;
   ice = ICELevel.Weak;
+
+  constructor(x: number, y: number, ch: string, colour: string) {
+    super(x, y, ch, colour);
+    this.id = Robot.#nextId++;
+  }
 }
 
 export class Roomba extends Robot {

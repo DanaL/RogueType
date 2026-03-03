@@ -179,7 +179,6 @@ export class GameState {
   }
 
   private startRobotHack(robot: Robot): void {
-    const excerpt = randomTextExcerptSync(Math.round(this.game.wpm / 4));
     const popup = new RobotHackPopup(robot.name, robot.currFirewall, robot.maxFirewall, 2, 1);
     const controller = new RobotHackController(this.game, this, robot, popup, () => {
       this.computeFov();
