@@ -6,23 +6,19 @@ import logJamsText from '../LogJams.txt?raw';
 import { distance, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange } from "./Utils";
 
 export class LevelInfo {
-  height: number;
-  width: number;
   map: Record<string, TerrainType> = {};
   devices: Record<string, Device> = {};
   roomMask: Uint8Array;
   roomId: Int16Array;   // 0 = no room; positive = room index
 
-  constructor(h: number, w: number) {
-    this.height = h;
-    this.width = w;
-    this.roomMask = new Uint8Array(h * w);
-    this.roomId   = new Int16Array(h * w);
+  constructor() {
+    this.roomMask = new Uint8Array(MAP_ROWS * MAP_WIDTH);
+    this.roomId   = new Int16Array(MAP_ROWS * MAP_WIDTH);
   }
 }
 
 export function generateMap(h: number, w: number, levelNum: number): LevelInfo {
-  const level = new LevelInfo(h, w);
+  const level = new LevelInfo();
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -130,9 +126,9 @@ function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
 
 function debugDumpMap(level: LevelInfo): void {
   const rows: string[] = [];
-  for (let y = 0; y < level.height; y++) {
+  for (let y = 0; y < MAP_ROWS; y++) {
     let row = '';
-    for (let x = 0; x < level.width; x++) {
+    for (let x = 0; x < MAP_WIDTH; x++) {
       const terrain = level.map[`${x},${y}`];
       if (terrain === undefined)
         row += '?';
@@ -149,14 +145,8 @@ function debugDumpMap(level: LevelInfo): void {
 const ROOM_GAP = 2;
 const NEIGHBORS_4: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
-function floodFill(
-  level: LevelInfo,
-  seeds: number[],
-  canVisit: (ni: number, nx: number, ny: number) => boolean,
-  onVisit: (ni: number, dist: number) => void
-): void {
-  const { width: W, height: H } = level;
-  const dist = new Int32Array(H * W).fill(-1);
+function floodFill(seeds: number[], canVisit: (ni: number, nx: number, ny: number) => boolean, onVisit: (ni: number, dist: number) => void): void {
+  const dist = new Int32Array(MAP_ROWS * MAP_WIDTH).fill(-1);
   const queue: number[] = [];
 
   for (const s of seeds) {
@@ -168,10 +158,10 @@ function floodFill(
 
   for (let qi = 0; qi < queue.length; qi++) {
     const cur = queue[qi];
-    const cx = cur % W, cy = Math.floor(cur / W);
+    const cx = cur % MAP_WIDTH, cy = Math.floor(cur / MAP_WIDTH);
     for (const [dx, dy] of NEIGHBORS_4) {
       const nx = cx + dx, ny = cy + dy;
-      const ni = ny * W + nx;
+      const ni = ny * MAP_WIDTH + nx;
       if (dist[ni] !== -1) continue;
       if (!canVisit(ni, nx, ny)) continue;
       dist[ni] = dist[cur] + 1;
@@ -202,7 +192,7 @@ function stampTiles(level: LevelInfo, tiles: TerrainType[][], originRow: number,
     for (let c = 0; c < tiles[r].length; c++) {
       const x = originCol + c;
       const y = originRow + r;
-      const i = y * level.width + x;
+      const i = y * MAP_WIDTH + x;
       level.map[`${x},${y}`] = tiles[r][c];
       level.roomMask[i] = region;
       level.roomId[i] = id;
@@ -210,18 +200,13 @@ function stampTiles(level: LevelInfo, tiles: TerrainType[][], originRow: number,
   }
 }
 
-// extraDoors: additional map indices (e.g. a logjam gate) treated as door endpoints.
-// They can be reached and started from, but are never erased on failure.
 function carveHallways(level: LevelInfo, colMin: number, colMax: number, gateIdx: number = -1): void {
-  const { width: W, height: H } = level;
   const INF = 0x7fffffff;
-  
-  // Collect door positions within the column range, then add any extra doors
   const doors: number[] = [];
-  for (let y = 0; y < H; y++) {
+  for (let y = 0; y < MAP_ROWS; y++) {
     for (let x = colMin; x <= colMax; x++) {
       if (level.map[`${x},${y}`] === Terrain.Door)
-        doors.push(y * W + x);
+        doors.push(y * MAP_WIDTH + x);
     }
   }
   if (gateIdx !== -1) {
@@ -235,8 +220,8 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, gateIdx
       continue;
 
     // BFS through background (non-roomMask) cells, staying within the column range
-    const dist = new Int32Array(H * W).fill(INF);
-    const prev = new Int32Array(H * W).fill(-1);
+    const dist = new Int32Array(MAP_ROWS * MAP_WIDTH).fill(INF);
+    const prev = new Int32Array(MAP_ROWS * MAP_WIDTH).fill(-1);
     dist[startIdx] = 0;
     const queue: number[] = [startIdx];
     let endIdx = -1;
@@ -244,15 +229,17 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, gateIdx
     bfs:
     for (let qi = 0; qi < queue.length; qi++) {
       const cur = queue[qi];
-      const cx = cur % W;
-      const cy = Math.floor(cur / W);
+      const cx = cur % MAP_WIDTH;
+      const cy = Math.floor(cur / MAP_WIDTH);
 
       for (const [dx, dy] of NEIGHBORS_4) {
         const nx = cx + dx;
         const ny = cy + dy;
-        if (nx <= 0 || nx >= W - 1 || ny <= 0 || ny >= H - 1) continue;
-        if (nx < colMin || nx > colMax) continue;
-        const ni = ny * W + nx;
+        if (nx <= 0 || nx >= MAP_WIDTH - 1 || ny <= 0 || ny >= MAP_ROWS - 1) 
+          continue;
+        if (nx < colMin || nx > colMax) 
+          continue;
+        const ni = ny * MAP_WIDTH + nx;
         if (dist[ni] !== INF) 
           continue;
 
@@ -265,8 +252,7 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, gateIdx
         dist[ni] = dist[cur] + 1;
         prev[ni] = cur;
 
-        // Stop at: an existing hallway floor, an extra door (e.g. gate),
-        // or a door belonging to a different room
+        // Stop at: an existing hallway floor, a gate,  or a door belonging to a different room
         if (terrain === Terrain.Floor || terrain === Terrain.Gate || (terrain === Terrain.Door && level.roomId[ni] !== level.roomId[startIdx])) {
           endIdx = ni;
           break bfs;
@@ -285,8 +271,8 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, gateIdx
     // Trace back from endIdx to startIdx, carving floor on intermediate cells
     let cur = prev[endIdx];
     while (cur !== startIdx && cur !== -1) {
-      const cx = cur % W;
-      const cy = Math.floor(cur / W);
+      const cx = cur % MAP_WIDTH;
+      const cy = Math.floor(cur / MAP_WIDTH);
       if (level.map[`${cx},${cy}`] !== Terrain.Door) {
         level.map[`${cx},${cy}`] = Terrain.Floor;
       }
@@ -294,27 +280,25 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, gateIdx
     }
 
     unconnected.delete(startIdx);
-    if (level.map[`${endIdx % W},${Math.floor(endIdx / W)}`] === Terrain.Door) {
+    if (level.map[`${endIdx % MAP_WIDTH},${Math.floor(endIdx / MAP_WIDTH)}`] === Terrain.Door) {
       unconnected.delete(endIdx);
     }
   }
 }
 
-function joinDisjointRegions(level: LevelInfo, colMin: number, colMax: number): void {
-  const { width: W, height: H } = level;
-
+function joinDisjointRegions(level: LevelInfo, colMin: number, colMax: number): void {  
   function findRegions(): Int16Array {
-    const comp = new Int16Array(H * W).fill(-1);
+    const comp = new Int16Array(MAP_WIDTH * MAP_ROWS).fill(-1);
     let id = 0;
-    for (let y = 1; y < H - 1; y++) {
+    for (let y = 1; y < MAP_ROWS - 1; y++) {
       for (let x = colMin; x <= colMax; x++) {
-        const i = y * W + x;
+        const i = y * MAP_WIDTH + x;
         if (comp[i] !== -1) continue;
         const t = level.map[`${x},${y}`];
         if (t !== Terrain.Floor && t !== Terrain.Door) continue;
-        floodFill(level, [i],
+        floodFill([i],
           (ni, nx, ny) => {
-            if (nx < colMin || nx > colMax || ny <= 0 || ny >= H - 1) return false;
+            if (nx < colMin || nx > colMax || ny <= 0 || ny >= MAP_ROWS - 1) return false;
             if (comp[ni] !== -1) return false;
             const nt = level.map[`${nx},${ny}`];
             return nt === Terrain.Floor || nt === Terrain.Door;
@@ -338,14 +322,14 @@ function joinDisjointRegions(level: LevelInfo, colMin: number, colMax: number): 
 
     let bestLen = Infinity, bestX1 = -1, bestY1 = -1, bestX2 = -1, bestY2 = -1;
 
-    for (let y = 1; y < H - 1; y++) {
+    for (let y = 1; y < MAP_ROWS - 1; y++) {
       for (let x = colMin; x <= colMax; x++) {
-        const ci = region[y * W + x];
+        const ci = region[y * MAP_WIDTH + x];
         if (ci === -1) continue;
 
         // Scan right (within column bounds)
         for (let x2 = x + 1; x2 <= colMax; x2++) {
-          const ni = y * W + x2;
+          const ni = y * MAP_WIDTH + x2;
           const t = level.map[`${x2},${y}`];
           if (level.roomMask[ni] && t !== Terrain.Floor && t !== Terrain.Door) 
             break;
@@ -359,8 +343,8 @@ function joinDisjointRegions(level: LevelInfo, colMin: number, colMax: number): 
         }
 
         // Scan down
-        for (let y2 = y + 1; y2 < H - 1; y2++) {
-          const ni = y2 * W + x;
+        for (let y2 = y + 1; y2 < MAP_ROWS - 1; y2++) {
+          const ni = y2 * MAP_WIDTH + x;
           const t = level.map[`${x},${y2}`];
           if (level.roomMask[ni] && t !== Terrain.Floor && t !== Terrain.Door) 
             break;
