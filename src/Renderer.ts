@@ -147,18 +147,21 @@ export class Renderer {
       this.display.draw(col++, 0, ch, "#009d4a", "#111");
     }
     let colour, s;
-    if (gs.player.securityClearance == 5) {
+    if (gs.player.securityClearance === 5) {
       colour = "#600088";
       s = "violet";
-    } else if (gs.player.securityClearance == 4) {
+    } else if (gs.player.securityClearance === 4) {
       colour = "#008ac5";
       s = "blue";
-    } else if (gs.player.securityClearance == 3) {
+    } else if (gs.player.securityClearance === 3) {
       colour = "#0aff52";
       s = "green";
-    } else if (gs.player.securityClearance == 2) {
+    } else if (gs.player.securityClearance === 2) {
       colour = "#f9d071";
       s = "yellow";
+    } else if (gs.player.securityClearance === 1) {
+      colour = "#ff004e";
+      s = "red";
     } else {
       colour = "#4e6ea8";
       s = "none";
