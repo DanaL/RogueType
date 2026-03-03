@@ -157,10 +157,10 @@ export class RobotHackController extends InputController {
   private excerpt: string = "";
   private popup: RobotHackPopup;
   private progressPerMs: number;
-  private onComplete: () => void;
+  private onComplete: (success: boolean) => void;
   private done: boolean = false;
 
-  constructor(game: Game, gs: GameState, robot: Robot, popup: RobotHackPopup, onComplete: () => void) {
+  constructor(game: Game, gs: GameState, robot: Robot, popup: RobotHackPopup, onComplete: (success: boolean) => void) {
     super();
     this.game = game;
     this.gs = gs;
@@ -211,16 +211,11 @@ export class RobotHackController extends InputController {
 
     if (this.gs.player.currFirewall <= 0) {
       this.endHack();
-      const popup = new Popup("", "\nYou have been expunged.", 5, 10, 35);
-      this.game.pushPopup(popup);
-      this.game.pushInputController(new InfoPopupController(this.game, () => this.onComplete()));
+      this.onComplete(false);
+      
     } else if (this.robot.currFirewall <= 0) {
       this.endHack();
-      // Stub: robot control menu
-      const popup = new Popup("", `\n${this.robot.name} has been hacked.\n\n[Robot control menu - stub]`, 5, 10, 35);
-      this.game.pushPopup(popup);
-      this.game.pushInputController(new InfoPopupController(this.game, () => this.onComplete()));
-
+      this.onComplete(true);
     } else {
       // New round
       this.setExcerpt();
