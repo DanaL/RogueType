@@ -23,14 +23,16 @@ export abstract class Actor {
     this.colour = colour;
   }
 
-  protected randomMove(gs: GameState): void {
+  protected randomMove(gs: GameState): boolean {
     const dirs: [number, number][] = [[0, -1], [0, 1], [1, 0], [-1, 0]];
     const [dx, dy] = dirs[Math.floor(ROT.RNG.getUniform() * 4)];
     
     const terrain = gs.maps[gs.currLevel][`${this.x + dx},${this.y + dy}`];
     if (TERRAIN_DEF[terrain].walkable) {
-      gs.tryMove(dx, dy, null, this);
+      return gs.tryMove(dx, dy, null, this);
     }
+
+    return false;
   }
 
   abstract act(): Promise<void>;
@@ -65,7 +67,9 @@ export class Roomba extends Actor {
   }
 
   act(): Promise<void> {
-    this.randomMove(this.gs);
+    if (!this.randomMove(this.gs) && this.gs.visible[`${this.level},${this.x},${this.y}`]) {
+      this.gs.addMessage("The roomba beeps.");
+    }
 
     return Promise.resolve();
   }

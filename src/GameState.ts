@@ -81,33 +81,49 @@ export class GameState {
     }
   }
 
-  tryMove(dx: number, dy: number, game: Game | null, actor: Actor): void {
+  tryMove(dx: number, dy: number, game: Game | null, actor: Actor): boolean {
     const nx = actor.x + dx;
     const ny = actor.y + dy;
     const key = `${nx},${ny}`;
     const terrain = this.maps[this.currLevel][key];
+    const isPlayer = actor instanceof Player;
 
     if (terrain === undefined || !TERRAIN_DEF[terrain].walkable) {
-      if (actor instanceof Player)
+      if (isPlayer)
         this.addMessage("You cannot go that way!");
-      return;
+      return false;
     } else if (actor instanceof Player && terrain == Terrain.LiftDown) {
       this.stepOnLift(nx, ny, game);
-      return;
-      
+      return true;      
+    } else if (this.occupied(nx, ny)) {
+      if (isPlayer) {
+        this.addMessage("There's someone in your way.");
+        // we'll handle the attempt to hack a robot here
+      }
+
+      return false;
     }
 
     actor.x = nx;
     actor.y = ny;
   
-    if (this.devices[this.currLevel][key]) {
+    if (isPlayer && this.devices[this.currLevel][key]) {
       this.handleDevice(actor, this.devices[this.currLevel][key])
     }
-    // else if (this.occupied(nx, ny)) {
-    //   if (actor instanceof Player)
-    //     this.addMessage("There's someone in your way!");
-    //   return;
-    // } 
+
+    return true;
+  }
+
+  occupied(x: number, y: number): boolean {
+    if (this.player.x === x && this.player.y === y)
+      return true;
+
+    for (const robot of this.robots) {
+      if (robot.level === this.currLevel && robot.x === x && robot.y === y)
+        return true;
+    }
+
+    return false;
   }
 
   private stepOnLift(dx: number, dy: number, game: Game | null): void {
