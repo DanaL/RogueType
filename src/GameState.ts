@@ -182,7 +182,9 @@ export class GameState {
     const popup = new RobotHackPopup(robot.name, robot.currFirewall, robot.maxFirewall, 2, 1);
     const controller = new RobotHackController(this.game, this, robot, popup, (success) => {
       if (success) {
-        const popup = new Popup("", `\n${robot.name} has been hacked.\n\n[Robot control menu - stub]`, 5, 10, 35);
+        const msg = `You have taken control of the ${robot.name}.`;
+        const popup = new Popup("", msg, 5, 10, 35);
+        this.addMessage(msg);
         this.game.pushPopup(popup);
         this.game.pushInputController(new InfoPopupController(this.game));
 
@@ -206,8 +208,6 @@ export class GameState {
         this.player.hackedRobot = robot;
         this.player.currRobotId = robot.id;
         this.player.securityClearance = robot.securityClearance;
-
-        //this.game.pushInputController(new InfoPopupController(this.game, () => this.onComplete()));
       } else {
         const popup = new Popup("", "\nYou have been expunged.", 5, 10, 35);
         this.game.pushPopup(popup);
