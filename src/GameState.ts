@@ -206,6 +206,7 @@ export class GameState {
         this.player.currHull = robot.currHull;
         this.player.maxFirewall = robot.maxFirewall;
         this.player.currFirewall = Math.round(robot.maxFirewall / 3);
+        this.player.hackedRobot = robot;
         this.player.currRobotId = robot.id;
         this.player.securityClearance = robot.securityClearance;
 

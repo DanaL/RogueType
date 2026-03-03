@@ -54,7 +54,7 @@ export function setupWorld(game: Game): void {
   game.gs.player.currHull = 5;
   game.scheduler.add(game.gs.player, true);
   
-  let burritoBot = new BasicBot('burrito bot', "Corpo food delivery bot. Its chassis is battered and grafitti-ed.", 'b', '#005260', 0, 0);
+  let burritoBot = new BasicBot('burrito bot', "Corpo food delivery bot. Its chassis is battered and grafitti-ed.", 'b', '#005260', 0, 0, game.gs);
   burritoBot.maxFirewall = 10;
   burritoBot.currFirewall = 10;
   burritoBot.maxHull = 5;
