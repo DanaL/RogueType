@@ -3,6 +3,8 @@ import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
 
 export abstract class Actor {
+  name: string = "";
+  desc: string = "";
   x: number;
   y: number;
   level: number = 0; // level as in dungeon level, not an expression of power
@@ -51,8 +53,6 @@ export class Player extends Actor {
 }
 
 export class Roomba extends Actor {
-  name: string;
-  desc: string;
   private readonly gs: GameState;
 
   constructor(x: number, y: number, gs: GameState) {

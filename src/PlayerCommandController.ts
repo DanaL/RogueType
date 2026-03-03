@@ -3,7 +3,7 @@ import { Game } from "./Game";
 import type { Examinable } from "./ExamineController";
 import { ExamineController } from "./ExamineController";
 import { Terrain } from "./Terrain";
-import { indefArticle, MOVE_KEYS } from "./Utils";
+import { capitalize, indefArticle, MOVE_KEYS } from "./Utils";
 
 export class PlayerCommandController extends InputController {
   private game: Game;
@@ -36,6 +36,14 @@ export class PlayerCommandController extends InputController {
           case Terrain.LiftUp:
             targets.push({ x, y, name: "Up Elevator", desc: "For security reasons, elevators in the Facility only go between two floors each." });
             break;
+        }
+      }
+
+      for (const robot of gs.robots) {
+        const key = `${robot.level},${robot.x},${robot.y}`;
+        if (gs.visible[key]) {
+          const n = capitalize(indefArticle(robot.name));
+          targets.push({ x: robot.x, y: robot.y, name: n, desc: robot.desc})
         }
       }
 

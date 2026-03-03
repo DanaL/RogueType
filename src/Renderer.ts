@@ -89,14 +89,17 @@ export class Renderer {
     for (const robot of gs.robots) {
       if (robot.level !== gs.currLevel)
         continue;
-      
-      const key = `${robot.level},${robot.x},${robot.y}`;
-      if (gs.visible[key]) {
+
+      const coord = `${robot.x},${robot.y}`;
+      const vkey = `${robot.level},${coord}`;
+      if (gs.visible[vkey]) {
         const sx = robot.x - camX;
         const sy = robot.y - camY;
         if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH)
           continue;
-        cells[`${robot.x},${robot.y}`] = { glyph: robot.ch, fg: robot.colour, bg: "#000", sx: sx, sy: sy};
+        const fg = coord == gs.highlightedLoc ? "#fff" : robot.colour;
+        const bg = coord == gs.highlightedLoc ? "#ff5cff" : "#000";
+        cells[`${robot.x},${robot.y}`] = { glyph: robot.ch, fg: fg, bg: bg, sx: sx, sy: sy};
       }
     }
 
