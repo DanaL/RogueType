@@ -81,19 +81,15 @@ export class GameState {
       if (actor instanceof Player)
         this.addMessage("You cannot go that way!");
       return;
-    } else if (terrain == Terrain.LiftDown && !this.downLifts[this.currLevel]) {
-      const msg = "The lift is currently disabled."
-      this.addMessage(msg);
-      game?.pushPopup(new Popup("", "\n" + msg, 3, 10, 31));
-      game?.pushInputController(new InfoPopupController(game));
-    } else if (terrain == Terrain.LiftDown && this.downLifts[this.currLevel]) {
-      this.takeLiftDown();
-    }
-    else {
-      actor.x = nx;
-      actor.y = ny;
+    } else if (actor instanceof Player && terrain == Terrain.LiftDown) {
+      this.stepOnLift(nx, ny, game);
+      return;
+      
     }
     
+    actor.x = nx;
+    actor.y = ny;
+  
     if (this.devices[this.currLevel][key]) {
       this.handleDevice(actor, this.devices[this.currLevel][key])
     }
@@ -102,6 +98,25 @@ export class GameState {
     //     this.addMessage("There's someone in your way!");
     //   return;
     // } 
+  }
+
+  private stepOnLift(dx: number, dy: number, game: Game | null): void {
+    this.player.x = dx;
+    this.player.y = dy;
+
+    if (!this.downLifts[this.currLevel]) {
+      const msg = "The lift is currently disabled."
+      this.addMessage(msg);
+      game?.pushPopup(new Popup("", "\n" + msg, 3, 10, 31));
+      game?.pushInputController(new InfoPopupController(game));
+    } else if (this.player.securityClearance < 1) {
+      const msg = "You do not have sufficient security access to use an elevator.";
+      this.addMessage(msg);
+      game?.pushPopup(new Popup("", "\n" + msg, 3, 10, 31));
+      game?.pushInputController(new InfoPopupController(game));
+    } else {
+      this.takeLiftDown();
+    }    
   }
 
   private handleDevice(_actor: Actor, device: Device): void {
