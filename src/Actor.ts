@@ -81,9 +81,10 @@ export class Roomba extends Robot {
     this.gs = gs;
     this.maxHull = 3;
     this.currHull = 3;
-    this.currFirewall = 6;
-    this.maxFirewall = 6;
-    this.accuracy = 0.75;
+    this.currFirewall = 5;
+    this.maxFirewall = 5;
+    this.accuracy = 0.80;
+    this.securityClearance = 1;
   }
 
   act(): Promise<void> {

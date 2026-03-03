@@ -185,6 +185,30 @@ export class GameState {
         const popup = new Popup("", `\n${robot.name} has been hacked.\n\n[Robot control menu - stub]`, 5, 10, 35);
         this.game.pushPopup(popup);
         this.game.pushInputController(new InfoPopupController(this.game));
+
+        this.game.scheduler.remove(robot);
+        this.robots = this.robots.filter(r => r !== robot);
+
+        if (this.player.hackedRobot) {
+          let prevRobot = this.player.hackedRobot;
+          prevRobot.x = this.player.x;
+          prevRobot.y = this.player.y;
+          prevRobot.level = this.currLevel;
+          this.robots.push(prevRobot);
+          this.game.scheduler.add(prevRobot, true);
+        }
+        
+        this.player.x = robot.x;
+        this.player.y = robot.y;
+        this.player.ch = robot.ch;
+        this.player.colour = robot.colour;
+        this.player.maxHull = robot.maxHull;
+        this.player.currHull = robot.currHull;
+        this.player.maxFirewall = robot.maxFirewall;
+        this.player.currFirewall = Math.round(robot.maxFirewall / 3);
+        this.player.currRobotId = robot.id;
+        this.player.securityClearance = robot.securityClearance;
+
         //this.game.pushInputController(new InfoPopupController(this.game, () => this.onComplete()));
       } else {
         const popup = new Popup("", "\nYou have been expunged.", 5, 10, 35);

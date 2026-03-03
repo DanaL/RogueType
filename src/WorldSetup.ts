@@ -64,6 +64,7 @@ export function setupWorld(game: Game): void {
   burritoBot.currFirewall = 10;
   burritoBot.maxHull = 5;
   burritoBot.currFirewall = 5;
+  burritoBot.securityClearance = 0;
   game.gs.player.hackedRobot = burritoBot;
 
   const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);
