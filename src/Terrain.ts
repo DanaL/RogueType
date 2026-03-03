@@ -18,7 +18,7 @@ interface TerrainDef {
 
 const TERRAIN_DEF: Record<TerrainType, TerrainDef> = {
   [Terrain.Floor]: { glyph: '.', fg: '#646365', walkable: true, opaque: false },
-  [Terrain.Wall]:  { glyph: '▓', fg: '#646365', walkable: false, opaque: true },
+  [Terrain.Wall]:  { glyph: '#', fg: '#646365', walkable: false, opaque: true },
   [Terrain.Gate]: { glyph: 'ǁ', fg: '#add4fa', walkable: true, opaque: false },
   [Terrain.LiftDown]: { glyph: '>', fg: '#add4fa', walkable: true, opaque: false },
   [Terrain.LiftUp]: { glyph: '<', fg: '#add4fa', walkable: true, opaque: false },
