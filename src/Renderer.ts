@@ -142,6 +142,31 @@ export class Renderer {
       this.display.draw(col++, 0, '=', "#4e6ea8","#111");
     }
 
+    col += 2;
+    for (const ch of "access: ") {
+      this.display.draw(col++, 0, ch, "#009d4a", "#111");
+    }
+    let colour, s;
+    if (gs.player.securityClearance == 5) {
+      colour = "#600088";
+      s = "violet";
+    } else if (gs.player.securityClearance == 4) {
+      colour = "#008ac5";
+      s = "blue";
+    } else if (gs.player.securityClearance == 3) {
+      colour = "#0aff52";
+      s = "green";
+    } else if (gs.player.securityClearance == 2) {
+      colour = "#f9d071";
+      s = "yellow";
+    } else {
+      colour = "#4e6ea8";
+      s = "none";
+    }
+    for (const ch of s) {
+      this.display.draw(col++, 0, ch, colour, "#111");
+    }
+
     // Write message log
     const msgColors = ["#444", "#777", "#bbb"]; // oldest → newest
     const msgStartY = this.height - 3;
