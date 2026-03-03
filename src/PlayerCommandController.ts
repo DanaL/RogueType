@@ -4,6 +4,7 @@ import type { Examinable } from "./ExamineController";
 import { ExamineController } from "./ExamineController";
 import { Terrain } from "./Terrain";
 import { capitalize, indefArticle, MOVE_KEYS, ActionResult } from "./Utils";
+import { SWManagementController } from "./SWManagementController";
 
 export class PlayerCommandController extends InputController {
   private game: Game;
@@ -52,6 +53,12 @@ export class PlayerCommandController extends InputController {
       } else {
         gs.addMessage("There is nothing interesting to examine.");
       }
+      return;
+    }
+    else if (e.key === "m") {
+      const swm = new SWManagementController(this.game.gs, this.game);
+      this.game.pushInputController(swm);
+      
       return;
     }
 

@@ -25,6 +25,10 @@ export class Renderer {
     this.display.draw(col, row, ch, fg, bg);
   }
 
+  drawInverted(row: number, col: number, ch: string, fg: string, bg: string): void {
+    this.display.draw(col, row, ch, fg, bg);
+  }
+
   drawText(row: number, col: number, txt: string, fg: string, bg: string): void {
     this.display.draw(col, row, txt, fg, bg);
   }

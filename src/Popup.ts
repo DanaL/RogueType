@@ -83,7 +83,8 @@ export class Popup {
       }
 
       for (const ch of token.text) {
-        renderer.drawChar(row, col++, ch, token.colour, "#000");
+        ch === '█' ? renderer.drawChar(row, col++, ' ', token.colour, token.colour)
+                   : renderer.drawChar(row, col++, ch, token.colour, "#000");        
       }
     }
     this.closeContentRow(renderer, row++, col);
