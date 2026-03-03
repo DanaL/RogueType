@@ -1,10 +1,9 @@
 import * as ROT from "rot-js";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
+import { ActionResult, ICELevel } from "./Utils";
 
 export abstract class Actor {
-  name: string = "";
-  desc: string = "";
   x: number;
   y: number;
   level: number = 0; // level as in dungeon level, not an expression of power
@@ -23,7 +22,7 @@ export abstract class Actor {
     this.colour = colour;
   }
 
-  protected randomMove(gs: GameState): boolean {
+  protected randomMove(gs: GameState): ActionResult {
     const dirs: [number, number][] = [[0, -1], [0, 1], [1, 0], [-1, 0]];
     const [dx, dy] = dirs[Math.floor(ROT.RNG.getUniform() * 4)];
     
@@ -32,7 +31,7 @@ export abstract class Actor {
       return gs.tryMove(dx, dy, null, this);
     }
 
-    return false;
+    return ActionResult.Failure;
   }
 
   abstract act(): Promise<void>;
@@ -54,7 +53,14 @@ export class Player extends Actor {
   }
 }
 
-export class Roomba extends Actor {
+export abstract class Robot extends Actor {
+  name: string = "";
+  desc: string = "";
+  accuracy: number = 0.0;
+  ice = ICELevel.Weak;
+}
+
+export class Roomba extends Robot {
   private readonly gs: GameState;
 
   constructor(x: number, y: number, gs: GameState) {
@@ -64,10 +70,15 @@ export class Roomba extends Actor {
     this.x = x;
     this.y = y;
     this.gs = gs;
+    this.maxHull = 3;
+    this.currHull = 3;
+    this.currFirewall = 6;
+    this.maxFirewall = 6;
+    this.accuracy = 0.75;
   }
 
   act(): Promise<void> {
-    if (!this.randomMove(this.gs) && this.gs.visible[`${this.level},${this.x},${this.y}`]) {
+    if (this.randomMove(this.gs) === ActionResult.Failure && this.gs.visible[`${this.level},${this.x},${this.y}`]) {
       this.gs.addMessage("The roomba beeps.");
     }
 

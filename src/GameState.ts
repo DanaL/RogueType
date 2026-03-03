@@ -1,13 +1,14 @@
 import * as ROT from "rot-js";
-import { Actor, Player } from "./Actor";
+import { Actor, Player, Robot } from "./Actor";
 import { Device, Terminal } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
 import { InfoPopupController, YesNoController } from "./InputController";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { randomTextExcerptSync, NUM_LVLS } from "./Utils";
+import { randomTextExcerptSync, NUM_LVLS, ActionResult } from "./Utils";
 import { TypingTestPopup, TypingTestController } from "./TypingTest";
+import { RobotHackPopup, RobotHackController } from "./RobotHack";
 import { TerminalController } from "./Terminal";
 
 export class GameState {
@@ -22,7 +23,7 @@ export class GameState {
   visible: Record<string, boolean> = {};
   explored: Record<string, boolean> = {};
   downLifts: boolean[] = Array(NUM_LVLS).fill(false);
-  robots: Actor[] = [];
+  robots: Robot[] = [];
 
   highlightedLoc: string = "";
   isAnimating: boolean = false;
@@ -58,7 +59,7 @@ export class GameState {
     });
   }
 
-  public addRobot(robot: Actor, level: number, x: number, y: number): void {
+  public addRobot(robot: Robot, level: number, x: number, y: number): void {
     robot.level = level;
     robot.x = x;
     robot.y = y;
@@ -81,39 +82,6 @@ export class GameState {
     }
   }
 
-  tryMove(dx: number, dy: number, game: Game | null, actor: Actor): boolean {
-    const nx = actor.x + dx;
-    const ny = actor.y + dy;
-    const key = `${nx},${ny}`;
-    const terrain = this.maps[this.currLevel][key];
-    const isPlayer = actor instanceof Player;
-
-    if (terrain === undefined || !TERRAIN_DEF[terrain].walkable) {
-      if (isPlayer)
-        this.addMessage("You cannot go that way!");
-      return false;
-    } else if (actor instanceof Player && terrain == Terrain.LiftDown) {
-      this.stepOnLift(nx, ny, game);
-      return true;      
-    } else if (this.occupied(nx, ny)) {
-      if (isPlayer) {
-        this.addMessage("There's someone in your way.");
-        // we'll handle the attempt to hack a robot here
-      }
-
-      return false;
-    }
-
-    actor.x = nx;
-    actor.y = ny;
-  
-    if (isPlayer && this.devices[this.currLevel][key]) {
-      this.handleDevice(actor, this.devices[this.currLevel][key])
-    }
-
-    return true;
-  }
-
   occupied(x: number, y: number): boolean {
     if (this.player.x === x && this.player.y === y)
       return true;
@@ -124,6 +92,55 @@ export class GameState {
     }
 
     return false;
+  }
+
+  tryMove(dx: number, dy: number, game: Game | null, actor: Actor): ActionResult {
+    const nx = actor.x + dx;
+    const ny = actor.y + dy;
+    const key = `${nx},${ny}`;
+    const terrain = this.maps[this.currLevel][key];
+    const isPlayer = actor instanceof Player;
+
+    if (terrain === undefined || !TERRAIN_DEF[terrain].walkable) {
+      if (isPlayer)
+        this.addMessage("You cannot go that way!");
+      return ActionResult.Failure;
+    } else if (actor instanceof Player && terrain == Terrain.LiftDown) {
+      this.stepOnLift(nx, ny, game);
+      return ActionResult.Success;
+    } else if (this.occupied(nx, ny)) {
+      if (isPlayer && this.bumpIntoRobot(nx, ny))
+        return ActionResult.Pending;
+      return ActionResult.Failure;
+    }
+
+    actor.x = nx;
+    actor.y = ny;
+
+    if (isPlayer && this.devices[this.currLevel][key]) {
+      if (this.handleDevice(this.devices[this.currLevel][key]))
+        return ActionResult.Pending;
+    }
+
+    return ActionResult.Success;
+  }
+
+  private bumpIntoRobot(x: number, y: number): boolean {
+    const robot = this.robots.find(a => a.level === this.currLevel && a.x === x && a.y === y) ?? null;
+
+    if (!robot) return false;
+
+    this.game.pushPopup(new YesNoPopup("", `\nAttempt to hack ${robot.name}`, 5, 10, 30));
+    this.game.pushInputController(new YesNoController(this.game, (yes) => {
+      if (yes) {
+        this.startRobotHack(robot);
+      } else {
+        this.computeFov();
+        this.player.endTurn();
+      }
+    }));
+
+    return true;
   }
 
   private stepOnLift(dx: number, dy: number, game: Game | null): void {
@@ -145,14 +162,32 @@ export class GameState {
     }    
   }
 
-  private handleDevice(_actor: Actor, device: Device): void {
+  private handleDevice(device: Device): boolean {
     if (device instanceof Terminal) {
       this.game.pushPopup(new YesNoPopup("", "\nAccess terminal?", 5, 10, 30));
       this.game.pushInputController(new YesNoController(this.game, (yes) => {
-        if (yes) 
+        if (yes)
           this.startTerminalHack(device);
+        else {
+          this.computeFov();
+          this.player.endTurn();
+        }
       }));
+      return true;
     }
+    return false;
+  }
+
+  private startRobotHack(robot: Robot): void {
+    const excerpt = randomTextExcerptSync(Math.round(this.game.wpm / 4));
+    const popup = new RobotHackPopup(robot.name, robot.currFirewall, robot.maxFirewall, 2, 1);
+    const controller = new RobotHackController(this.game, this, robot, popup, () => {
+      this.computeFov();
+      this.player.endTurn();
+    });
+
+    this.game.pushPopup(popup);
+    this.game.pushInputController(controller);
   }
 
   private startTerminalHack(device: Terminal): void {
@@ -165,6 +200,8 @@ export class GameState {
       } else {
         device.accessFailures++;
         this.player.currFirewall = Math.max(0, this.player.currFirewall - 1);
+        this.computeFov();
+        this.player.endTurn();
       }
     });
 

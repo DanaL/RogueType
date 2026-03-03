@@ -3,7 +3,7 @@ import { Game } from "./Game";
 import type { Examinable } from "./ExamineController";
 import { ExamineController } from "./ExamineController";
 import { Terrain } from "./Terrain";
-import { capitalize, indefArticle, MOVE_KEYS } from "./Utils";
+import { capitalize, indefArticle, MOVE_KEYS, ActionResult } from "./Utils";
 
 export class PlayerCommandController extends InputController {
   private game: Game;
@@ -58,16 +58,14 @@ export class PlayerCommandController extends InputController {
     const dir = MOVE_KEYS[e.key];
     if (dir) {
       e.preventDefault();
-      this.game.gs.tryMove(dir[0], dir[1], this.game, this.game.gs.player);
+      const result = this.game.gs.tryMove(dir[0], dir[1], this.game, this.game.gs.player);
       this.game.gs.computeFov();
-      this.game.gs.player.endTurn();
+      if (result !== ActionResult.Pending)
+        this.game.gs.player.endTurn();
     } else if (e.key == ' ' || e.key == '.') {
       // A pass action
       this.game.gs.computeFov();
       this.game.gs.player.endTurn();
     }
-
-    this.game.gs.computeFov();
-    this.game.gs.player.endTurn();
   }
 }
