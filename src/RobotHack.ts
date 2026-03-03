@@ -1,7 +1,7 @@
 import { Game } from "./Game";
 import { GameState } from "./GameState";
 import { Robot } from "./Actor";
-import { InputController, InfoPopupController } from "./InputController";
+import { InputController } from "./InputController";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
 import { randomTextExcerptSync } from "./Utils";
