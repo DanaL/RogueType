@@ -51,10 +51,21 @@ export function setupWorld(game: Game): void {
   game.gs.player = new Player(44, 16, 'b', "#005260");
   game.gs.player.maxFirewall = 10;
   game.gs.player.currFirewall = 10;
-  game.gs.player.maxHull = 10;
-  game.gs.player.currHull = 10;
+  game.gs.player.maxHull = 5;
+  game.gs.player.currHull = 5;
   game.scheduler.add(game.gs.player, true);
   
+  let burritoBot = new Roomba(0, 0, game.gs);
+  burritoBot.name = 'burrito bot';
+  burritoBot.desc = "Corpo food delivery bot. Its chassis is battered and grafitti-ed."
+  burritoBot.ch = 'b';
+  burritoBot.colour = '#005260';
+  burritoBot.maxFirewall = 10;
+  burritoBot.currFirewall = 10;
+  burritoBot.maxHull = 5;
+  burritoBot.currFirewall = 5;
+  game.gs.player.hackedRobot = burritoBot;
+
   const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);
   game.gs.maps.push(levelInfo.map);
 
