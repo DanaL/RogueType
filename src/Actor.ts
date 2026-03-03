@@ -69,6 +69,18 @@ export abstract class Robot extends Actor {
   }
 }
 
+export class BasicBot extends Robot {  
+  constructor(name: string, desc: string, ch: string, colour: string, x: number, y: number) {    
+    super(x, y, ch, colour);
+    this.name = name;
+    this.desc = desc;
+  }
+
+  act(): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
 export class Roomba extends Robot {
   private readonly gs: GameState;
 

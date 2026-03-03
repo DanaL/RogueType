@@ -1,6 +1,6 @@
 import { DataFile, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
-import { Player, Roomba } from "./Actor";
+import { BasicBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH } from "./Utils";
 import { generateMap } from "./LevelGen";
@@ -54,16 +54,11 @@ export function setupWorld(game: Game): void {
   game.gs.player.currHull = 5;
   game.scheduler.add(game.gs.player, true);
   
-  let burritoBot = new Roomba(0, 0, game.gs);
-  burritoBot.name = 'burrito bot';
-  burritoBot.desc = "Corpo food delivery bot. Its chassis is battered and grafitti-ed."
-  burritoBot.ch = 'b';
-  burritoBot.colour = '#005260';
+  let burritoBot = new BasicBot('burrito bot', "Corpo food delivery bot. Its chassis is battered and grafitti-ed.", 'b', '#005260', 0, 0);
   burritoBot.maxFirewall = 10;
   burritoBot.currFirewall = 10;
   burritoBot.maxHull = 5;
   burritoBot.currFirewall = 5;
-  burritoBot.securityClearance = 0;
   game.gs.player.hackedRobot = burritoBot;
 
   const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);
