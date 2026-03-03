@@ -53,21 +53,22 @@ export class Renderer {
         continue;
 
       const def = TERRAIN_DEF[gs.maps[gs.currLevel][key]];
+      const lvlKey = `${gs.currLevel},${key}`;
 
       if (key == gs.highlightedLoc) {
         const cell = { glyph: def.glyph, fg: "#fff", bg: "#ff5cff", sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
-      } else if (gs.visible[key]) {
+      } else if (gs.visible[lvlKey]) {
         const cell = { glyph: def.glyph, fg: def.fg, bg: null, sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
-      } else if (gs.explored[key]) {
+      } else if (gs.explored[lvlKey]) {
         const cell = { glyph: def.glyph, fg: "#222", bg: null, sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
       }
 
       if (gs.devices[gs.currLevel][key]) {
-        const visible = gs.visible[key];
-        const explored = gs.explored[key];
+        const visible = gs.visible[lvlKey];
+        const explored = gs.explored[lvlKey];
         if (!(visible || explored))
           continue;
 

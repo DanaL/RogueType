@@ -18,14 +18,14 @@ export class PlayerCommandController extends InputController {
       const { gs } = this.game;
       
       const targets: Examinable[] = Object.entries(gs.devices[gs.currLevel])
-        .filter(([key]) => gs.visible[key] || gs.explored[key])
+        .filter(([key]) => gs.visible[`${gs.currLevel},${key}`] || gs.explored[`${gs.currLevel},${key}`])
         .map(([key, device]) => {
           const [x, y] = key.split(',').map(Number);
           return { x, y, name: device.name, desc: device.desc };
         });
 
       for (const [key, terrain] of Object.entries(gs.maps[gs.currLevel])) {
-        if (!(gs.visible[key] || gs.explored[key]))
+        if (!(gs.visible[`${gs.currLevel},${key}`] || gs.explored[`${gs.currLevel},${key}`]))
           continue;
 
         const [x, y] = key.split(',').map(Number);

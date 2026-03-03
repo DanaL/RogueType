@@ -51,7 +51,7 @@ export class GameState {
 
     this.fov.compute(this.player.x, this.player.y, this.fovRadius, (x: number, y: number, _r: number, visibility: number) => {
       if (visibility) {
-        const key = `${x},${y}`;
+        const key = `${this.currLevel},${x},${y}`;
         this.visible[key] = true;
         this.explored[key] = true;
       }
