@@ -1,9 +1,8 @@
 import * as ROT from "rot-js";
-import { Actor } from "./Actor";
+import { Actor, Player } from "./Actor";
 import { Device, Terminal } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
-import { Player } from "./Player";
 import { InfoPopupController, YesNoController } from "./InputController";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
@@ -23,6 +22,7 @@ export class GameState {
   visible: Record<string, boolean> = {};
   explored: Record<string, boolean> = {};
   downLifts: boolean[] = Array(NUM_LVLS).fill(false);
+  robots: Actor[] = [];
 
   highlightedLoc: string = "";
   isAnimating: boolean = false;
@@ -58,6 +58,16 @@ export class GameState {
     });
   }
 
+  public addRobot(robot: Actor, level: number, x: number, y: number): void {
+    robot.level = level;
+    robot.x = x;
+    robot.y = y;
+
+    this.robots.push(robot);
+    if (level == this.currLevel)
+      this.game.scheduler.add(robot, true);
+  }
+
   private takeLiftDown(): void {
     ++this.currLevel;
     
@@ -86,7 +96,7 @@ export class GameState {
       return;
       
     }
-    
+
     actor.x = nx;
     actor.y = ny;
   

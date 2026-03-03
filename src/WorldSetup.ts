@@ -1,9 +1,10 @@
 import { DataFile, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
-import { Player } from "./Player";
+import { Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH } from "./Utils";
 import { generateMap } from "./LevelGen";
+import { Room } from "rot-js/lib/map/features";
 
 export function setupWorld(game: Game): void {
   let overworld: Record<string, TerrainType> = {};
@@ -52,7 +53,11 @@ export function setupWorld(game: Game): void {
   game.gs.player.currFirewall = 10;
   game.gs.player.maxHull = 10;
   game.gs.player.currHull = 10;
-
+  game.scheduler.add(game.gs.player, true);
+  
   const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);
   game.gs.maps.push(levelInfo.map);
+
+  const roomba = new Roomba(41, 19, game.gs);
+  game.gs.addRobot(roomba, 0, 41, 17);
 }

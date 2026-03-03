@@ -86,6 +86,20 @@ export class Renderer {
       } 
     }
 
+    for (const robot of gs.robots) {
+      if (robot.level !== gs.currLevel)
+        continue;
+      
+      const key = `${robot.level},${robot.x},${robot.y}`;
+      if (gs.visible[key]) {
+        const sx = robot.x - camX;
+        const sy = robot.y - camY;
+        if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH)
+          continue;
+        cells[`${robot.x},${robot.y}`] = { glyph: robot.ch, fg: robot.colour, bg: "#000", sx: sx, sy: sy};
+      }
+    }
+
     for (const cell of Object.values(cells)) {
       this.display.draw(cell.sx, cell.sy + this.MAP_Y, cell.glyph, cell.fg, cell.bg);
     }
