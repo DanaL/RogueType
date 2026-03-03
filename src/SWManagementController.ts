@@ -45,7 +45,7 @@ class SWManagementPopup extends Popup {
     let slot = 0;
         
     while (slot++ < capactiy) {
-      s += `[#4e6ea8 ${'█'.repeat(width)}]\n`;
+      s += `[#4e6ea8,#4e6ea8 ${'_'.repeat(width)}]\n`;
     }
 
     this.text = s;

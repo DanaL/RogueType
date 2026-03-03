@@ -1,5 +1,6 @@
 export interface Token {
   colour: string;
+  bgColour?: string;
   text: string;
 }
 
@@ -9,6 +10,7 @@ export class LineScanner {
   private start = 0;
   private current = 0;
   private currentColour: string;
+  private currentBgColour: string | undefined;
   private readonly defaultColour: string;
 
   constructor(source: string, defaultColour: string = "#009d4a") {
@@ -34,25 +36,26 @@ export class LineScanner {
         break;
       case ']':
         this.currentColour = this.defaultColour;
+        this.currentBgColour = undefined;
         break;
       case ' ':
         break; // spaces consumed; words include their trailing space
       case '\n':
-        this.tokens.push({ colour: this.currentColour, text: '\n' });
+        this.tokens.push({ colour: this.currentColour, bgColour: this.currentBgColour, text: '\n' });
         break;
       case '\t':
-        this.tokens.push({ colour: this.currentColour, text: '\t' });
+        this.tokens.push({ colour: this.currentColour, bgColour: this.currentBgColour, text: '\t' });
         break;
       case '\\':
         if (this.peek() === 'n') {
-          this.tokens.push({ colour: this.currentColour, text: '\n' });
+          this.tokens.push({ colour: this.currentColour, bgColour: this.currentBgColour, text: '\n' });
           this.advance();
         } else {
-          this.tokens.push({ colour: this.currentColour, text: c });
+          this.tokens.push({ colour: this.currentColour, bgColour: this.currentBgColour, text: c });
         }
         break;
       case '_':
-        this.tokens.push({ colour: this.currentColour, text: ' ' });
+        this.tokens.push({ colour: this.currentColour, bgColour: this.currentBgColour, text: ' ' });
         break;
       default:
         this.scanWord();
@@ -62,9 +65,19 @@ export class LineScanner {
 
   private scanColor(): void {
     this.start = this.current;
-    while (/[a-zA-Z0-9#]/.test(this.peek())) 
+    while (/[a-zA-Z0-9#]/.test(this.peek()))
       this.advance();
     this.currentColour = this.source.slice(this.start, this.current);
+
+    if (this.peek() === ',') {
+      this.advance(); // consume ','
+      this.start = this.current;
+      while (/[a-zA-Z0-9#]/.test(this.peek()))
+        this.advance();
+      this.currentBgColour = this.source.slice(this.start, this.current);
+    } else {
+      this.currentBgColour = undefined;
+    }
   }
 
   private scanWord(): void {
@@ -80,7 +93,7 @@ export class LineScanner {
     } else if (this.peek() === ']' && this.peekNext() === ' ') {
       word += ' ';
     }
-    this.tokens.push({ colour: this.currentColour, text: word });
+    this.tokens.push({ colour: this.currentColour, bgColour: this.currentBgColour, text: word });
   }
 
   private peek(): string {

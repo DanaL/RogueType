@@ -51,7 +51,7 @@ export class Popup {
 
     for (const token of titleTokens) {
       for (const ch of token.text) {
-        renderer.drawChar(row, col++, ch, token.colour, "#000");
+        renderer.drawChar(row, col++, ch, token.colour, token.bgColour ?? "#000");
       }
     }
 
@@ -83,8 +83,7 @@ export class Popup {
       }
 
       for (const ch of token.text) {
-        ch === '█' ? renderer.drawChar(row, col++, ' ', token.colour, token.colour)
-                   : renderer.drawChar(row, col++, ch, token.colour, "#000");        
+        renderer.drawChar(row, col++, ch, token.colour, token.bgColour ?? "#000");
       }
     }
     this.closeContentRow(renderer, row++, col);
@@ -112,7 +111,7 @@ export class Popup {
     let col = this.openContentRow(renderer, row);
     for (const token of tokens) {
       for (const ch of token.text) {
-        renderer.drawChar(row, col++, ch, token.colour, "#000");
+        renderer.drawChar(row, col++, ch, token.colour, token.bgColour ?? "#000");
       }
     }
     this.closeContentRow(renderer, row++, col);
