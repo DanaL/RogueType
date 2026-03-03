@@ -61,6 +61,7 @@ export function setupWorld(game: Game): void {
   burritoBot.software.push(new Software("Norton AntiVirus 414.10.13.14", SoftwareCategory.ICE, false, 1, 2));
   burritoBot.software.push(new Software("DW Move Protocal", SoftwareCategory.Behaviour, false, 1, 1));
   burritoBot.currFirewall = 10;
+  burritoBot.accuracy = 0.80;
   game.gs.player.hackedRobot = burritoBot;
 
   const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);
