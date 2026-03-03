@@ -118,7 +118,7 @@ export class Renderer {
     let col = 1;
     const hullRatio = gs.player.currHull / gs.player.maxHull;
     const hullBars = Math.round(20 * hullRatio);
-    for (const ch of "hull: ") {
+    for (const ch of "chassis: ") {
       this.display.draw(col++, 0, ch, "#009d4a", "#111");
     }
     let count = 0;
