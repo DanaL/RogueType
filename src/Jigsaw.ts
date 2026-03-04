@@ -34,12 +34,8 @@ export class JigsawController extends InputController {
   }
 
   handleInput(e: KeyboardEvent): void {
-    if (e.key === "Escape") {
-      this.game.popPopup();
-      this.game.popInputController();
-
-      return;
-    } else if (e.key === 's' || e.key === 'ArrowDown' || e.key === 'j') {  
+    
+    if (e.key === 's' || e.key === 'ArrowDown' || e.key === 'j') {  
       this.cursor = (this.cursor + 1) %  NUM_LINES;
     } else if (e.key === 'w' || e.key === 'ArrowUp' || e.key === 'k') {  
       this.cursor = this.cursor === 0 ? NUM_LINES - 1 : this.cursor - 1;
@@ -47,6 +43,13 @@ export class JigsawController extends InputController {
       this.placePiece();
     } else if (e.key === "Enter") {
       this.selectPiece();
+    } else if (e.key === "Escape" && this.selectedId !== -1) {
+      this.selectedId = -1;
+    } else if (e.key === "Escape") {
+      this.game.popPopup();
+      this.game.popInputController();
+
+      return;
     }
 
     this.popup.setText();
@@ -139,7 +142,7 @@ export class JigsawPopup extends Popup {
         const cursor = this.controller.cursor;
         let s: string = "";
         for (const c of selectedText) {
-          s += c === '.' ? "[#add4fa,#add4fa _]" : "[#222,#add4fa ▆]";            
+          s += c === '.' ? "[#222,#222 _]" : "[#f9d071,#222 ▆]";            
         }
         lines[cursor]= prefix(cursor) + s + "\n";
       }
