@@ -282,7 +282,8 @@ export class GameState {
 
   private startRobotHack(robot: Robot): void {
     const popup = new RobotHackPopup(robot.name, robot.currFirewall, robot.maxFirewall, 2, 1);
-    const controller = new RobotHackController(this.game, this, robot, popup, (success) => {
+    const wordCount = Math.round(this.game.wpm / 4);
+    const controller = new RobotHackController(this.game, this, robot, popup, wordCount, (success) => {
       if (success) {
         this.player.previousRobots.push(robot.id);
         const msg = `You have taken control of the ${robot.name}.`;
