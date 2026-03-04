@@ -69,7 +69,7 @@ export class GameState {
         gateOpen = false;
 
       if (!device.weighted && actorLocs.has(key) && this.visible[`${this.currLevel},${key}`]) {
-        this.addMessage("You here a click.");
+        this.addMessage("You hear a click.");
       }
       device.weighted = actorLocs.has(key);
     }
