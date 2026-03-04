@@ -73,7 +73,7 @@ export function setupWorld(game: Game): void {
   const roomba = new Roomba(41, 19, game.gs);
   game.gs.addRobot(roomba, 0, 41, 17);
 
-  const pwd = renderBitmap("AF5TD07");
+  const pwd = renderBitmap("AF5TD0");
 
   game.gs.player.jigsawPieces.push(pwd[0]);
   game.gs.player.jigsawPieces.push(pwd[2]);
