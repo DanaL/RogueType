@@ -66,6 +66,9 @@ export class PlayerCommandController extends InputController {
       this.game.pushInputController(vped);
 
       return;
+    } else if (e.key === "D") {
+      this.game.gs.disconnectCurrentRobot();
+      return;
     }
 
     const dir = MOVE_KEYS[e.key];

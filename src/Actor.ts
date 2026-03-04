@@ -57,7 +57,8 @@ export class Player extends Actor {
   hackedRobot: Robot | null = null;
   softwareArchive: Software[] = [];
   jigsawPieces: JigsawPiece[] = [];
-  
+  previousRobots: number[] = [];
+
   get maxHull(): number { return this.hackedRobot ? this.hackedRobot.maxHull : 0; }
   get currHull(): number { return this.hackedRobot ? this.hackedRobot.currHull : 0; }
   set currHull(val: number) {

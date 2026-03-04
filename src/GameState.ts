@@ -25,6 +25,8 @@ export class GameState {
   downLifts: boolean[] = Array(NUM_LVLS).fill(false);
   robots: Robot[] = [];
 
+  onRestart: (() => void) | null = null;
+
   highlightedLoc: string = "";
   isAnimating: boolean = false;
   fovRadius = 10;
@@ -171,6 +173,33 @@ export class GameState {
     return ActionResult.Success;
   }
 
+  private expunged() {
+    this.game.pushPopup(new Popup("","\n[#d93e48 U HAVE BEEN EXPUNGED]\n\n-- press any key to continue --", 10, 20, 40));
+    this.game.pushInputController(new InfoPopupController(this.game, this.onRestart));
+  }
+
+  private disconnect() {
+    if (this.player.previousRobots.length === 0) {
+      this.expunged();
+    }
+  }
+
+  disconnectCurrentRobot() {
+    let msg = "\ndisconnect from current remote host?";
+    if (this.player.previousRobots.length === 0) {
+      msg += "\n\n[#d93e48 * warning:] no previous host. u will be expunged."
+    }
+
+    this.game.pushPopup(new YesNoPopup("", msg, 5, 10, 50));
+    this.game.pushInputController(new YesNoController(this.game, (yes) => {
+      if (yes) {
+        this.disconnect();
+        this.computeFov();
+        this.player.endTurn();
+      }
+    }));
+  }
+
   private bumpIntoRobot(x: number, y: number): boolean {
     const robot = this.robots.find(a => a.level === this.currLevel && a.x === x && a.y === y) ?? null;
 
@@ -229,6 +258,7 @@ export class GameState {
     const popup = new RobotHackPopup(robot.name, robot.currFirewall, robot.maxFirewall, 2, 1);
     const controller = new RobotHackController(this.game, this, robot, popup, (success) => {
       if (success) {
+        this.player.previousRobots.push(robot.id);
         const msg = `You have taken control of the ${robot.name}.`;
         const popup = new Popup("", msg, 5, 10, 35);
         this.addMessage(msg);
