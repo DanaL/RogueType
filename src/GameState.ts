@@ -179,9 +179,24 @@ export class GameState {
   }
 
   private disconnect() {
-    if (this.player.previousRobots.length === 0) {
-      this.expunged();
+    do {
+      let robotId = this.player.previousRobots.pop() ?? -1;
+
+      if (robotId === -1) {
+        this.expunged();
+        return;
+      }
+
+      for (const robot of this.robots) {
+        if (robot.id === robotId) {
+          this.switchToRobot(robot);
+          this.currLevel = robot.level;
+          this.computeFov();
+          return;
+        }
+      }
     }
+    while (true);
   }
 
   disconnectCurrentRobot() {
@@ -265,26 +280,8 @@ export class GameState {
         this.game.pushPopup(popup);
         this.game.pushInputController(new InfoPopupController(this.game));
 
-        this.game.scheduler.remove(robot);
-        this.robots = this.robots.filter(r => r !== robot);
-
-        if (this.player.hackedRobot) {
-          let prevRobot = this.player.hackedRobot;
-          prevRobot.x = this.player.x;
-          prevRobot.y = this.player.y;
-          prevRobot.level = this.currLevel;
-          this.robots.push(prevRobot);
-          this.game.scheduler.add(prevRobot, true);
-        }
-        
-        this.player.x = robot.x;
-        this.player.y = robot.y;
-        this.player.ch = robot.ch;
-        this.player.colour = robot.colour;
+        this.switchToRobot(robot);    
         robot.currFirewall = Math.round(robot.maxFirewall / 3);
-        this.player.hackedRobot = robot;
-        this.player.currRobotId = robot.id;
-        this.player.securityClearance = robot.securityClearance;
       } else {
         const popup = new Popup("", "\nYou have been expunged.", 5, 10, 35);
         this.game.pushPopup(popup);
@@ -298,6 +295,30 @@ export class GameState {
 
     this.game.pushPopup(popup);
     this.game.pushInputController(controller);
+  }
+
+  private switchToRobot(robot: Robot): void {
+    this.game.scheduler.remove(robot);
+    this.robots = this.robots.filter(r => r !== robot);
+
+    if (this.player.hackedRobot) {
+      let prevRobot = this.player.hackedRobot;
+      prevRobot.x = this.player.x;
+      prevRobot.y = this.player.y;
+      prevRobot.level = this.currLevel;
+      this.robots.push(prevRobot);
+      this.game.scheduler.add(prevRobot, true);
+      this.player.previousRobots.push(prevRobot.id);
+    }
+       
+    this.player.level = robot.level;
+    this.player.x = robot.x;
+    this.player.y = robot.y;
+    this.player.ch = robot.ch;
+    this.player.colour = robot.colour;
+    this.player.hackedRobot = robot;
+    this.player.currRobotId = robot.id;
+    this.player.securityClearance = robot.securityClearance;
   }
 
   private startTerminalHack(device: Terminal): void {
