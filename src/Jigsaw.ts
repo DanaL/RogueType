@@ -18,12 +18,12 @@ const NUM_LINES: number = 25;
 
 export class JigsawController extends InputController {
   cursor: number = -1;
+  selectedId: number = -1;
 
   private player: Player;
   private game: Game;
   private popup: JigsawPopup;
-  private selectedId: number = -1;
-
+  
   constructor(p: Player, g: Game) {
     super();
     this.game = g;
@@ -43,15 +43,34 @@ export class JigsawController extends InputController {
       this.cursor = (this.cursor + 1) %  NUM_LINES;
     } else if (e.key === 'w' || e.key === 'ArrowUp' || e.key === 'k') {  
       this.cursor = this.cursor === 0 ? NUM_LINES - 1 : this.cursor - 1;
+    } else if (e.key === "Enter" && this.selectedId !== -1) {
+      this.placePiece();
+    } else if (e.key === "Enter") {
+      this.selectPiece();
     }
 
     this.popup.setText();
   }
+
+  private placePiece() {
+    const selectedPiece = this.player.jigsawPieces.find(p => p.id === this.selectedId);
+    if (selectedPiece) {
+      if (!this.player.jigsawPieces.some(p => p.row === this.cursor)) {
+        selectedPiece.row = this.cursor;
+        this.selectedId = -1;
+      }
+    }    
+  }
+
+  private selectPiece() {
+    for (const p of this.player.jigsawPieces) {
+      if (p.row === this.cursor)
+        this.selectedId = p.id;
+    }
+  }
 }
 
 export class JigsawPopup extends Popup {
-  selected: number = -1;
-  
   private player: Player;
   private controller: JigsawController;
 
@@ -70,7 +89,8 @@ export class JigsawPopup extends Popup {
     this.text = "select/deselect pieces with enter, use mv keys to sort\n\n";
 
     const lines: string[] = Array(NUM_LINES).fill("");
-
+    let selectedText = "";
+    let selectedRow = -1;
     if (this.player.jigsawPieces.length > 0) {
       let cursorDefault = 9999;
       let row = 24;
@@ -80,6 +100,11 @@ export class JigsawPopup extends Popup {
         if (row < cursorDefault)
           cursorDefault = row;
         row -= 2;
+
+        if (piece.id === this.controller.selectedId) {
+          selectedRow = row;
+          selectedText = piece.text;
+        }
       }
 
       for (const piece of this.player.jigsawPieces.filter(j => j.row !== -1)) {
@@ -87,24 +112,36 @@ export class JigsawPopup extends Popup {
         row = piece.row;
         if (row < cursorDefault)
           cursorDefault = row;
+        if (piece.id === this.controller.selectedId) {
+          selectedRow = row;
+          selectedText = piece.text;
+        }
       }
 
       if (this.controller.cursor === -1 && cursorDefault !== 9999) {
-        this.selected = cursorDefault;
         this.controller.cursor = cursorDefault;
       }
 
       for (let j = 0; j < NUM_LINES; j++) {
-        if (lines[j] === "") {
+        if (lines[j] === "" || j === selectedRow) {
           lines[j] = prefix(j) + `[#222,#222 ${'_'.repeat(48)}]`;          
-        } else {
+        } else if (j !== selectedRow) {
           let s: string = "";
           for (const c of lines[j]) {
-            s += c === '.' ? "[#222,#222 _]" : "[#fff,#222 ▆]";
+            s += c === '.' ? "[#222,#222 _]" : "[#fff,#222 ▆]";            
           }
           lines[j]= prefix(j) + s;
         }
         lines[j] += '\n';
+      }
+
+      if (selectedRow !== -1) {
+        const cursor = this.controller.cursor;
+        let s: string = "";
+        for (const c of selectedText) {
+          s += c === '.' ? "[#add4fa,#add4fa _]" : "[#222,#add4fa ▆]";            
+        }
+        lines[cursor]= prefix(cursor) + s + "\n";
       }
 
       lines[this.controller.cursor] = lines[this.controller.cursor];
