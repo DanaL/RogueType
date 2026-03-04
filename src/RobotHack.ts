@@ -215,13 +215,12 @@ export class RobotHackController extends InputController {
       this.gs.player.currFirewall = Math.max(0, this.gs.player.currFirewall - 5);
     }
 
-    if (this.gs.player.currFirewall <= 0) {
-      this.endHack();
-      this.onComplete(false);
-      
-    } else if (this.robot.currFirewall <= 0) {
+    if (this.robot.currFirewall <= 0) {
       this.endHack();
       this.onComplete(true);
+    } if (this.gs.player.currFirewall <= 0) {
+      this.endHack();
+      this.onComplete(false);
     } else {
       // New round
       this.setExcerpt();
