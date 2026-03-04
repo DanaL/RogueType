@@ -2,6 +2,7 @@ import { Game } from "./Game";
 import { InputController } from "./InputController";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
+import { SoftwareCategory } from "./Software";
 
 export class TypingTestController extends InputController {
   // 0 = in progress, 1 = success, 2 = failed
@@ -18,7 +19,13 @@ export class TypingTestController extends InputController {
   constructor(game: Game, timeLimitMS: number, text: string, popup: TypingTestPopup, onComplete: (success: boolean) => void) {
     super();
     this.game = game;
-    this.deadline = Date.now() + timeLimitMS;
+
+    // ice breaker software gets you a little more time in typing tests
+    const iceBreaker = game.gs.player.hackedRobot!.software
+      .filter(sw => sw.cat === SoftwareCategory.ICEBreaker)
+      .reduce((sum, sw) => sum + sw.level, 0);
+    this.deadline = Date.now() + timeLimitMS + 250 * iceBreaker;
+
     this.pos = text.startsWith("...") ? 3 : 0;
     this.endPos = text.endsWith("...") ? text.length - 3 : text.length;
     this.text = text;

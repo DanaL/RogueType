@@ -5,6 +5,7 @@ import { InputController } from "./InputController";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
 import { randomTextExcerptSync } from "./Utils";
+import { SoftwareCategory } from "./Software";
 
 const PANEL_WIDTH = 36;
 const SEP_WIDTH = 3;
@@ -172,8 +173,13 @@ export class RobotHackController extends InputController {
 
     const scale = ROBOT_WPM_SCALE[robot.ice] ?? 1.0;
     const robotWpm = game.wpm * scale;
+
+    const iceBreaker = gs.player.hackedRobot!.software
+      .filter(sw => sw.cat === SoftwareCategory.ICEBreaker)
+      .reduce((sum, sw) => sum + sw.level, 0);
+    const acc = robot.accuracy - (iceBreaker * 0.05);
     // Characters per ms, reduced by accuracy (mistakes cost extra time)
-    this.progressPerMs = (robotWpm * 5 / 60_000) * robot.accuracy;
+    this.progressPerMs = (robotWpm * 5 / 60_000) * acc;
   }
 
   handleInput(e: KeyboardEvent): void {

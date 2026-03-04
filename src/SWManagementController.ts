@@ -2,7 +2,6 @@ import { InputController } from "./InputController";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
 import type { GameState } from "./GameState";
-import { MAP_WIDTH } from "./Utils";
 import type { Player } from "./Actor";
 import { SoftwareCategory } from "./Software";
 
