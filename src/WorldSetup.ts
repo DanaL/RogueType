@@ -49,7 +49,7 @@ export function setupWorld(game: Game): void {
   terminal.addFile(new DataFile("kernel.c", "#include <\"stdio.h\">\n\nint main() {\n__printf(\"hello, world?\");\n\n__/* todo: write rest of kernel */\n\n__return 0;\n}"));
   game.gs.devices[0]["49,15"] = terminal;
 
-  game.gs.player = new Player(44, 16, 'b', "#005260");
+  game.gs.player = new Player(44, 16, 'b', "#005260", game.gs);
   game.gs.player.maxHull = 5;
   game.gs.player.currHull = 5;
   game.gs.player.softwareArchive.push(new Software("One-Sendai Ice-Cracker Jr. 0.2.11 beta", SoftwareCategory.ICEBreaker, false, 1, 2));
@@ -72,7 +72,7 @@ export function setupWorld(game: Game): void {
   const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);
   game.gs.maps.push(levelInfo.map);
   game.gs.devices[1] = levelInfo.devices;
-  
+
   game.gs.downLifts[0] = true;
   
   const roomba = new Roomba(41, 19, game.gs);

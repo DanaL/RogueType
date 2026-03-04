@@ -1,6 +1,6 @@
 import * as ROT from "rot-js";
 import { Actor, Player, Robot } from "./Actor";
-import { Device, Terminal } from "./Device";
+import { Device, Terminal, WeightTrigger } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
 import { InfoPopupController, YesNoController } from "./InputController";
@@ -44,6 +44,52 @@ export class GameState {
       const terrain = this.maps[this.currLevel][`${x},${y}`];
       return terrain !== undefined && !TERRAIN_DEF[terrain].opaque;
     });
+  }
+
+  postTurn(): void {
+    this.checkGateState();
+  }
+
+  private checkGateState() {
+    const actorLocs = new Set<string>([
+      ...this.robots
+        .filter(r => r.level === this.currLevel)
+        .map(r => `${r.x},${r.y}`)
+    ]);
+    actorLocs.add(`${this.player.x},${this.player.y}`);
+
+    let gateOpen = true;
+    for (const [key, device] of Object.entries(this.devices[this.currLevel])) {
+      if (!(device instanceof WeightTrigger))
+        continue;
+
+      if (!actorLocs.has(key))
+        gateOpen = false;
+
+      if (!device.weighted && actorLocs.has(key) && this.visible[`${this.currLevel},${key}`]) {
+        this.addMessage("You here a click.");
+      }
+      device.weighted = actorLocs.has(key);
+    }
+
+    let gateLoc = "";
+    let gate = -1;
+    for (const loc of Object.keys(this.maps[this.currLevel])) {
+      if (this.maps[this.currLevel][loc] === Terrain.Gate || this.maps[this.currLevel][loc] === Terrain.OpenGate) {
+        gateLoc = loc;
+        gate = this.maps[this.currLevel][loc];
+      }
+    }
+
+    if (gateOpen && gate === Terrain.Gate) {
+      this.maps[this.currLevel][gateLoc] = Terrain.OpenGate;
+      if (this.visible[`${this.currLevel},${gateLoc}`])
+        this.addMessage("You hear a pneumatic hiss.");
+    } else if (!gateOpen && gate === Terrain.OpenGate) {
+      this.maps[this.currLevel][gateLoc] = Terrain.Gate;
+      if (this.visible[`${this.currLevel},${gateLoc}`])
+        this.addMessage("You hear a pneumatic hiss.");
+    }
   }
 
   computeFov(): void {
@@ -117,8 +163,8 @@ export class GameState {
     actor.x = nx;
     actor.y = ny;
 
-    if (isPlayer && this.devices[this.currLevel][key]) {
-      if (this.handleDevice(this.devices[this.currLevel][key]))
+    if (this.devices[this.currLevel][key]) {
+      if (this.handleDevice(actor, this.devices[this.currLevel][key]))
         return ActionResult.Pending;
     }
 
@@ -162,8 +208,8 @@ export class GameState {
     }    
   }
 
-  private handleDevice(device: Device): boolean {
-    if (device instanceof Terminal) {
+  private handleDevice(actor: Actor, device: Device): boolean {
+    if (actor instanceof Player && device instanceof Terminal) {
       this.game.pushPopup(new YesNoPopup("", "\nAccess terminal?", 5, 10, 30));
       this.game.pushInputController(new YesNoController(this.game, (yes) => {
         if (yes)
@@ -174,7 +220,8 @@ export class GameState {
         }
       }));
       return true;
-    }
+    } 
+
     return false;
   }
 

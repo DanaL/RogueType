@@ -12,6 +12,8 @@ export abstract class Actor {
   ch: string;
   colour: string;
 
+  protected gs: GameState;
+
   abstract get maxHull(): number;
   abstract get currHull(): number;
   abstract set currHull(val: number);
@@ -23,11 +25,12 @@ export abstract class Actor {
   
   securityClearance: number = 0;
 
-  constructor(x: number, y: number, ch: string, colour: string) {
+  constructor(x: number, y: number, ch: string, colour: string, gs: GameState) {
     this.x = x;
     this.y = y;
     this.ch = ch;
     this.colour = colour;
+    this.gs = gs;
   }
 
   protected randomMove(gs: GameState): ActionResult {
@@ -42,10 +45,14 @@ export abstract class Actor {
     return ActionResult.Failure;
   }
 
+  endTurn(): void {
+    this.gs.postTurn();
+  }
+
   abstract act(): Promise<void>;
 }
 
-export class Player extends Actor {  
+export class Player extends Actor {
   currRobotId: number = 1;
   hackedRobot: Robot | null = null;
   softwareArchive: Software[] = [];
@@ -74,6 +81,7 @@ export class Player extends Actor {
 
   endTurn(): void {
     this._endTurn?.();
+    super.endTurn();
   }
 
   act(): Promise<void> {
@@ -110,12 +118,9 @@ export abstract class Robot extends Actor {
   get currFirewall() { return Math.min(this._currFirewall, this.maxFirewall) }
   set currFirewall(val: number) { this._currFirewall = Math.min(val, this.maxFirewall) }
   
-  protected gs: GameState
-
   constructor(x: number, y: number, ch: string, colour: string, gs: GameState) {
-    super(x, y, ch, colour);
+    super(x, y, ch, colour, gs);
     this.id = Robot.#nextId++;
-    this.gs = gs;
   }
 
   protected movement(gs: GameState): ActionResult {
@@ -137,7 +142,7 @@ export class BasicBot extends Robot {
 
   act(): Promise<void> {
     this.movement(this.gs);
-
+    this.endTurn();
     return Promise.resolve();
   }
 }
@@ -165,6 +170,7 @@ export class Roomba extends Robot {
       this.gs.addMessage("The roomba beeps.");
     }
 
+    this.endTurn();
     return Promise.resolve();
   }
 }
