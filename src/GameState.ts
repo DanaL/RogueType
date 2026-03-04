@@ -199,7 +199,7 @@ export class GameState {
     while (true);
   }
 
-  disconnectCurrentRobot() {
+  disconnectCurrentRobot(): void {
     let msg = "\ndisconnect from current remote host?";
     if (this.player.previousRobots.length === 0) {
       msg += "\n\n[#d93e48 * warning:] no previous host. u will be expunged."
@@ -211,6 +211,17 @@ export class GameState {
         this.disconnect();
         this.computeFov();
         this.player.endTurn();
+      }
+    }));
+  }
+
+  quit(): void {
+    let msg = "\nquit current run and restart?";
+    
+    this.game.pushPopup(new YesNoPopup("", msg, 5, 10, 50));
+    this.game.pushInputController(new YesNoController(this.game, (yes) => {
+      if (yes && this.onRestart) {
+        this.onRestart();
       }
     }));
   }
