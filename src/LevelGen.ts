@@ -4,11 +4,14 @@ import type { TerrainType } from "./Terrain";
 import { Device, WeightTrigger } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
-import { distance, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange } from "./Utils";
+import { distance, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
+import { Roomba } from "./Actor";
 
 export class LevelInfo {
   map: Record<string, TerrainType> = {};
   devices: Record<string, Device> = {};
+  arrivalSideLoc: string[] = [];
+  restrictedSideLoc: string[] = [];
   roomMask: Uint8Array;
   roomId: Int16Array;   // 0 = no room; positive = room index
 
@@ -22,6 +25,34 @@ export function buildLevel(gs: GameState, levelNum: number) {
   const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, levelNum);
   gs.maps.push(levelInfo.map);
   gs.devices[levelNum] = levelInfo.devices;
+
+  for (let i = 0; i < levelInfo.roomMask.length; i++) {
+    const y = Math.floor(i / MAP_WIDTH);
+    const x = i - y * MAP_WIDTH;
+    const k = `${x},${y}`;
+    const region = levelInfo.roomMask[i];
+    if (levelInfo.map[k] == Terrain.Floor && region == 2) {
+      levelInfo.arrivalSideLoc.push(k);
+    } else if (levelInfo.map[k] == Terrain.Floor && region == 3) {
+      levelInfo.restrictedSideLoc.push(k);
+    }
+  }
+
+  const used = new Set<string>();
+  for (let j = 0; j < 3; j++) {
+    for (let tries = 0; tries < 20; ++tries) {
+      const idx = rngRange(levelInfo.arrivalSideLoc.length);
+      const loc = levelInfo.arrivalSideLoc[idx];
+      if (used.has(loc))
+        continue;
+
+      const [x, y] = loc.split(',').map(Number);
+      const roomba = new Roomba(x, y, gs);
+      gs.addRobot(roomba, levelNum, x, y);
+      used.add(loc);
+      break;
+    }
+  }
 }
 
 function generateMap(h: number, w: number, levelNum: number): LevelInfo {
