@@ -101,7 +101,8 @@ export abstract class Robot extends Actor {
   software: Software[] = [];
   ice = ICELevel.Weak;
   memorySize = 0;
-
+  previouslyHacked = false;
+  
   protected _maxHull: number = 0;
   get maxHull() { return this._maxHull; }
   protected _currHull: number = 0;

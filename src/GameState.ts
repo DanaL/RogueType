@@ -291,7 +291,8 @@ export class GameState {
         this.game.pushPopup(popup);
         this.game.pushInputController(new InfoPopupController(this.game));
 
-        this.switchToRobot(robot);    
+        this.switchToRobot(robot);
+        robot.previouslyHacked = true;   
         robot.currFirewall = Math.round(robot.maxFirewall / 3);
       } else {
         const popup = new Popup("", "\nYou have been expunged.", 5, 10, 35);

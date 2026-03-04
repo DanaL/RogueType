@@ -166,7 +166,7 @@ export class RobotHackController extends InputController {
     this.game = game;
     this.gs = gs;
     this.robot = robot;
-    this.setExcerpt();
+    this.setExcerpt(this.robot.previouslyHacked);
     this.popup = popup;
     this.popup.resetForNewRound(this.excerpt);
     this.onComplete = onComplete;
@@ -223,14 +223,15 @@ export class RobotHackController extends InputController {
       this.onComplete(false);
     } else {
       // New round
-      this.setExcerpt();
+      this.setExcerpt(this.robot.previouslyHacked);
       this.popup.resetForNewRound(this.excerpt);
       this.done = false;
     }
   }
 
-  private setExcerpt(): void {
-    this.excerpt = randomTextExcerptSync(Math.round(this.game.wpm / 4));
+  private setExcerpt(previouslyHacked: boolean): void {
+    const len = previouslyHacked ? Math.round(this.game.wpm / 8) : Math.round(this.game.wpm / 4);
+    this.excerpt = randomTextExcerptSync(len);
   }
 
   private endHack(): void {
