@@ -1,4 +1,5 @@
 import * as ROT from "rot-js";
+import { JigsawPiece } from "./Jigsaw";
 
 export const ActionResult = { Success: 0, Failure: 1, Pending: 2 } as const;
 export type ActionResult = (typeof ActionResult)[keyof typeof ActionResult];
@@ -163,7 +164,7 @@ export async function warmFontCache(): Promise<void> {
 
 // Returns one string per row. Each character contributes 8 columns.
 // Unknown characters are silently skipped.
-export function renderBitmap(input: string): string[] {
+export function renderBitmap(input: string): JigsawPiece[] {
   const chars = [...input.toUpperCase()]
     .map(ch => petFont!.get(ch))
     .filter((rows): rows is string[] => rows !== undefined);
@@ -172,10 +173,13 @@ export function renderBitmap(input: string): string[] {
     return [];
 
   const rowCount = chars[0].length;
-  const result: string[] = [];
+  const result: JigsawPiece[] = [];
 
-  for (let row = 0; row < rowCount; row++)
-    result.push(chars.map(c => c[row] ?? '........').join(''));
-
+  for (let row = 0; row < rowCount; row++) {
+    const s = chars.map(c => c[row] ?? '........').join('');
+    const piece = new JigsawPiece(row, s);
+    result.push(piece);
+  }
+  
   return result;
 }

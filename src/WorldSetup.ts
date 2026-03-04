@@ -75,7 +75,7 @@ export function setupWorld(game: Game): void {
 
   const pwd = renderBitmap("AF5TD07");
 
-  for (const s of pwd) {
-    console.log(s);
-  }
+  game.gs.player.jigsawPieces.push(pwd[0]);
+  game.gs.player.jigsawPieces.push(pwd[2]);
+  game.gs.player.jigsawPieces.push(pwd[6]);
 }
