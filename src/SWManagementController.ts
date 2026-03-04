@@ -215,7 +215,7 @@ class SWManagementPopup extends Popup {
       const bg = {
         [SoftwareCategory.ICE]: "#009d4a",
         [SoftwareCategory.ICEBreaker]: "#ff004e",
-        [SoftwareCategory.Behaviour]: "#005260",
+        [SoftwareCategory.Behaviour]: "#ac29ce",
         [SoftwareCategory.Data]: "#f9d071"
       }[sw.cat] ?? "#add4fa";
       
