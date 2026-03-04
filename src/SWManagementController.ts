@@ -8,6 +8,9 @@ import { SoftwareCategory } from "./Software";
 
 const MAIN_MENU = 0;
 const DELETE_MENU = 1;
+const INSTALL_MENU = 2;
+const INSUFFICIENT_STORAGE = 3;
+const DUPLICATE_PACKAGE = 4;
 
 export class SWManagementController extends InputController {
   private gs: GameState;
@@ -26,21 +29,17 @@ export class SWManagementController extends InputController {
   }
 
   handleInput(e: KeyboardEvent): void {
-    if (e.key === 'Escape') {
-      this.game.popPopup();
-      this.game.popInputController();
+    e.preventDefault();
 
-      return;
-    } else if (this.state == MAIN_MENU && (e.key === 's' || e.key === 'ArrowDown' || e.key === 'j')) {
-      e.preventDefault();
+
+    if (this.state == MAIN_MENU && (e.key === 's' || e.key === 'ArrowDown' || e.key === 'j')) {      
       if (this.gs.player.hackedRobot) {
         this.row = (this.row + 1) % this.gs.player.hackedRobot.software.length;
         this.popup.selection = this.row;
       }
     } else if (this.state == MAIN_MENU && (e.key === 'w' || e.key === 'ArrowUp' || e.key === 'k')) {
-      e.preventDefault();
       if (this.gs.player.hackedRobot) {
-        this.row = (this.row - 1)
+        this.row = this.row - 1;
         if (this.row < 0)
           this.row = this.gs.player.hackedRobot.software.length - 1;
         this.popup.selection = this.row;
@@ -51,9 +50,61 @@ export class SWManagementController extends InputController {
       this.state = MAIN_MENU;
     } else if (this.state === DELETE_MENU && e.key === 'y') {
       this.eraseSelectedSoftware();      
+    } else if (this.state === MAIN_MENU && this.popup.options.has('i') && e.key === 'i') {
+      this.row = 0;
+      this.popup.selection = 0;
+      this.state = INSTALL_MENU;
+    } else if (this.state === INSTALL_MENU && (e.key === 's' || e.key === 'ArrowDown' || e.key === 'j')) {
+      if (this.gs.player.softwareArchive.length > 0) {
+        this.row = (this.row + 1) % this.gs.player.softwareArchive.length;
+        this.popup.selection = this.row;
+      }
+    } else if (this.state === INSTALL_MENU && e.key === "Escape") {
+      this.state = MAIN_MENU;
+    } else if (this.state === INSTALL_MENU && (e.key === 'w' || e.key === 'ArrowUp' || e.key === 'k')) {
+      if (this.gs.player.softwareArchive.length > 0) {
+        this.row = this.row - 1;
+        if (this.row < 0)
+          this.row = this.gs.player.softwareArchive.length - 1;
+        this.popup.selection = this.row;
+      }
+    } else if (this.state === INSTALL_MENU && e.key === 'Enter') {
+      this.installSelectedSoftware();
+    } else if ((this.state === INSUFFICIENT_STORAGE || this.state === DUPLICATE_PACKAGE) && (e.key === 'Enter' || e.key === 'Escape')) {
+      this.state = INSTALL_MENU;
+    } else if (e.key === 'Escape') {
+      this.game.popPopup();
+      this.game.popInputController();
+
+      return;
     }
 
     this.popup.setText(this.state);
+  }
+
+  private installSelectedSoftware(): void {
+    if (!this.gs.player.hackedRobot)
+      return;
+
+    const pckg = this.gs.player.softwareArchive[this.row];
+    this.row = 0;
+    this.popup.selection = 0;
+
+    const capacity = this.gs.player.hackedRobot.memorySize;
+    const memUsed = this.gs.player.hackedRobot.software.reduce((sum, sw) => sum + sw.size, 0);
+    if (pckg.size > capacity - memUsed) {
+      this.state = INSUFFICIENT_STORAGE;  
+      return;
+    }
+
+    for (const sw of this.gs.player.hackedRobot.software) {
+      if (sw.name === pckg.name) {
+        this.state = DUPLICATE_PACKAGE;
+        return;
+      }
+    }
+
+    this.gs.player.hackedRobot.software.push(pckg);
   }
 
   private eraseSelectedSoftware(): void {
@@ -83,7 +134,7 @@ class SWManagementPopup extends Popup {
   
   constructor(player: Player) {
     const title = player.hackedRobot ? `*software system control [#add4fa ${player.hackedRobot.name}]*` : "";
-    super(title, "", 1, MAP_WIDTH / 2 - 26, 60);
+    super(title, "", 1, 1, 90);
     this.player = player;
     this.setText(MAIN_MENU);
   }
@@ -93,6 +144,49 @@ class SWManagementPopup extends Popup {
       this.writeMainMenu();
     else if (state === DELETE_MENU)
       this.deleteMenu();
+    else if (state === INSTALL_MENU)
+      this.installMenu();
+    else if (state === INSUFFICIENT_STORAGE) 
+      this.text = "_____[#d93e48 insufficient storage for selected software package]";
+    else if (state === DUPLICATE_PACKAGE) 
+      this.text = "_____[#d93e48 software package already installed on remote device]";
+  }
+
+  private installMenu(): void {
+    const archived = this.player.softwareArchive.map(sw => sw.name);
+    const installed = this.player.hackedRobot!.software.map(sw => sw.name);
+    const memUsed = this.player.hackedRobot!.software.reduce((sum, sw) => sum + sw.size, 0);
+    const memSize = this.player.hackedRobot?.memorySize ?? 0;
+    for (let j = memUsed; j < memSize; j++) {
+      installed.push("[#767c98 ...]");
+    }
+    const count = Math.max(installed.length, archived.length);
+
+    const archivedWidth = Math.max(10, ...archived.map(a => a.length));
+
+    let s = "select p[#ac29ce ac]kage to i[[#ac29ce n]stall, then hit ente[#4e6ea8 r]\n\n";
+
+    for (let j = 0; j < count; j++) {
+      const bg = j === this.selection ? '#add4fa' : '#000';
+      const fg = j === this.selection ? '#000' : '#009d4a';
+      if (j < archived.length) {
+        s += `[${fg},${bg} ${archived[j]}]`;
+        for (let k = 0; k < archivedWidth - archived[j].length; k++)
+          s += '[' + bg + ' _]';        
+      } else {
+        s += '[#000 _]'.repeat(archivedWidth);
+      }
+
+      s += j === this.selection ? '[#000 _]>[#000 _]' : '[#000 _][#000 _][#000 _]';
+
+      if (j < installed.length) {
+        s+= installed[j];
+      }
+
+      s+= '\n';
+    }
+
+    this.text = s;
   }
 
   private deleteMenu(): void {
@@ -126,15 +220,13 @@ class SWManagementPopup extends Popup {
       }[sw.cat] ?? "#add4fa";
       
 
-      line += `[#fff,${bg} ${bl}]`;
+      line += `[#000,${bg} ${bl}]`;
       line += `[#000,${bg} ${sw.name}]`;
-      line += `[#fff,${bg} ${'_'.repeat(width - sw.name.length - 2)}${br}]\n`;
+      line += `[#000,${bg} ${'_'.repeat(width - sw.name.length - 2)}${br}]\n`;
       lines.push(line);
 
       for (let j = 1; j < sw.size; j++) {
-        line = `[#fff,${bg} ${bl}]`;
-        line += `[${bg},${bg} ${'_'.repeat(width - 2)}]`;
-        line += `[#fff,${bg} ${br}]\n`;      
+        line = `[${bg},${bg} ${'_'.repeat(width)}]\n`;
         lines.push(line);
       }
 
@@ -143,7 +235,7 @@ class SWManagementPopup extends Popup {
     }
 
     while (slotsUsed < capacity) {
-      lines.push(`[#add4fa,#add4fa ${'_'.repeat(width)}]\n`);
+      lines.push(`[#767c98,#767c98 ${'_'.repeat(width)}]\n`);
       ++slotsUsed;
     }
 
@@ -154,11 +246,11 @@ class SWManagementPopup extends Popup {
     if (!this.player.hackedRobot)
       return;
 
-    this.options = new Set<string>(['u']);
+    this.options = new Set<string>(['i']);
 
     const lines: string[] = this.installedSoftwareLines();
 
-    lines[0] = lines[0].slice(0, -1) + "__[#fff (][#ac29ce u][#fff )]pload software\n";
+    lines[0] = lines[0].slice(0, -1) + "__[#fff (][#ac29ce i][#fff )]nstall software\n";
     if (this.player.hackedRobot.software.length > 0 && !this.player.hackedRobot.software[this.selection].firmware) {
       lines[1] = lines[1].slice(0, -1) + "__[#fff (][#ac29ce e][#fff )]rase selected\n";
       this.options.add('e');
