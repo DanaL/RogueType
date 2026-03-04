@@ -59,7 +59,7 @@ export function setupWorld(game: Game): void {
   burritoBot.memorySize = 8;
   burritoBot.software.push(new Software("Emergency Burrito Procedures", SoftwareCategory.Data, true, 1, 4));
   burritoBot.software.push(new Software("Norton AntiVirus 414.10.13.14", SoftwareCategory.ICE, false, 1, 2));
-  burritoBot.software.push(new Software("DW Move Protocal", SoftwareCategory.Behaviour, false, 1, 1));
+  burritoBot.software.push(new Software("DW Move Protocol", SoftwareCategory.Behaviour, false, 1, 1));
   burritoBot.currFirewall = 10;
   burritoBot.accuracy = 0.80;
   game.gs.player.hackedRobot = burritoBot;

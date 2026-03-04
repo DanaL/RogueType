@@ -104,7 +104,7 @@ export abstract class Robot extends Actor {
   }
 
   protected _currFirewall: number = 0;
-  get currFirewall() { return this._currFirewall }
+  get currFirewall() { return Math.min(this._currFirewall, this.maxFirewall) }
   set currFirewall(val: number) { this._currFirewall = Math.min(val, this.maxFirewall) }
   
   protected gs: GameState
