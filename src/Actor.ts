@@ -114,6 +114,15 @@ export abstract class Robot extends Actor {
     this.id = Robot.#nextId++;
     this.gs = gs;
   }
+
+  protected movement(gs: GameState): ActionResult {
+    for (const sw of this.software) {
+      if (sw.name === "DW Move Protocol")
+        return this.randomMove(gs);
+    }
+
+    return ActionResult.Failure;
+  }
 }
 
 export class BasicBot extends Robot {  
@@ -124,7 +133,7 @@ export class BasicBot extends Robot {
   }
 
   act(): Promise<void> {
-    this.randomMove(this.gs);
+    this.movement(this.gs);
 
     return Promise.resolve();
   }
@@ -144,12 +153,12 @@ export class Roomba extends Robot {
     this.memorySize = 3;
 
     this.software.push(new Software("Facility Firewall Gold Edition", SoftwareCategory.ICE, false, 1, 1));
-    this.software.push(new Software("DW Move Protocal", SoftwareCategory.Behaviour, false, 1, 1));
+    this.software.push(new Software("DW Move Protocol", SoftwareCategory.Behaviour, false, 1, 1));
     this.currFirewall = 5;    
   }
 
   act(): Promise<void> {
-    if (this.randomMove(this.gs) === ActionResult.Failure && this.gs.visible[`${this.level},${this.x},${this.y}`]) {
+    if (this.movement(this.gs) === ActionResult.Failure && this.gs.visible[`${this.level},${this.x},${this.y}`]) {
       this.gs.addMessage("The roomba beeps.");
     }
 
