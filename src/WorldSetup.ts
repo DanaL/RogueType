@@ -51,6 +51,7 @@ export function setupWorld(game: Game): void {
   game.gs.player = new Player(44, 16, 'b', "#005260");
   game.gs.player.maxHull = 5;
   game.gs.player.currHull = 5;
+  game.gs.player.softwareArchive.push(new Software("One-Sendai Ice-Cracker Jr. 0.2.11 beta", SoftwareCategory.ICEBreaker, false, 1, 2));
   game.scheduler.add(game.gs.player, true);
   
   let burritoBot = new BasicBot('burrito bot', "Corpo food delivery bot. Its chassis is battered and grafitti-ed.", 'b', '#005260', 0, 0, game.gs);    

@@ -50,13 +50,29 @@ export class SWManagementController extends InputController {
     } else if (this.state === DELETE_MENU && e.key === 'n') {
       this.state = MAIN_MENU;
     } else if (this.state === DELETE_MENU && e.key === 'y') {
-      this.gs.player.hackedRobot?.software.splice(this.row, 1);
-      this.row = 0;
-      this.popup.selection = 0;
-      this.state = MAIN_MENU;
+      this.eraseSelectedSoftware();      
     }
 
     this.popup.setText(this.state);
+  }
+
+  private eraseSelectedSoftware(): void {
+    const deleted = this.gs.player.hackedRobot?.software[this.row];    
+    this.gs.player.hackedRobot?.software.splice(this.row, 1);
+    this.row = 0;
+    this.popup.selection = 0;
+    this.state = MAIN_MENU;
+
+    let found = false;
+    for (const sw of this.gs.player.softwareArchive) {
+      if (sw.name === deleted?.name) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found && deleted)
+      this.gs.player.softwareArchive.push(deleted);
   }
 }
 
@@ -87,13 +103,12 @@ class SWManagementPopup extends Popup {
     this.text = s;
   }
 
-  private writeMainMenu(): void {
-    if (!this.player.hackedRobot)
-      return;
-
-    this.options = new Set<string>(['u']);
-
+  private installedSoftwareLines(): string[] {
     const lines: string[] = [];
+    
+    if (!this.player.hackedRobot)
+      return lines;
+
     const capacity = this.player.hackedRobot.memorySize;
     const width = Math.max(10, ...this.player.hackedRobot.software.map(sw => sw.name.length)) + 2;
 
@@ -131,6 +146,17 @@ class SWManagementPopup extends Popup {
       lines.push(`[#add4fa,#add4fa ${'_'.repeat(width)}]\n`);
       ++slotsUsed;
     }
+
+    return lines;
+  }
+
+  private writeMainMenu(): void {
+    if (!this.player.hackedRobot)
+      return;
+
+    this.options = new Set<string>(['u']);
+
+    const lines: string[] = this.installedSoftwareLines();
 
     lines[0] = lines[0].slice(0, -1) + "__[#fff (][#ac29ce u][#fff )]pload software\n";
     if (this.player.hackedRobot.software.length > 0 && !this.player.hackedRobot.software[this.selection].firmware) {

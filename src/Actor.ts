@@ -47,7 +47,8 @@ export abstract class Actor {
 export class Player extends Actor {  
   currRobotId: number = 1;
   hackedRobot: Robot | null = null;
-
+  softwareArchive: Software[] = [];
+  
   get maxHull(): number { return this.hackedRobot ? this.hackedRobot.maxHull : 0; }
   get currHull(): number { return this.hackedRobot ? this.hackedRobot.currHull : 0; }
   set currHull(val: number) {
