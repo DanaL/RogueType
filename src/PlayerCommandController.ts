@@ -1,10 +1,12 @@
-import { InputController } from "./InputController";
+import { InfoPopupController, InputController } from "./InputController";
 import { Game } from "./Game";
 import type { Examinable } from "./ExamineController";
 import { ExamineController } from "./ExamineController";
 import { Terrain } from "./Terrain";
 import { capitalize, indefArticle, MOVE_KEYS, ActionResult } from "./Utils";
 import { SWManagementController } from "./SWManagementController";
+import { Popup } from "./Popup";
+import { JigsawController } from "./Jigsaw";
 
 export class PlayerCommandController extends InputController {
   private game: Game;
@@ -54,11 +56,15 @@ export class PlayerCommandController extends InputController {
         gs.addMessage("There is nothing interesting to examine.");
       }
       return;
-    }
-    else if (e.key === "m") {
+    } else if (e.key === "m") {
       const swm = new SWManagementController(this.game.gs, this.game);
       this.game.pushInputController(swm);
       
+      return;
+    } else if (e.key === "v") {
+      const vped = new JigsawController(this.game.gs.player, this.game);
+      this.game.pushInputController(vped);
+
       return;
     }
 
