@@ -4,6 +4,8 @@ import { TERRAIN_DEF } from "./Terrain";
 
 type Cell = { glyph: string; fg: string; bg: string | null; sx: number; sy: number };
 
+const EXPLORED_COLOUR: string = "#3a3a4a";
+
 export class Renderer {
   private display: ROT.Display;
   private width: number;
@@ -66,7 +68,7 @@ export class Renderer {
         const cell = { glyph: def.glyph, fg: def.fg, bg: null, sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
       } else if (gs.explored[lvlKey]) {
-        const cell = { glyph: def.glyph, fg: "#222", bg: null, sx: sx, sy: sy};
+        const cell = { glyph: def.glyph, fg: EXPLORED_COLOUR, bg: null, sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
       }
 
@@ -84,7 +86,7 @@ export class Renderer {
           const cell = { glyph: device.ch, fg: device.colour, bg: null, sx: sx, sy: sy};
           cells[`${sx},${sy}`] = cell;
         } else if (explored) {
-          const cell = { glyph: device.ch, fg: "#222", bg: null, sx: sx, sy: sy};
+          const cell = { glyph: device.ch, fg: EXPLORED_COLOUR, bg: null, sx: sx, sy: sy};
           cells[`${sx},${sy}`] = cell;
         }
       } 
