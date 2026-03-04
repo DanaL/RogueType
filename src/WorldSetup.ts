@@ -56,6 +56,8 @@ export function setupWorld(game: Game): void {
   game.gs.player.softwareArchive.push(new Software("Cookie Monster Virus Model C", SoftwareCategory.Data, false, 1, 2));
   game.scheduler.add(game.gs.player, true);
   
+  game.gs.player.securityClearance = 2;
+
   let burritoBot = new BasicBot('burrito bot', "Corpo food delivery bot. Its chassis is battered and grafitti-ed.", 'b', '#005260', 0, 0, game.gs);    
   burritoBot.maxHull = 5;
   burritoBot.currHull = 5;
@@ -69,7 +71,10 @@ export function setupWorld(game: Game): void {
 
   const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);
   game.gs.maps.push(levelInfo.map);
-
+  game.gs.devices[1] = levelInfo.devices;
+  
+  game.gs.downLifts[0] = true;
+  
   const roomba = new Roomba(41, 19, game.gs);
   game.gs.addRobot(roomba, 0, 41, 17);
 

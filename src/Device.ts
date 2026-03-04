@@ -29,6 +29,18 @@ export class Terminal extends Device {
   }
 }
 
+export class WeightTrigger extends Device {
+  readonly gateX: number;
+  readonly gateY: number;
+  weighted: boolean = false;
+
+  constructor(gx: number, gy: number) {
+    super("trigger", "A trigger that reacts to weight on it.", '•', '#646365');
+    this.gateX = gx;
+    this.gateY = gy;
+  }
+}
+
 export class DataFile {
   readonly title: string;
   readonly contents: string;

@@ -1,6 +1,6 @@
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { Device } from "./Device";
+import { Device, WeightTrigger } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange } from "./Utils";
@@ -31,7 +31,7 @@ export function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   const chokePoint = LOG_JAMS[rndRange(LOG_JAMS.length)];
   const row = MAP_ROWS / 2 - 5 + rndRange(10);
   const col = MAP_WIDTH / 2 - 5 + rndRange(10);
-  stampTiles(level, chokePoint.tiles, row, col, nextRoomId++, 1);
+  setupChokePoint(level, chokePoint, row, col, nextRoomId++, 1);
 
   // Compute the absolute gate position — it forms the boundary between the two halves.
   // The arrival side is on the opposite side of the map from chokePoint.restricted.
@@ -90,6 +90,17 @@ export function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   debugDumpMap(level);
 
   return level;
+}
+
+function setupChokePoint(level: LevelInfo, template: LogJamTemplate, row: number, col:number, roomId: number, regionId: number):void {
+  stampTiles(level, template.tiles, row, col, roomId, regionId);
+
+  for (const wt of template.triggers) {
+    const gx = template.gate.col + col;
+    const gy = template.gate.row + row;
+    const trigger = new WeightTrigger(gx, gy);
+    level.devices[`${wt.col + col},${wt.row + row}`] = trigger;
+  }
 }
 
 function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
