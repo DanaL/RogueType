@@ -3,7 +3,7 @@ import { Game } from "./Game";
 import { BasicBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH } from "./Utils";
-import { generateMap } from "./LevelGen";
+import { buildLevel } from "./LevelGen";
 import { Software, SoftwareCategory } from "./Software";
 import { renderBitmap } from "./Utils";
 
@@ -67,9 +67,7 @@ export function setupWorld(game: Game): void {
   burritoBot.accuracy = 0.80;
   game.gs.player.hackedRobot = burritoBot;
 
-  const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, 1);
-  game.gs.maps.push(levelInfo.map);
-  game.gs.devices[1] = levelInfo.devices;
+  buildLevel(game.gs, 1);
 
   game.gs.downLifts[0] = true;
   

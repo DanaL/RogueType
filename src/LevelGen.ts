@@ -1,3 +1,4 @@
+import { GameState } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
 import { Device, WeightTrigger } from "./Device";
@@ -17,7 +18,13 @@ export class LevelInfo {
   }
 }
 
-export function generateMap(h: number, w: number, levelNum: number): LevelInfo {
+export function buildLevel(gs: GameState, levelNum: number) {
+  const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, levelNum);
+  gs.maps.push(levelInfo.map);
+  gs.devices[levelNum] = levelInfo.devices;
+}
+
+function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   const level = new LevelInfo();
 
   for (let y = 0; y < h; y++) {
@@ -86,8 +93,6 @@ export function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   joinDisjointRegions(level, resColMin, resColMax);
 
   setStairs(level, gateIdx, levelNum);
-
-  debugDumpMap(level);
 
   return level;
 }
