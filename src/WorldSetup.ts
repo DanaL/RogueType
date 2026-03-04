@@ -5,6 +5,7 @@ import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH } from "./Utils";
 import { generateMap } from "./LevelGen";
 import { Software, SoftwareCategory } from "./Software";
+import { renderBitmap } from "./Utils";
 
 export function setupWorld(game: Game): void {
   let overworld: Record<string, TerrainType> = {};
@@ -71,4 +72,10 @@ export function setupWorld(game: Game): void {
 
   const roomba = new Roomba(41, 19, game.gs);
   game.gs.addRobot(roomba, 0, 41, 17);
+
+  const pwd = renderBitmap("AF5TD07");
+
+  for (const s of pwd) {
+    console.log(s);
+  }
 }

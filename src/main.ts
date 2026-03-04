@@ -4,7 +4,7 @@ import { Renderer } from "./Renderer";
 import { Popup } from "./Popup";
 import { InfoPopupController } from "./InputController";
 import { PlayerCommandController } from "./PlayerCommandController";
-import { MAP_ROWS, MAP_WIDTH, warmTextCache } from "./Utils";
+import { MAP_ROWS, MAP_WIDTH, warmTextCache, warmFontCache } from "./Utils";
 import { setupWorld } from "./WorldSetup";
 
 const NUM_MSG_ROWS = 3;
@@ -15,8 +15,10 @@ state.fovRadius = Math.ceil(Math.hypot(MAP_WIDTH / 2, MAP_ROWS / 2));
 const renderer = new Renderer(MAP_WIDTH, DISPLAY_HEIGHT, 18);
 const game = new Game(state, renderer);
 
+await warmTextCache();
+await warmFontCache();
+
 setupWorld(game);
-warmTextCache();
 
 document.getElementById("app")!.appendChild(renderer.getContainer());
 

@@ -127,3 +127,55 @@ export async function randomTextExcerpt(wordCount: number): Promise<string> {
   return excerptFromWords(words, wordCount);
 }
 
+let petFont: Map<string, string[]> | null = null;
+
+function parsePetFont(text: string): Map<string, string[]> {
+  const font = new Map<string, string[]>();
+  const lines = text.split('\n');
+
+  let i = 0;
+  while (i < lines.length) {
+    const label = lines[i].trim();
+    if (label.length === 1 && /[A-Z0-9]/.test(label)) {
+      const rows: string[] = [];
+      i++;
+      while (i < lines.length && /^[.*]{8}$/.test(lines[i])) {
+        rows.push(lines[i]);
+        i++;
+      }
+      if (rows.length > 0)
+        font.set(label, rows);
+    } else {
+      i++;
+    }
+  }
+
+  return font;
+}
+
+export async function warmFontCache(): Promise<void> {
+  if (petFont) 
+    return;
+  const response = await fetch('/pet-font.txt');
+  const text = await response.text();
+  petFont = parsePetFont(text);
+}
+
+// Returns one string per row. Each character contributes 8 columns.
+// Unknown characters are silently skipped.
+export function renderBitmap(input: string): string[] {
+  const chars = [...input.toUpperCase()]
+    .map(ch => petFont!.get(ch))
+    .filter((rows): rows is string[] => rows !== undefined);
+
+  if (chars.length === 0) 
+    return [];
+
+  const rowCount = chars[0].length;
+  const result: string[] = [];
+
+  for (let row = 0; row < rowCount; row++)
+    result.push(chars.map(c => c[row] ?? '........').join(''));
+
+  return result;
+}
