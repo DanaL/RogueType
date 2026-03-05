@@ -11,6 +11,9 @@ import { TypingTestPopup, TypingTestController } from "./TypingTest";
 import { RobotHackPopup, RobotHackController } from "./RobotHack";
 import { TerminalController } from "./Terminal";
 
+export const EnvironmentHazard = { NONE: 0, RADIATION: 1 }
+export type EnvironmentHazard = (typeof EnvironmentHazard)[keyof typeof EnvironmentHazard];
+
 export class GameState {
   readonly width: number;
   readonly height: number;
@@ -19,7 +22,8 @@ export class GameState {
 
   maps: Record<string, TerrainType>[] = [];
   devices: Record<string, Device>[] = Array.from({ length: NUM_LVLS }, () => ({}));
-  freeCells: string[] = [];
+  hazards: Record<string, EnvironmentHazard>[] = Array.from({ length: NUM_LVLS }, () => ({}));
+
   visible: Record<string, boolean> = {};
   explored: Record<string, boolean> = {};
   downLifts: boolean[] = Array(NUM_LVLS).fill(false);

@@ -1,10 +1,11 @@
 import * as ROT from "rot-js";
-import { GameState } from "./GameState";
+import { GameState, EnvironmentHazard } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
 
 type Cell = { glyph: string; fg: string; bg: string | null; sx: number; sy: number };
 
 const EXPLORED_COLOUR: string = "#3a3a4a";
+const RADIATION_BG: string = "#1a3d0a";
 
 export class Renderer {
   private display: ROT.Display;
@@ -61,11 +62,12 @@ export class Renderer {
       const def = TERRAIN_DEF[gs.maps[gs.currLevel][key]];
       const lvlKey = `${gs.currLevel},${key}`;
 
+      const radBg = gs.hazards[gs.currLevel][key] === EnvironmentHazard.RADIATION ? RADIATION_BG : null;
       if (key == gs.highlightedLoc) {
         const cell = { glyph: def.glyph, fg: "#fff", bg: "#ff5cff", sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
       } else if (gs.visible[lvlKey]) {
-        const cell = { glyph: def.glyph, fg: def.fg, bg: null, sx: sx, sy: sy};
+        const cell = { glyph: def.glyph, fg: def.fg, bg: radBg, sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
       } else if (gs.explored[lvlKey]) {
         const cell = { glyph: def.glyph, fg: EXPLORED_COLOUR, bg: null, sx: sx, sy: sy};
@@ -83,7 +85,7 @@ export class Renderer {
           const cell = { glyph: device.ch, fg: "#fff", bg: "#ff5cff", sx: sx, sy: sy};
           cells[`${sx},${sy}`] = cell;
         } else if (visible) {
-          const cell = { glyph: device.ch, fg: device.colour, bg: null, sx: sx, sy: sy};
+          const cell = { glyph: device.ch, fg: device.colour, bg: radBg, sx: sx, sy: sy};
           cells[`${sx},${sy}`] = cell;
         } else if (explored) {
           const cell = { glyph: device.ch, fg: EXPLORED_COLOUR, bg: null, sx: sx, sy: sy};
@@ -104,7 +106,7 @@ export class Renderer {
         if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH)
           continue;
         const fg = coord == gs.highlightedLoc ? "#fff" : robot.colour;
-        const bg = coord == gs.highlightedLoc ? "#ff5cff" : "#000";
+        const bg = coord == gs.highlightedLoc ? "#ff5cff" : (gs.hazards[gs.currLevel][coord] === EnvironmentHazard.RADIATION ? RADIATION_BG : "#000");
         cells[`${robot.x},${robot.y}`] = { glyph: robot.ch, fg: fg, bg: bg, sx: sx, sy: sy};
       }
     }

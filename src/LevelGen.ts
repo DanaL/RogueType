@@ -1,4 +1,4 @@
-import { GameState } from "./GameState";
+import { GameState, EnvironmentHazard } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
 import { Device, WeightTrigger, TimerTrigger, Terminal, LIFT_ACCESS, DISABLE_GATE } from "./Device";
@@ -71,11 +71,15 @@ export function buildLevel(gs: GameState, levelNum: number) {
     const x = i - y * MAP_WIDTH;
     const k = `${x},${y}`;
     const region = levelInfo.roomMask[i];
-    if (levelInfo.map[k] == Terrain.Floor && region == 2) {
+    if (levelInfo.map[k] === Terrain.Floor && region === 2) {
       levelInfo.arrivalSideLoc.push(k);
-    } else if (levelInfo.map[k] == Terrain.Floor && region == 3) {
+    } else if (levelInfo.map[k] === Terrain.Floor && region === 3) {
       levelInfo.restrictedSideLoc.push(k);
     }
+
+    // TEMP add radiation to the squares of the gate room
+    if (levelInfo.map[k] === Terrain.Floor && region === 1)
+      gs.hazards[levelNum][k] = EnvironmentHazard.RADIATION;
   }
 
   const used = new Set<string>();
@@ -119,7 +123,7 @@ export function buildLevel(gs: GameState, levelNum: number) {
       used.add(loc);
       break;
     }
-  }
+  }  
 }
 
 function generateMap(h: number, w: number, levelNum: number): LevelInfo {
