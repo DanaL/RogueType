@@ -88,7 +88,7 @@ export class GameState {
 
     if (Object.keys(weightTriggers).length > 0) {
       gateOpen = true;
-      for (const loc in Object.keys(weightTriggers)) {
+      for (const loc of Object.keys(weightTriggers)) {
         if (!actorLocs.has(loc)) {
           gateOpen = false;
           weightTriggers[loc].weighted = false;
