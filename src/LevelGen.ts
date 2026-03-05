@@ -352,15 +352,45 @@ function setupLightPuzzle(level: LevelInfo, template: LogJamTemplate, originRow:
       best = { ...result, doorX: door.x, doorY: door.y, mirrorsNeeded };
   }
 
-  if (!best) return;
+  if (!best) {
+    const gx = template.gate.col + originCol;
+    const gy = template.gate.row + originRow;
+    for (const lt of template.lTriggers)
+      level.devices[`${lt.col + originCol},${lt.row + originRow}`] = new WeightTrigger(gx, gy);
+    return;
+  }
 
-  // Place LightSource and terminal first so they are excluded from mirror placement
+  // Place LightSource — scan along beam axis into far room for a free floor tile
   const farRoomId = level.roomId[best.endY * MAP_WIDTH + best.endX];
-  const lsX = best.endX + best.exitDX;
-  const lsY = best.endY + best.exitDY;
-  const lsk = `${lsX},${lsY}`;
-  if (level.map[lsk] === Terrain.Floor && !level.devices[lsk])
-    level.devices[lsk] = new LightSource(-best.exitDX, -best.exitDY);
+  let lsPlaced = false;
+  let scanX = best.endX + best.exitDX;
+  let scanY = best.endY + best.exitDY;
+  for (let i = 0; i < 20; i++) {
+    const lsk = `${scanX},${scanY}`;
+    if (level.map[lsk] !== Terrain.Floor) break;
+    if (!level.devices[lsk]) {
+      level.devices[lsk] = new LightSource(-best.exitDX, -best.exitDY);
+      lsPlaced = true;
+      break;
+    }
+    scanX += best.exitDX;
+    scanY += best.exitDY;
+  }
+
+  if (!lsPlaced) {
+    // Fall back to weight triggers so the gate can still be opened
+    const gx = template.gate.col + originCol;
+    const gy = template.gate.row + originRow;
+    for (const lt of template.lTriggers)
+      level.devices[`${lt.col + originCol},${lt.row + originRow}`] = new WeightTrigger(gx, gy);
+    return;
+  }
+
+  // Place LightTriggers now that we know the puzzle is viable
+  const gx = template.gate.col + originCol;
+  const gy = template.gate.row + originRow;
+  for (const lt of template.lTriggers)
+    level.devices[`${lt.col + originCol},${lt.row + originRow}`] = new LightTrigger(gx, gy);
 
   for (let i = 0; i < level.roomId.length; i++) {
     if (level.roomId[i] !== farRoomId) continue;
@@ -570,11 +600,6 @@ function setupChokePoint(level: LevelInfo, template: LogJamTemplate, row: number
     level.devices[`${tt.col + col},${tt.row + row}`] = trigger;
   }
 
-  for (const lt of template.lTriggers) {
-    const gx = template.gate.col + col;
-    const gy = template.gate.row + row;
-    level.devices[`${lt.col + col},${lt.row + row}`] = new LightTrigger(gx, gy);
-  }
 }
 
 function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
