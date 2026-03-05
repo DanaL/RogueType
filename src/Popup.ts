@@ -115,6 +115,7 @@ export class Popup {
       }
     }
     this.closeContentRow(renderer, row++, col);
+    
     return row;
   }
 

@@ -58,6 +58,10 @@ export class GameState {
         timerTrigger.countDown = 0;
         const gateMapLoc = `${timerTrigger.gateX},${timerTrigger.gateY}`;
         const gateLoc = `${this.currLevel},${gateMapLoc}`;
+
+        if (this.maps[this.currLevel][gateMapLoc] === Terrain.DeactivatedGate)
+          return;
+
         this.maps[this.currLevel][gateMapLoc] = Terrain.Gate;
         if (this.visible[gateLoc])
           this.addMessage("The gate closes with a hiss.");
@@ -107,6 +111,9 @@ export class GameState {
         gate = this.maps[this.currLevel][loc];
       }
     }
+
+    if (gate === Terrain.DeactivatedGate)
+      return;
 
     if (gateOpen && gate === Terrain.Gate) {
       this.maps[this.currLevel][gateLoc] = Terrain.OpenGate;
@@ -316,6 +323,10 @@ export class GameState {
       if (device.countDown === 0) {
         device.countDown = 6;
         const gateLoc = `${device.gateX},${device.gateY}`;
+        if (this.maps[this.currLevel][gateLoc] === Terrain.DeactivatedGate) {
+          return false;
+        }
+        
         const actorLoc = `${this.currLevel},${actor.x},${actor.y}`;
         this.maps[this.currLevel][gateLoc] = Terrain.OpenGate;
         if (this.visible[actorLoc])

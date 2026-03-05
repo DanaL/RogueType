@@ -13,6 +13,7 @@ export abstract class Device {
 }
 
 export const LIFT_ACCESS = 0b000000001;
+export const DISABLE_GATE = 0b000000010;
 
 export class Terminal extends Device {
   readonly functions: number = 0;

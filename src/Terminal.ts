@@ -4,11 +4,13 @@ import { InputController } from "./InputController";
 import { LineScanner } from "./LineScanner";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
+import { Terrain } from "./Terrain";
 
 const MAIN_MENU   = 0;
 const LIFT_ACCESS = 1;
 const FILE_SYSTEM = 2;
 const FILE_VIEW   = 3;
+const DISABLE_GATE = 4;
 
 type TerminalFunction = { desc: string; flag: number };
 
@@ -27,6 +29,8 @@ export class TerminalController extends InputController {
 
     if ((term.functions & Device.LIFT_ACCESS) !== 0)
       this.options.push({ desc: "lift access", flag: LIFT_ACCESS });
+    if ((term.functions & Device.DISABLE_GATE) !== 0)
+      this.options.push({ desc: "disable gate", flag: DISABLE_GATE });
 
     this.options.push({ desc: "local file system", flag: FILE_SYSTEM });
 
@@ -63,6 +67,12 @@ export class TerminalController extends InputController {
       this.gs.downLifts[this.gs.currLevel] = !this.gs.downLifts[this.gs.currLevel];
       const s = this.gs.downLifts[this.gs.currLevel] ? "Elevator enabled" : "Elevator disabled";
       this.gs.addMessage(s);
+    } else if (e.key === 'Escape' && this.state === DISABLE_GATE) {
+      this.setState(MAIN_MENU);
+    } else if (this.state === DISABLE_GATE && !this.popup.gateDeactivated && e.key === 'n') {
+      this.setState(MAIN_MENU);
+    } else if (this.state === DISABLE_GATE && !this.popup.gateDeactivated && e.key === 'y') {
+      this.disableGate();
     } else if (e.key === 'Enter' && this.state === FILE_SYSTEM) {
       this.popup.selectedFile = this.currRow;
       this.setState(FILE_VIEW);
@@ -75,6 +85,13 @@ export class TerminalController extends InputController {
       this.gs.game.popInputController();
     }
   }
+
+  private disableGate() {
+    this.gs.maps[this.gs.currLevel][this.popup.gateLoc] = Terrain.DeactivatedGate;
+    this.gs.computeFov();
+    this.popup.gateDeactivated = true;
+    this.popup.gateLoc = "";
+  }
 }
 
 export class TerminalPopup extends Popup {
@@ -84,12 +101,15 @@ export class TerminalPopup extends Popup {
   private items: string[];
   private gs: GameState;
   private term: Device.Terminal;
+  gateLoc: string = "";
+  gateDeactivated: boolean = false;
 
   constructor(gs: GameState, term: Device.Terminal, items: string[], row: number, col: number) {
     super("ultraD[#ac29ce O]S 3.7.2 [#fff ad][#ac29ce m][#fff in termina][#4e6ea8 l]", "", row, col, 40);
     this.items = items;
     this.gs = gs;
     this.term = term;
+    this.checkGateStatus();
   }
 
   protected drawContent(renderer: Renderer, row: number): number {
@@ -103,8 +123,23 @@ export class TerminalPopup extends Popup {
       row = this.fileSystem(renderer, row);
     else if (this.state === FILE_VIEW)   
       row = this.fileView(renderer, row);
+    else if (this.state === DISABLE_GATE)
+      row = this.gateAccess(renderer, row);
 
     return row;
+  }
+
+  private checkGateStatus() {
+    for (const loc of Object.keys(this.gs.maps[this.gs.currLevel])) {
+      const terrain = this.gs.maps[this.gs.currLevel][loc];
+      if (terrain === Terrain.Gate || terrain === Terrain.OpenGate) {
+        this.gateLoc = loc;
+        return;
+      } else if (terrain === Terrain.DeactivatedGate) {
+        this.gateLoc = loc;
+        this.gateDeactivated = true;
+      }
+    }
   }
 
   private drawMenu(renderer: Renderer, row: number, items: string[]): number {
@@ -127,6 +162,32 @@ export class TerminalPopup extends Popup {
       this.closeContentRow(renderer, row++, col);
     }
 
+    return row;
+  }
+
+  private gateAccess(renderer: Renderer, row: number): number {
+    if (this.gateDeactivated) {
+      let col = this.openContentRow(renderer, row);
+      for (const ch of "gate deactivated")
+        renderer.drawChar(row, col++, ch, '#009d4a', '#000');
+      this.closeContentRow(renderer, row++, col);
+    } else {
+      let col = this.openContentRow(renderer, row);
+      for (const ch of "deactivate gate?")
+        renderer.drawChar(row, col++, ch, '#009d4a', '#000');
+      this.closeContentRow(renderer, row++, col);
+      
+      const prompt = "____[#fff (][#ac29ce y][#fff )]es    [#fff (][#ac29ce n][#fff )]o";
+      const tokens = new LineScanner(prompt).scan();
+      col = this.openContentRow(renderer, row);
+      for (const token of tokens) {
+        for (const ch of token.text) {
+          renderer.drawChar(row, col++, ch, token.colour, token.bgColour ?? "#000");
+        }
+      }
+      this.closeContentRow(renderer, row++, col);
+    }
+    
     return row;
   }
 

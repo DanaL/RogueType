@@ -1,7 +1,7 @@
 import { GameState } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { Device, WeightTrigger, TimerTrigger } from "./Device";
+import { Device, WeightTrigger, TimerTrigger, Terminal, LIFT_ACCESS, DISABLE_GATE } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
@@ -97,6 +97,12 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
       const rr = rndRange(1, maxRow - roomTemplate.height);
       if (!overlapsExistingRoom(level, roomTemplate.tiles, rr, rc)) {
         stampTiles(level, roomTemplate.tiles, rr, rc, nextRoomId++, 2);
+
+        for (let term of roomTemplate.terminals) {
+          const termX = rc + term.col;
+          const termY = rr + term.row;
+          placeTerminal(level, termX, termY, levelNum);
+        }
         break;
       }
     }
@@ -113,11 +119,21 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
       const rr = rndRange(1, maxRow - roomTemplate.height);
       if (!overlapsExistingRoom(level, roomTemplate.tiles, rr, rc)) {
         stampTiles(level, roomTemplate.tiles, rr, rc, nextRoomId++, 3);
+
+        for (let term of roomTemplate.terminals) {
+          const termX = rc + term.col;
+          const termY = rr + term.row;
+          placeTerminal(level, termX, termY, levelNum);
+        }
         break;
       }
     }
   }
   
+  // place a terminal on the restricted side that can disable the 
+  // gate so hopefully the player can't get trapped
+  placeFailsafeTerminal(level, levelNum);
+
   carveHallways(level, arrColMin, arrColMax);
   carveHallways(level, resColMin, resColMax, gateIdx);
 
@@ -127,6 +143,34 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   setStairs(level, gateIdx, levelNum);
 
   return level;
+}
+
+function placeFailsafeTerminal(level: LevelInfo, levelNum: number) {
+  const candidates: string[] = [];
+  for (let j = 0; j < level.roomMask.length; j++) {
+    const x = j % MAP_WIDTH;
+    const y = Math.floor(j / MAP_WIDTH);
+    const loc = `${x},${y}`;
+    if (level.roomMask[j] === 3 && level.map[loc] === Terrain.Floor) {
+      candidates.push(loc);
+    }
+  }
+
+  for (let j = 0; j < 25; j++) {
+    const loc = candidates[rngRange(candidates.length)];
+    if (level.devices[loc])
+      continue;
+
+    const [ x, y ] = loc.split(',').map(Number);
+    const functions = LIFT_ACCESS | DISABLE_GATE;
+    placeTerminal(level, x, y, levelNum, functions);
+    break;
+  }
+}
+
+function placeTerminal(level: LevelInfo, x: number, y: number, levelNum: number, functions: number = LIFT_ACCESS): void {
+  const terminal = new Terminal(functions);
+  level.devices[`${x},${y}`] = terminal;
 }
 
 function setupChokePoint(level: LevelInfo, template: LogJamTemplate, row: number, col:number, roomId: number, regionId: number):void {
@@ -494,8 +538,8 @@ function parseRooms(text: string): RoomTemplate[] {
   return splitBlocks(text).map(block => {
     const { tiles, meta } = parseTemplateBlock(block);
     return {
-      width:     Math.max(...tiles.map(r => r.length)),
-      height:    tiles.length,
+      width: Math.max(...tiles.map(r => r.length)),
+      height: tiles.length,
       tiles,
       entrances: parseCoords(meta['Entrance'] ?? ''),
       terminals: parseCoords(meta['Terminal'] ?? ''),
@@ -508,13 +552,13 @@ function parseLogJams(text: string): LogJamTemplate[] {
     const { tiles, meta } = parseTemplateBlock(block);
     const gateCoords = parseCoords(meta['Gate'] ?? '');
     return {
-      width:      Math.max(...tiles.map(r => r.length)),
-      height:     tiles.length,
+      width: Math.max(...tiles.map(r => r.length)),
+      height: tiles.length,
       tiles,
-      entrances:  parseCoords(meta['Entrance']   ?? ''),
-      gate:       gateCoords[0] ?? { row: 0, col: 0 },
-      triggers:   parseCoords(meta['WTrigger']   ?? ''),
-      timerTriggers:   parseCoords(meta['TTrigger']   ?? ''),
+      entrances: parseCoords(meta['Entrance']   ?? ''),
+      gate: gateCoords[0] ?? { row: 0, col: 0 },
+      triggers: parseCoords(meta['WTrigger']   ?? ''),
+      timerTriggers: parseCoords(meta['TTrigger']   ?? ''),
       restricted: meta['Restricted'] ?? '',
     };
   });
