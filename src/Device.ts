@@ -74,8 +74,15 @@ export class Crate extends Device {
 }
 
 export class Mirror extends Device {
+  flipped: boolean = false;
+
   constructor() {
     super("mirror", "A polished surface mounted on a swivel. It reflects beams of light at 90 degrees.", '╱', '#8af');
+  }
+
+  rotate(): void {
+    this.flipped = !this.flipped;
+    this.ch = this.flipped ? '╲' : '╱';
   }
 }
 

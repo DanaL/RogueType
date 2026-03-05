@@ -103,8 +103,7 @@ export class GameState {
           break;
         }
         if (tileDevice instanceof Mirror) {
-          // Reflect off a '╱' mirror: (dx, dy) → (-dy, -dx)
-          [dx, dy] = [-dy, -dx];
+          [dx, dy] = tileDevice.flipped ? [dy, dx] : [-dy, -dx];
         }
 
         x += dx;

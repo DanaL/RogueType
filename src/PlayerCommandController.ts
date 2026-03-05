@@ -88,7 +88,7 @@ export class PlayerCommandController extends InputController {
           if (device instanceof Mirror) {
             robot.carriedDevice = device;
             delete gs.devices[gs.currLevel][loc];
-            gs.addMessage(`You pick up the ${device.name}.`);
+            gs.addMessage(`You pick up the ${device.name}. Press [r] to rotate it.`);
             gs.player.endTurn();
           } else if (device) {
             gs.addMessage(`You can't pick up the ${device.name}.`);
@@ -98,6 +98,14 @@ export class PlayerCommandController extends InputController {
         }
       } else {
         gs.addMessage("This bot has no extra functions.");
+      }
+      return;
+    } else if (e.key === "r") {
+      const { gs } = this.game;
+      const robot = gs.player.hackedRobot;
+      if (robot instanceof ForkLifter && robot.carriedDevice instanceof Mirror) {
+        robot.carriedDevice.rotate();
+        gs.addMessage(`You rotate the mirror (now ${robot.carriedDevice.ch}).`);
       }
       return;
     } else if (e.key === "D") {
