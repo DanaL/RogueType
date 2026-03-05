@@ -1,7 +1,7 @@
 import { GameState, EnvironmentHazard } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { Crate, Device, WeightTrigger, TimerTrigger, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION } from "./Device";
+import { Crate, Device, WeightTrigger, TimerTrigger, LightTrigger, LightSource, Mirror, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
@@ -210,6 +210,145 @@ function surroundLocWithCrates(level: LevelInfo, x: number, y: number): boolean 
   return true;
 }
 
+function traceCorridorFrom(
+  level: LevelInfo,
+  doorX: number, doorY: number,
+  exitDX: number, exitDY: number
+): { corners: { x: number; y: number }[]; endX: number; endY: number; exitDX: number; exitDY: number } | null {
+  let x = doorX + exitDX;
+  let y = doorY + exitDY;
+  let dx = exitDX;
+  let dy = exitDY;
+  const corners: { x: number; y: number }[] = [];
+  const visited = new Set<string>();
+
+  for (let step = 0; step < 500; step++) {
+    const k = `${x},${y}`;
+    if (visited.has(k)) return null;
+    visited.add(k);
+
+    const t = level.map[k];
+    if (t === undefined) return null;
+
+    if (t === Terrain.Door) {
+      if (level.roomMask[y * MAP_WIDTH + x] !== 1)
+        return { corners, endX: x, endY: y, exitDX: dx, exitDY: dy };
+      return null;
+    }
+    if (t !== Terrain.Floor) return null;
+
+    // Try to continue in current direction
+    const nx = x + dx;
+    const ny = y + dy;
+    const nt = level.map[`${nx},${ny}`];
+    const ni = ny * MAP_WIDTH + nx;
+
+    if (nt === Terrain.Floor) {
+      x = nx; y = ny;
+      continue;
+    }
+    if (nt === Terrain.Door && level.roomMask[ni] !== 1)
+      return { corners, endX: nx, endY: ny, exitDX: dx, exitDY: dy };
+
+    // Try perpendiculars (corner)
+    const sideDirs: [number, number][] = dy === 0 ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]];
+    let turned = false;
+    for (const [pdx, pdy] of sideDirs) {
+      const tx = x + pdx;
+      const ty = y + pdy;
+      const pt = level.map[`${tx},${ty}`];
+      const pi = ty * MAP_WIDTH + tx;
+      if (pt === Terrain.Floor) {
+        corners.push({ x, y });
+        dx = pdx; dy = pdy;
+        x = tx; y = ty;
+        turned = true;
+        break;
+      }
+      if (pt === Terrain.Door && level.roomMask[pi] !== 1) {
+        corners.push({ x, y });
+        return { corners, endX: tx, endY: ty, exitDX: pdx, exitDY: pdy };
+      }
+    }
+    if (!turned) return null;
+  }
+  return null;
+}
+
+function setupLightPuzzle(level: LevelInfo, template: LogJamTemplate, originRow: number, originCol: number): void {
+  // Collect valid logjam room doors (roomMask===1, terrain===Door) with their exit directions
+  const logjamDoors: { x: number; y: number; exitDX: number; exitDY: number }[] = [];
+  for (let r = 0; r < template.height; r++) {
+    for (let c = 0; c < template.width; c++) {
+      const absX = originCol + c;
+      const absY = originRow + r;
+      if (level.map[`${absX},${absY}`] !== Terrain.Door) continue;
+      if (level.roomMask[absY * MAP_WIDTH + absX] !== 1) continue;
+      for (const [ddx, ddy] of [[-1, 0], [1, 0], [0, -1], [0, 1]] as [number, number][]) {
+        const nx = absX + ddx, ny = absY + ddy;
+        const nt = level.map[`${nx},${ny}`];
+        if (nt === Terrain.Floor && level.roomMask[ny * MAP_WIDTH + nx] === 0) {
+          logjamDoors.push({ x: absX, y: absY, exitDX: ddx, exitDY: ddy });
+          break;
+        }
+      }
+    }
+  }
+
+  type PathInfo = {
+    corners: { x: number; y: number }[];
+    endX: number; endY: number;
+    exitDX: number; exitDY: number;
+    doorX: number; doorY: number;
+    mirrorsNeeded: number;
+  };
+
+  let best: PathInfo | null = null;
+  for (const door of logjamDoors) {
+    const result = traceCorridorFrom(level, door.x, door.y, door.exitDX, door.exitDY);
+    if (!result) continue;
+
+    // Check if any LightTrigger is inline with the entry direction
+    let extraMirror = 1;
+    for (const lt of template.lTriggers) {
+      const ltAbsX = originCol + lt.col;
+      const ltAbsY = originRow + lt.row;
+      const inlineH = door.exitDX !== 0 && ltAbsY === door.y; // horizontal beam, same row
+      const inlineV = door.exitDY !== 0 && ltAbsX === door.x; // vertical beam, same col
+      if (inlineH || inlineV) { extraMirror = 0; break; }
+    }
+    const mirrorsNeeded = result.corners.length + extraMirror;
+    if (!best || mirrorsNeeded < best.mirrorsNeeded)
+      best = { ...result, doorX: door.x, doorY: door.y, mirrorsNeeded };
+  }
+
+  if (!best) return;
+
+  // Scatter the required mirrors randomly across arrival-side floor tiles
+  const arrivalFloors: string[] = [];
+  for (let i = 0; i < level.roomMask.length; i++) {
+    if (level.roomMask[i] !== 2) continue;
+    const ax = i % MAP_WIDTH;
+    const ay = Math.floor(i / MAP_WIDTH);
+    const ak = `${ax},${ay}`;
+    if (level.map[ak] === Terrain.Floor && !level.devices[ak])
+      arrivalFloors.push(ak);
+  }
+  for (let i = arrivalFloors.length - 1; i > 0; i--) {
+    const j = rngRange(i + 1);
+    [arrivalFloors[i], arrivalFloors[j]] = [arrivalFloors[j], arrivalFloors[i]];
+  }
+  for (let i = 0; i < best.mirrorsNeeded && i < arrivalFloors.length; i++)
+    level.devices[arrivalFloors[i]] = new Mirror();
+
+  // Place LightSource one step inside the far room, aimed back toward the logjam room
+  const lsX = best.endX + best.exitDX;
+  const lsY = best.endY + best.exitDY;
+  const lsk = `${lsX},${lsY}`;
+  if (level.map[lsk] === Terrain.Floor && !level.devices[lsk])
+    level.devices[lsk] = new LightSource(-best.exitDX, -best.exitDY);
+}
+
 function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   const level = new LevelInfo();
 
@@ -221,7 +360,9 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 
   // Place the chokePoint near the centre of the map
   let nextRoomId = 1;
-  const chokePoint = LOG_JAMS[rndRange(LOG_JAMS.length)];
+  const chokePoindIdx = levelNum === 1 ? LOG_JAMS.length - 1 : rndRange(LOG_JAMS.length);
+  const chokePoint = LOG_JAMS[chokePoindIdx];
+  
   const row = MAP_ROWS / 2 - 5 + rndRange(10);
   const col = MAP_WIDTH / 2 - 5 + rndRange(10);
   setupChokePoint(level, chokePoint, row, col, nextRoomId++, 1);
@@ -295,6 +436,9 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   joinDisjointRegions(level, resColMin, resColMax);
 
   cleanupDoors(level);
+
+  if (chokePoint.lTriggers.length > 0)
+    setupLightPuzzle(level, chokePoint, row, col);
 
   setStairs(level, gateIdx, levelNum);
 
@@ -378,6 +522,12 @@ function setupChokePoint(level: LevelInfo, template: LogJamTemplate, row: number
     const gy = template.gate.row + row;
     const trigger = new TimerTrigger(gx, gy);
     level.devices[`${tt.col + col},${tt.row + row}`] = trigger;
+  }
+
+  for (const lt of template.lTriggers) {
+    const gx = template.gate.col + col;
+    const gy = template.gate.row + row;
+    level.devices[`${lt.col + col},${lt.row + row}`] = new LightTrigger(gx, gy);
   }
 }
 
@@ -682,6 +832,7 @@ interface LogJamTemplate {
   gate: RoomCoord;
   triggers: RoomCoord[];
   timerTriggers: RoomCoord[];
+  lTriggers: RoomCoord[];
   restricted: string;
 }
 
@@ -691,6 +842,7 @@ const CHAR_TO_TERRAIN: Record<string, TerrainType> = {
   '.': Terrain.Floor,
   '=': Terrain.Floor,
   '1': Terrain.Floor,
+  'L': Terrain.Floor,
   '+': Terrain.Door,
   'G': Terrain.Gate,
 };
@@ -747,6 +899,7 @@ function parseLogJams(text: string): LogJamTemplate[] {
       gate: gateCoords[0] ?? { row: 0, col: 0 },
       triggers: parseCoords(meta['WTrigger'] ?? ''),
       timerTriggers: parseCoords(meta['TTrigger'] ?? ''),
+      lTriggers: parseCoords(meta['LTrigger'] ?? ''),
       restricted: meta['Restricted'] ?? '',
     };
   });

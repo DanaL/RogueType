@@ -55,9 +55,37 @@ export class TimerTrigger extends Device {
   }
 }
 
+export class LightTrigger extends Device {
+  readonly gateX: number;
+  readonly gateY: number;
+
+  constructor(gx: number, gy: number) {
+    super("large crystal", "It is built into a pedestal and glint slightly in the low lighting.", '♢', '#fff');
+    this.gateX = gx;
+    this.gateY = gy;
+  }
+}
+
 export class Crate extends Device {
   constructor() {
     super("crate", "A large, heavy wooden box with a paperclip stamped on it.", '▧', '#c47231' );
+  }
+}
+
+export class Mirror extends Device {
+  constructor() {
+    super("mirror", "A polished surface mounted on a swivel. It reflects beams of light at 90 degrees.", '╱', '#8af');
+  }
+}
+
+export class LightSource extends Device {
+  readonly dirX: number;
+  readonly dirY: number;
+
+  constructor(dirX: number, dirY: number) {
+    super("light source", "A focused emitter. It projects a concentrated beam in one direction.", '★', '#ff0');
+    this.dirX = dirX;
+    this.dirY = dirY;
   }
 }
 
