@@ -156,6 +156,9 @@ export abstract class Robot extends Actor {
   constructor(x: number, y: number, ch: string, colour: string, gs: GameState) {
     super(x, y, ch, colour, gs);
     this.id = Robot.#nextId++;
+
+    if (rngRange(5) === 0)
+      this.software.push(new Software("Experimental Evil Algorithm", SoftwareCategory.Behaviour, false, 1, 2));      
   }
 
   act(): Promise<void> {

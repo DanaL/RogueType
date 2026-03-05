@@ -154,8 +154,6 @@ export function buildLevel(gs: GameState, levelNum: number) {
       workerDrone.memorySize = 5;
       workerDrone.software.push(new Software("Facility Firewall Gold Edition", SoftwareCategory.ICE, false, 1, 2));
       workerDrone.software.push(new Software("DW Move Protocol", SoftwareCategory.Behaviour, false, 1, 1));
-      if (rngRange(3) === 0)
-        workerDrone.software.push(new Software("Experimental Evil Algorithm", SoftwareCategory.Behaviour, false, 1, 2));
       workerDrone.currFirewall = 10;
       workerDrone.accuracy = 0.85;
       workerDrone.ice = ICELevel.Normal;
@@ -240,8 +238,10 @@ function surroundLocWithCrates(level: LevelInfo, x: number, y: number): boolean 
     return t === Terrain.LiftUp || t === Terrain.LiftDown;
   }))
     return false;
+    
   for (const [dx, dy] of walkableNeighbors)
     level.devices[`${x + dx},${y + dy}`] = new Crate();
+
   return true;
 }
 
