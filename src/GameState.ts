@@ -49,7 +49,7 @@ export class GameState {
   }
 
   postTurn(): void {
-    this.checkGateState();
+    this.checkWeightedGateState();
   }
 
   roundEnd(): void {
@@ -67,7 +67,7 @@ export class GameState {
     }
   }
 
-  private checkGateState() {
+  private checkWeightedGateState() {
     const actorLocs = new Set<string>([
       ...this.robots
         .filter(r => r.level === this.currLevel)
@@ -76,13 +76,10 @@ export class GameState {
     actorLocs.add(`${this.player.x},${this.player.y}`);
 
     let weightTriggers: Record<string, WeightTrigger> = {};
-    let timerTriggers: Record<string, TimerTrigger> = {};
     let gateOpen = false;
     for (const [key, device] of Object.entries(this.devices[this.currLevel])) {
       if (device instanceof WeightTrigger)
         weightTriggers[key] = device;
-      else if (device instanceof TimerTrigger)
-        timerTriggers[key] = device;
     }
 
     if (Object.keys(weightTriggers).length > 0) {
@@ -97,18 +94,9 @@ export class GameState {
             this.addMessage("You hear a click.");
         } 
       }
-    } else if (Object.keys(timerTriggers).length > 0) {
-      // There should only be one timer trigger on a floor (at least for the 7DRL version of the game)
-      const loc = Object.keys(timerTriggers)[0]
-      const timer = timerTriggers[loc];
-      if (actorLocs.has(loc) && timer.countDown === 0) {
-        timer.countDown = 5;
-        gateOpen = true;
-        if (this.visible[`${this.currLevel},${loc}`])
-            this.addMessage("You hear a click and a buzzer begins to sound.");
-      } else if (timer.countDown > 0) {
-        gateOpen = true;
-      }
+    } 
+    else {
+      return;
     }
 
     let gateLoc = "";
@@ -324,7 +312,18 @@ export class GameState {
         }
       }));
       return true;
-    } 
+    } else if (device instanceof TimerTrigger) {
+      if (device.countDown === 0) {
+        device.countDown = 6;
+        const gateLoc = `${device.gateX},${device.gateY}`;
+        const actorLoc = `${this.currLevel},${actor.x},${actor.y}`;
+        this.maps[this.currLevel][gateLoc] = Terrain.OpenGate;
+        if (this.visible[actorLoc])
+          this.addMessage("You hear a click and a buzzer begins to sound.");
+        if (this.visible[`${this.currLevel},${device.gateX},${device.gateY}`])
+          this.addMessage("You hear a pneumatic hiss.");
+      }
+    }
 
     return false;
   }
