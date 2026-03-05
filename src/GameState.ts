@@ -465,10 +465,16 @@ export class GameState {
         robot.previouslyHacked = true;   
         robot.currFirewall = Math.round(robot.maxFirewall / 3);
       } else {
-        const popup = new Popup("", "\nYou have been expunged.", 5, 10, 35);
-        this.game.pushPopup(popup);
-        this.game.pushInputController(new InfoPopupController(this.game));
-        //this.game.pushInputController(new InfoPopupController(this.game, () => this.onComplete()));
+        if (this.player.currFirewall === 0) {
+          const popup = new Popup("", "\nconne[#ac29ce c]tion terminated.", 5, 10, 35);
+          this.game.pushPopup(popup);
+          this.game.pushInputController(new InfoPopupController(this.game));
+          this.disconnect();
+        } else {
+          const popup = new Popup("", "\nYou have been expunged.", 5, 10, 35);
+          this.game.pushPopup(popup);
+          this.game.pushInputController(new InfoPopupController(this.game));
+        }
       }
 
       this.computeFov();
@@ -513,6 +519,10 @@ export class GameState {
       } else {
         device.accessFailures++;
         this.player.currFirewall = Math.max(0, this.player.currFirewall - 1);
+        if (this.player.currFirewall === 0) {
+          this.addMessage("intrusion detected -- remote connection severed.");
+          this.disconnect();
+        }
         this.computeFov();
         this.player.endTurn();
       }
