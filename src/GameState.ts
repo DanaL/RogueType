@@ -117,10 +117,20 @@ export class GameState {
       this.game.scheduler.add(robot, true);
   }
 
+  private changeLevel(newLevel: number): void {
+    for (const robot of this.robots.filter(r => r.level === this.currLevel))
+      this.game.scheduler.remove(robot);
+
+    this.currLevel = newLevel;
+
+    for (const robot of this.robots.filter(r => r.level === this.currLevel))
+      this.game.scheduler.add(robot, true);
+  }
+
   private takeLiftDown(): void {
-    ++this.currLevel;
-    
-    for (const [key, terrain] of Object.entries(this.maps[this.currLevel])) { 
+    const nextLevel = this.currLevel + 1;
+
+    for (const [key, terrain] of Object.entries(this.maps[nextLevel])) {
       if (terrain === Terrain.LiftUp) {
         const [x, y] = key.split(',').map(Number);
         this.player.x = x;
@@ -128,6 +138,8 @@ export class GameState {
         break;
       }
     }
+
+    this.changeLevel(nextLevel);
   }
 
   occupied(x: number, y: number): boolean {
