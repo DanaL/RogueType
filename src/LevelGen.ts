@@ -94,9 +94,16 @@ export function buildLevel(gs: GameState, levelNum: number) {
     }
   }
 
+  const locs = [...levelInfo.arrivalSideLoc, ...levelInfo.restrictedSideLoc];
   for (let j = 0; j < 2; j++) {
     for (let tries = 0; tries < 20; ++tries) {
-      let workerDrone = new BasicBot('worker drone', "Performs various non-vacuuming tasks around the facility.", 'b', '#f9d071', 0, 0, gs);    
+      const idx = rngRange(locs.length);
+      const loc = locs[idx];
+      if (used.has(loc))
+        continue;
+
+      const [x, y] = loc.split(',').map(Number);
+      let workerDrone = new BasicBot('worker drone', "Performs various non-vacuuming tasks around the facility.", 'b', '#f9d071', x, y, gs);    
       workerDrone.maxHull = 5;
       workerDrone.currHull = 5;
       workerDrone.memorySize = 5;
@@ -105,6 +112,10 @@ export function buildLevel(gs: GameState, levelNum: number) {
       workerDrone.currFirewall = 10;
       workerDrone.accuracy = 0.85;
       workerDrone.ice = ICELevel.Normal;
+
+      gs.addRobot(workerDrone, levelNum, x, y);
+      used.add(loc);
+      break;
     }
   }
 }
