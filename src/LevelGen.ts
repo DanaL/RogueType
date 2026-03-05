@@ -6,7 +6,7 @@ import { Device, WeightTrigger, TimerTrigger, Terminal, LIFT_ACCESS, DISABLE_GAT
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
-import { Roomba, BasicBot } from "./Actor";
+import { Roomba, BasicBot, ShieldedBot } from "./Actor";
 import { Software, SoftwareCategory } from "./Software";
 
 export class LevelInfo {
@@ -162,7 +162,19 @@ export function buildLevel(gs: GameState, levelNum: number) {
       used.add(loc);
       break;
     }
-  }  
+  }
+
+  // Place a ShieldedBot on the arrival side (radiation is always present)
+  for (let tries = 0; tries < 20; tries++) {
+    const idx = rngRange(levelInfo.arrivalSideLoc.length);
+    const loc = levelInfo.arrivalSideLoc[idx];
+    if (used.has(loc))
+      continue;
+    const [x, y] = loc.split(',').map(Number);
+    gs.addRobot(new ShieldedBot(x, y, gs), levelNum, x, y);
+    used.add(loc);
+    break;
+  }
 }
 
 function generateMap(h: number, w: number, levelNum: number): LevelInfo {

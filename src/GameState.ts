@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Actor, Player, Robot } from "./Actor";
+import { Actor, Player, Robot, ShieldedBot } from "./Actor";
 import { Device, Terminal, TimerTrigger, WeightTrigger } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
@@ -55,8 +55,10 @@ export class GameState {
   postTurn(actor: Actor): void {
     this.checkWeightedGateState();
 
+    const shielded = actor instanceof ShieldedBot 
+              || (actor instanceof Player && actor.hackedRobot instanceof ShieldedBot);
     const loc = `${actor.x},${actor.y}`;
-    if (this.hazards[actor.level][loc] === EnvironmentHazard.RADIATION) {
+    if (!shielded && this.hazards[actor.level][loc] === EnvironmentHazard.RADIATION) {
       actor.takeDamage(2);
       if (this.visible[`${actor.level},${loc}`] && actor instanceof Player)
         this.addMessage("Radiation is damaging your systems!");

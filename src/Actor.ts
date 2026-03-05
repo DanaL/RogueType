@@ -207,3 +207,22 @@ export class Roomba extends Robot {
     this.currFirewall = 5;    
   }
 }
+
+export class ShieldedBot extends Robot {
+  constructor(x: number, y: number, gs: GameState) {
+    super(x, y, 'r', '#0aff52', gs);
+    this.name = "shielded bot";
+    this.desc = "A robot constructed with radiation shielding.";
+    this.x = x;
+    this.y = y;
+    this._maxHull = 10;    
+    this.currHull = 10;    
+    this.accuracy = 1.0;
+    this.securityClearance = 1;
+    this.memorySize = 2;
+
+    this.software.push(new Software("Facility Firewall Gold Edition", SoftwareCategory.ICE, false, 1, 1));
+    this.software.push(new Software("DW Move Protocol", SoftwareCategory.Behaviour, false, 1, 1));
+    this.currFirewall = 5;    
+  }
+}
