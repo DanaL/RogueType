@@ -235,6 +235,11 @@ function surroundLocWithCrates(level: LevelInfo, x: number, y: number): boolean 
   });
   if (walkableNeighbors.length < 3)
     return false;
+  if (walkableNeighbors.some(([dx, dy]) => {
+    const t = level.map[`${x + dx},${y + dy}`];
+    return t === Terrain.LiftUp || t === Terrain.LiftDown;
+  }))
+    return false;
   for (const [dx, dy] of walkableNeighbors)
     level.devices[`${x + dx},${y + dy}`] = new Crate();
   return true;
