@@ -99,7 +99,7 @@ export abstract class Robot extends Actor {
   desc: string = "";
   accuracy: number = 0.0;
   software: Software[] = [];
-  ice = ICELevel.Weak;
+  ice: ICELevel = ICELevel.Weak;
   memorySize = 0;
   previouslyHacked = false;
   

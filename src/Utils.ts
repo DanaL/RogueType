@@ -5,7 +5,7 @@ export const ActionResult = { Success: 0, Failure: 1, Pending: 2 } as const;
 export type ActionResult = (typeof ActionResult)[keyof typeof ActionResult];
 
 export const ICELevel = { Weak: 0, Normal: 1, Strong: 2, Freezing: 3 } as const;
-export type ICELevel = (typeof ActionResult)[keyof typeof ActionResult];
+export type ICELevel = (typeof ICELevel)[keyof typeof ICELevel];
 
 export const MAP_WIDTH = 100;
 export const MAP_ROWS = 32;

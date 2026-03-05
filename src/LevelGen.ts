@@ -4,8 +4,9 @@ import type { TerrainType } from "./Terrain";
 import { Device, WeightTrigger, TimerTrigger, Terminal, LIFT_ACCESS, DISABLE_GATE } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
-import { distance, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
-import { Roomba } from "./Actor";
+import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
+import { Roomba, BasicBot } from "./Actor";
+import { Software, SoftwareCategory } from "./Software";
 
 export class LevelInfo {
   map: Record<string, TerrainType> = {};
@@ -90,6 +91,20 @@ export function buildLevel(gs: GameState, levelNum: number) {
       gs.addRobot(roomba, levelNum, x, y);
       used.add(loc);
       break;
+    }
+  }
+
+  for (let j = 0; j < 2; j++) {
+    for (let tries = 0; tries < 20; ++tries) {
+      let workerDrone = new BasicBot('worker drone', "Performs various non-vacuuming tasks around the facility.", 'b', '#f9d071', 0, 0, gs);    
+      workerDrone.maxHull = 5;
+      workerDrone.currHull = 5;
+      workerDrone.memorySize = 5;
+      workerDrone.software.push(new Software("Facility Firewall Gold Edition", SoftwareCategory.ICE, false, 1, 2));
+      workerDrone.software.push(new Software("DW Move Protocol", SoftwareCategory.Behaviour, false, 1, 1));
+      workerDrone.currFirewall = 10;
+      workerDrone.accuracy = 0.85;
+      workerDrone.ice = ICELevel.Normal;
     }
   }
 }
@@ -183,7 +198,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   setStairs(level, gateIdx, levelNum);
 
   debugDumpMap(level, levelNum);
-  
+
   return level;
 }
 
