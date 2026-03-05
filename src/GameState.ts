@@ -64,11 +64,15 @@ export class GameState {
         this.addMessage("Radiation is damaging your systems!");
       this.checkDestroyed(actor);
     }
+
+    if (this.turn % 11 == 0) {
+      actor.currFirewall += 1;
+    }
   }
 
   roundEnd(): void {
     ++this.turn;
-    
+
     for (const timerTrigger of Object.values(this.devices[this.currLevel]).filter(d => d instanceof TimerTrigger)) {
       if (timerTrigger.countDown === 1) {
         timerTrigger.countDown = 0;
