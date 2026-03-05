@@ -18,6 +18,7 @@ interface TerrainDef {
   opaque:   boolean;
 }
 
+// server sort of character? ▤
 const TERRAIN_DEF: Record<TerrainType, TerrainDef> = {
   [Terrain.Floor]: { glyph: '.', fg: '#646365', walkable: true, opaque: false },
   [Terrain.Wall]:  { glyph: '#', fg: '#646365', walkable: false, opaque: true },

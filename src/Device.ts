@@ -55,6 +55,12 @@ export class TimerTrigger extends Device {
   }
 }
 
+export class Crate extends Device {
+  constructor() {
+    super("crate", "A large, heavy wooden box with a paperclip stamped on it.", '▧', '#c47231' );
+  }
+}
+
 export class DataFile {
   readonly title: string;
   readonly contents: string;

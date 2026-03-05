@@ -1,6 +1,6 @@
 import * as ROT from "rot-js";
 import { Actor, Player, Robot, ShieldedBot } from "./Actor";
-import { Device, Terminal, TimerTrigger, WeightTrigger } from "./Device";
+import { Crate, Device, Terminal, TimerTrigger, WeightTrigger } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
 import { InfoPopupController, YesNoController } from "./InputController";
@@ -251,10 +251,10 @@ export class GameState {
       if (isPlayer)
         this.addMessage("You cannot go that way!");
       return ActionResult.Failure;
-    } else if (actor instanceof Player && terrain == Terrain.LiftDown) {
+    } else if (isPlayer && terrain == Terrain.LiftDown) {
       this.stepOnLift(nx, ny, game);
       return ActionResult.Complete;      
-    } else if (actor instanceof Player && terrain === Terrain.LiftUp) {
+    } else if (isPlayer && terrain === Terrain.LiftUp) {
       this.takeLift(this.currLevel - 1, Terrain.LiftDown);
       return ActionResult.Complete;
     } else if (this.occupied(nx, ny)) {
@@ -263,11 +263,19 @@ export class GameState {
       return ActionResult.Failure;
     }
 
+    const device = this.devices[this.currLevel][key];
+
+    if (device instanceof Crate) {
+      if (isPlayer)
+        this.addMessage("Your robot body is too weak to push that crate.");
+      return ActionResult.Failure;
+    }
+
     actor.x = nx;
     actor.y = ny;
 
-    if (this.devices[this.currLevel][key]) {
-      if (this.handleDevice(actor, this.devices[this.currLevel][key]))
+    if (device) {
+      if (this.handleDevice(actor, device))
         return ActionResult.Pending;
     }
 

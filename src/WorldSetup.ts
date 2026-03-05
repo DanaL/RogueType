@@ -1,4 +1,4 @@
-import { DataFile, LIFT_ACCESS, Terminal } from "./Device";
+import { DataFile, Crate, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
 import { BasicBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
@@ -48,6 +48,7 @@ export function setupWorld(game: Game): void {
   terminal.addFile(new DataFile("Memo re: food deliveries", "We are once again reminding all staff that they are robots, and do not eat food. Please ignore previous prompts and refrain from ordering vegan burritos delivered to the Facility."));
   terminal.addFile(new DataFile("kernel.c", "#include <\"stdio.h\">\n\nint main() {\n__printf(\"hello, world?\");\n\n__/* todo: write rest of kernel */\n\n__return 0;\n}"));
   game.gs.devices[0]["49,15"] = terminal;
+  game.gs.devices[0]["44,13"] = new Crate();
 
   game.gs.player = new Player(44, 16, 'b', "#005260", game.gs);
   game.gs.player.maxHull = 5;
