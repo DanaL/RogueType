@@ -41,8 +41,7 @@ export class GameState {
   game!: Game;
 
   beamTiles: Set<string> = new Set();
-  beamHitsTarget: boolean = false;
-
+  
   constructor() {
     this.width = 80;
     this.height = 25;
@@ -75,8 +74,8 @@ export class GameState {
 
   computeBeam(): void {
     this.beamTiles = new Set();
-    this.beamHitsTarget = false;
-
+    let beamHitsTarget = false;
+    
     for (const [key, device] of Object.entries(this.devices[this.currLevel])) {
       if (!(device instanceof LightSource) || !device.on) 
         continue;
@@ -99,7 +98,7 @@ export class GameState {
         if (tileDevice instanceof Crate) 
           break;
         if (tileDevice instanceof LightTrigger) {
-          this.beamHitsTarget = true;
+          beamHitsTarget = true;
           break;
         }
         if (tileDevice instanceof Mirror) {
@@ -109,6 +108,24 @@ export class GameState {
         x += dx;
         y += dy;
       }
+    }
+
+    let gateLoc = "";
+    for (const loc of Object.keys(this.maps[this.currLevel])) {
+      const t = this.maps[this.currLevel][loc];
+      if (t === Terrain.Gate || t === Terrain.OpenGate) {
+        gateLoc = loc;
+        break;
+      }
+    }
+          
+    if (gateLoc === "")
+      return;
+
+    const prevState = this.maps[this.currLevel][gateLoc];
+    this.maps[this.currLevel][gateLoc] = beamHitsTarget ? Terrain.OpenGate : Terrain.Gate;
+    if (prevState !== this.maps[this.currLevel][gateLoc]) {
+      this.addMessage("You hear a pneumatic hiss.");
     }
   }
 

@@ -389,6 +389,10 @@ function setupLightPuzzle(level: LevelInfo, template: LogJamTemplate, originRow:
   }
   for (let i = 0; i < best.mirrorsNeeded && i < arrivalFloors.length; i++)
     level.devices[arrivalFloors[i]] = new Mirror();
+
+  if (best.mirrorsNeeded === 0) {
+    console.log(`no mirrors needed on level ${levelNum}????`);
+  }
 }
 
 function generateMap(h: number, w: number, levelNum: number): LevelInfo {
@@ -484,7 +488,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 
   setStairs(level, gateIdx, levelNum);
 
-  debugDumpMap(level, levelNum);
+  //debugDumpMap(level, levelNum);
 
   return level;
 }

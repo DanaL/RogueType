@@ -68,6 +68,10 @@ export function setupWorld(game: Game): void {
   burritoBot.accuracy = 0.80;
   game.gs.player.hackedRobot = burritoBot;
 
+  // temp 
+  burritoBot.securityClearance = 4;
+  game.gs.player.securityClearance = 4;
+  
   for (let level = 1; level < NUM_LVLS; level++)
     buildLevel(game.gs, level);
 
