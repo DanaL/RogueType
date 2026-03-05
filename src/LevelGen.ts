@@ -21,8 +21,47 @@ export class LevelInfo {
   }
 }
 
+function isMapConnected(level: LevelInfo): boolean {
+  let seedIdx = -1;
+  let totalWalkable = 0;
+
+  for (let y = 1; y < MAP_ROWS - 1; y++) {
+    for (let x = 1; x < MAP_WIDTH - 1; x++) {
+      const t = level.map[`${x},${y}`];
+      if (t !== undefined && (TERRAIN_DEF[t].walkable || t === Terrain.Gate)) {
+        totalWalkable++;
+        if (seedIdx === -1) seedIdx = y * MAP_WIDTH + x;
+      }
+    }
+  }
+
+  if (totalWalkable === 0)
+    return true;
+
+  let reachable = 0;
+  floodFill([seedIdx],
+    (_ni, nx, ny) => {
+      if (nx < 1 || nx >= MAP_WIDTH - 1 || ny < 1 || ny >= MAP_ROWS - 1) return false;
+      const t = level.map[`${nx},${ny}`];
+      return t !== undefined && (TERRAIN_DEF[t].walkable || t === Terrain.Gate);
+    },
+    () => { reachable++; }
+  );
+
+  return reachable === totalWalkable;
+}
+
 export function buildLevel(gs: GameState, levelNum: number) {
-  const levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, levelNum);
+  let levelInfo: LevelInfo;
+  let attempts = 0;
+  do {
+    levelInfo = generateMap(MAP_ROWS, MAP_WIDTH, levelNum);
+    attempts++;
+  } while (!isMapConnected(levelInfo) && attempts < 20);
+
+  if (attempts > 1)
+    console.log(`Level ${levelNum} took ${attempts} attempts to generate a connected map.`);
+
   gs.maps.push(levelInfo.map);
   gs.devices[levelNum] = levelInfo.devices;
 
@@ -142,6 +181,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 
   setStairs(level, gateIdx, levelNum);
 
+  debugDumpMap(level, levelNum);
   return level;
 }
 
@@ -223,7 +263,9 @@ function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
   }
 }
 
-function debugDumpMap(level: LevelInfo): void {
+function debugDumpMap(level: LevelInfo, levelNum: number): void {
+  console.log(`Level: ${levelNum}`);
+
   const rows: string[] = [];
   for (let y = 0; y < MAP_ROWS; y++) {
     let row = '';
@@ -232,7 +274,7 @@ function debugDumpMap(level: LevelInfo): void {
       if (terrain === undefined)
         row += '?';
       else if (terrain === Terrain.Wall)
-        row += '#';
+        row += ' ';
       else
         row += TERRAIN_DEF[terrain].glyph;
     }

@@ -2,7 +2,7 @@ import { DataFile, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
 import { BasicBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
-import { MAP_ROWS, MAP_WIDTH } from "./Utils";
+import { MAP_ROWS, MAP_WIDTH, NUM_LVLS } from "./Utils";
 import { buildLevel } from "./LevelGen";
 import { Software, SoftwareCategory } from "./Software";
 import { renderBitmap } from "./Utils";
@@ -67,7 +67,8 @@ export function setupWorld(game: Game): void {
   burritoBot.accuracy = 0.80;
   game.gs.player.hackedRobot = burritoBot;
 
-  buildLevel(game.gs, 1);
+  for (let level = 1; level < NUM_LVLS; level++)
+    buildLevel(game.gs, level);
 
   game.gs.downLifts[0] = true;
   
