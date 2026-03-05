@@ -181,11 +181,9 @@ export class GameState {
     }
   }
 
-  private takeLiftDown(): void {
-    const nextLevel = this.currLevel + 1;
-
+  private takeLift(nextLevel: number, arrival: TerrainType): void {
     for (const [key, terrain] of Object.entries(this.maps[nextLevel])) {
-      if (terrain === Terrain.LiftUp) {
+      if (terrain === arrival) {
         const [x, y] = key.split(',').map(Number);
         this.player.x = x;
         this.player.y = y;
@@ -196,6 +194,7 @@ export class GameState {
 
     this.changeLevel(nextLevel);
   }
+
 
   occupied(x: number, y: number): boolean {
     if (this.player.x === x && this.player.y === y)
@@ -254,6 +253,9 @@ export class GameState {
       return ActionResult.Failure;
     } else if (actor instanceof Player && terrain == Terrain.LiftDown) {
       this.stepOnLift(nx, ny, game);
+      return ActionResult.Complete;      
+    } else if (actor instanceof Player && terrain === Terrain.LiftUp) {
+      this.takeLift(this.currLevel - 1, Terrain.LiftDown);
       return ActionResult.Complete;
     } else if (this.occupied(nx, ny)) {
       if (isPlayer && this.bumpIntoRobot(nx, ny))
@@ -358,7 +360,7 @@ export class GameState {
       game?.pushPopup(new Popup("", "\n" + msg, 3, 10, 31));
       game?.pushInputController(new InfoPopupController(game));
     } else {
-      this.takeLiftDown();
+      this.takeLift(this.currLevel + 1, Terrain.LiftUp);
     }    
   }
 
