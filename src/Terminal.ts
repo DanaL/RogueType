@@ -13,6 +13,7 @@ const FILE_SYSTEM = 2;
 const FILE_VIEW   = 3;
 const DISABLE_GATE = 4;
 const VENT_RADIATION = 5;
+const LIGHT_SOURCE = 6;
 
 type TerminalFunction = { desc: string; flag: number };
 
@@ -35,7 +36,9 @@ export class TerminalController extends InputController {
       this.options.push({ desc: "disable gate", flag: DISABLE_GATE });
     if ((term.functions & Device.VENT_RADIATION) !== 0)
       this.options.push({ desc: "vent radiation", flag: VENT_RADIATION });
-
+    if ((term.functions & Device.LIGHT_SOURCE) !== 0) {
+      this.options.push({ desc: "light beam access", flag: LIGHT_SOURCE });
+    }
     this.options.push({ desc: "local file system", flag: FILE_SYSTEM });
 
     this.popup = new TerminalPopup(gs, term, this.options.map(o => o.desc), 3, 20);
@@ -85,10 +88,12 @@ export class TerminalController extends InputController {
     } else if (e.key === 'Enter' && this.state === FILE_SYSTEM) {
       this.popup.selectedFile = this.currRow;
       this.setState(FILE_VIEW);
+    } else if (this.state === LIGHT_SOURCE && e.key === 'Enter') {
+      this.toggleLightSource();
     } else if (e.key === 'Escape' && this.state === FILE_VIEW) {
       this.setState(FILE_SYSTEM);      
     } else if (e.key === 'Escape' && this.state === VENT_RADIATION) {
-      this.setState(FILE_SYSTEM);
+      this.setState(FILE_SYSTEM);      
     } else if (e.key === 'Escape' && this.state !== MAIN_MENU) {
       this.setState(MAIN_MENU);
     } else if (e.key === 'Escape') {
@@ -97,11 +102,20 @@ export class TerminalController extends InputController {
     }
   }
 
-  private disableGate() {
+  private disableGate(): void {
     this.gs.maps[this.gs.currLevel][this.popup.gateLoc] = Terrain.DeactivatedGate;
     this.gs.computeFov();
     this.popup.gateDeactivated = true;
     this.popup.gateLoc = "";
+  }
+
+  private toggleLightSource(): void {
+    for (const device of Object.values(this.gs.devices[this.gs.currLevel])) {
+      if (device instanceof Device.LightSource) {
+        device.on = !device.on;
+        return;
+      }
+    }
   }
 }
 
@@ -138,6 +152,8 @@ export class TerminalPopup extends Popup {
       row = this.gateAccess(renderer, row);
     else if (this.state === VENT_RADIATION)
       row = this.ventRadiation(renderer, row);
+    else if (this.state === LIGHT_SOURCE)
+      row = this.lightSourceAccess(renderer, row);
 
     return row;
   }
@@ -221,6 +237,35 @@ export class TerminalPopup extends Popup {
     for (const ch of "vent radiation? (Enter)")
       renderer.drawChar(row, col++, ch, '#009d4a', '#000');
     this.closeContentRow(renderer, row++, col);
+    return row;
+  }
+
+  private lightSourceAccess(renderer: Renderer, row: number): number {
+    let active = false;
+    for (const device of Object.values(this.gs.devices[this.gs.currLevel])) {
+      if (device instanceof Device.LightSource) {
+        active = device.on;
+        break;
+      }
+    }
+
+    let col = this.openContentRow(renderer, row);
+    const s = active ? "beam emission experiment [#fff active]" 
+                     : "beam emission experiment [#fff inactive]"
+    const tokens = new LineScanner(s).scan(); 
+    for (const token of tokens) {
+      for (const ch of token.text)
+        renderer.drawChar(row, col++, ch, token.colour, token.bgColour ?? "#000");
+    }
+    this.closeContentRow(renderer, row++, col);
+
+    this.drawBlankRow(renderer, row++)
+
+    col = this.openContentRow(renderer, row);
+    for (const ch of "\n\nenter to toggle")
+      renderer.drawChar(row, col++, ch, '#009d4a', '#000');
+    this.closeContentRow(renderer, row++, col);
+
     return row;
   }
 

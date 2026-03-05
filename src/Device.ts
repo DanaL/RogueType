@@ -15,6 +15,7 @@ export abstract class Device {
 export const LIFT_ACCESS    = 0b000000001;
 export const DISABLE_GATE   = 0b000000010;
 export const VENT_RADIATION = 0b000000100;
+export const LIGHT_SOURCE   = 0b000001000;
 
 export class Terminal extends Device {
   readonly functions: number = 0;
@@ -81,6 +82,7 @@ export class Mirror extends Device {
 export class LightSource extends Device {
   readonly dirX: number;
   readonly dirY: number;
+  on: boolean = false;
 
   constructor(dirX: number, dirY: number) {
     super("light source", "A focused emitter. It projects a concentrated beam in one direction.", '★', '#ff0');

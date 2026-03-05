@@ -1,7 +1,7 @@
 import { GameState, EnvironmentHazard } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { Crate, Device, WeightTrigger, TimerTrigger, LightTrigger, LightSource, Mirror, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION } from "./Device";
+import { Crate, Device, WeightTrigger, TimerTrigger, LightTrigger, LightSource, Mirror, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION, LIGHT_SOURCE } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
@@ -159,7 +159,8 @@ export function buildLevel(gs: GameState, levelNum: number) {
       workerDrone.currFirewall = 10;
       workerDrone.accuracy = 0.85;
       workerDrone.ice = ICELevel.Normal;
-
+      workerDrone.securityClearance = 1;
+      
       gs.addRobot(workerDrone, levelNum, x, y);
       used.add(loc);
       break;
@@ -275,7 +276,7 @@ function traceCorridorFrom(
   return null;
 }
 
-function setupLightPuzzle(level: LevelInfo, template: LogJamTemplate, originRow: number, originCol: number): void {
+function setupLightPuzzle(level: LevelInfo, template: LogJamTemplate, originRow: number, originCol: number, levelNum: number): void {
   // Collect valid logjam room doors (roomMask===1, terrain===Door) with their exit directions
   const logjamDoors: { x: number; y: number; exitDX: number; exitDY: number }[] = [];
   for (let r = 0; r < template.height; r++) {
@@ -324,6 +325,25 @@ function setupLightPuzzle(level: LevelInfo, template: LogJamTemplate, originRow:
 
   if (!best) return;
 
+  // Place LightSource and terminal first so they are excluded from mirror placement
+  const farRoomId = level.roomId[best.endY * MAP_WIDTH + best.endX];
+  const lsX = best.endX + best.exitDX;
+  const lsY = best.endY + best.exitDY;
+  const lsk = `${lsX},${lsY}`;
+  if (level.map[lsk] === Terrain.Floor && !level.devices[lsk])
+    level.devices[lsk] = new LightSource(-best.exitDX, -best.exitDY);
+
+  for (let i = 0; i < level.roomId.length; i++) {
+    if (level.roomId[i] !== farRoomId) continue;
+    const tx = i % MAP_WIDTH;
+    const ty = Math.floor(i / MAP_WIDTH);
+    const tk = `${tx},${ty}`;
+    if (level.map[tk] === Terrain.Floor && !level.devices[tk]) {
+      placeTerminal(level, tx, ty, levelNum, LIGHT_SOURCE);
+      break;
+    }
+  }
+
   // Scatter the required mirrors randomly across arrival-side floor tiles
   const arrivalFloors: string[] = [];
   for (let i = 0; i < level.roomMask.length; i++) {
@@ -340,13 +360,6 @@ function setupLightPuzzle(level: LevelInfo, template: LogJamTemplate, originRow:
   }
   for (let i = 0; i < best.mirrorsNeeded && i < arrivalFloors.length; i++)
     level.devices[arrivalFloors[i]] = new Mirror();
-
-  // Place LightSource one step inside the far room, aimed back toward the logjam room
-  const lsX = best.endX + best.exitDX;
-  const lsY = best.endY + best.exitDY;
-  const lsk = `${lsX},${lsY}`;
-  if (level.map[lsk] === Terrain.Floor && !level.devices[lsk])
-    level.devices[lsk] = new LightSource(-best.exitDX, -best.exitDY);
 }
 
 function generateMap(h: number, w: number, levelNum: number): LevelInfo {
@@ -438,7 +451,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   cleanupDoors(level);
 
   if (chokePoint.lTriggers.length > 0)
-    setupLightPuzzle(level, chokePoint, row, col);
+    setupLightPuzzle(level, chokePoint, row, col, levelNum);
 
   setStairs(level, gateIdx, levelNum);
 
