@@ -37,3 +37,14 @@ Gate:2,0
 Entrance:3,11
 TTrigger:4,8
 Restricted:West
+----------
+############
+#.1........#
++..........#
+#..........#
+#..........G
+############
+Gate:4,11
+Entrance:2,0
+TTrigger:1,2
+Restricted:East
