@@ -7,6 +7,8 @@ import { capitalize, indefArticle, MOVE_KEYS, ActionResult } from "./Utils";
 import { SWManagementController } from "./SWManagementController";
 import { Popup } from "./Popup";
 import { JigsawController } from "./Jigsaw";
+import { ForkLifter } from "./Actor";
+import { Mirror } from "./Device";
 
 export class PlayerCommandController extends InputController {
   private game: Game;
@@ -65,6 +67,38 @@ export class PlayerCommandController extends InputController {
       const vped = new JigsawController(this.game.gs.player, this.game);
       this.game.pushInputController(vped);
 
+      return;
+    } else if (e.key === "u") {
+      const { gs } = this.game;
+      const robot = gs.player.hackedRobot;
+
+      if (robot instanceof ForkLifter) {
+        const loc = `${gs.player.x},${gs.player.y}`;
+        if (robot.carriedDevice !== null) {
+          if (gs.devices[gs.currLevel][loc]) {
+            gs.addMessage("There is already something here.");
+          } else {
+            gs.devices[gs.currLevel][loc] = robot.carriedDevice;
+            gs.addMessage(`You place the ${robot.carriedDevice.name}.`);
+            robot.carriedDevice = null;
+            gs.player.endTurn();
+          }
+        } else {
+          const device = gs.devices[gs.currLevel][loc];
+          if (device instanceof Mirror) {
+            robot.carriedDevice = device;
+            delete gs.devices[gs.currLevel][loc];
+            gs.addMessage(`You pick up the ${device.name}.`);
+            gs.player.endTurn();
+          } else if (device) {
+            gs.addMessage(`You can't pick up the ${device.name}.`);
+          } else {
+            gs.addMessage("There is nothing here to pick up.");
+          }
+        }
+      } else {
+        gs.addMessage("This bot has no extra functions.");
+      }
       return;
     } else if (e.key === "D") {
       this.game.gs.disconnectCurrentRobot();

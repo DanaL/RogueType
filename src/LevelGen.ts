@@ -5,7 +5,7 @@ import { Crate, Device, WeightTrigger, TimerTrigger, LightTrigger, LightSource, 
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
-import { Roomba, BasicBot, ShieldedBot, DozerBot } from "./Actor";
+import { Roomba, BasicBot, ShieldedBot, DozerBot, ForkLifter } from "./Actor";
 import { Software, SoftwareCategory } from "./Software";
 
 export class LevelInfo {
@@ -182,6 +182,35 @@ export function buildLevel(gs: GameState, levelNum: number) {
         const surrounded = surroundLocWithCrates(levelInfo, x, y);
         if (surrounded && rngRange(2) === 0) {
           // 50% chance to also add a DozerBot on the arrival side
+          for (let dt = 0; dt < 20; dt++) {
+            const dozerLoc = levelInfo.arrivalSideLoc[rngRange(levelInfo.arrivalSideLoc.length)];
+            if (used.has(dozerLoc))
+              continue;
+            const [dx, dy] = dozerLoc.split(',').map(Number);
+            gs.addRobot(new DozerBot(dx, dy, gs), levelNum, dx, dy);
+            used.add(dozerLoc);
+            break;
+          }
+        }
+      }
+      break;
+    }
+  }
+
+  const hasLightPuzzle = Object.values(levelInfo.devices).some(d => d instanceof LightSource);
+  if (hasLightPuzzle) {
+    for (let tries = 0; tries < 20; tries++) {
+      const idx = rngRange(levelInfo.arrivalSideLoc.length);
+      const loc = levelInfo.arrivalSideLoc[idx];
+      if (used.has(loc))
+        continue;
+      const [x, y] = loc.split(',').map(Number);
+      gs.addRobot(new ForkLifter(x, y, gs), levelNum, x, y);
+      used.add(loc);
+
+      if (rngRange(10) < 3) {
+        const surrounded = surroundLocWithCrates(levelInfo, x, y);
+        if (surrounded) {
           for (let dt = 0; dt < 20; dt++) {
             const dozerLoc = levelInfo.arrivalSideLoc[rngRange(levelInfo.arrivalSideLoc.length)];
             if (used.has(dozerLoc))

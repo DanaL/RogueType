@@ -4,6 +4,7 @@ import { TERRAIN_DEF } from "./Terrain";
 import { ActionResult, ICELevel, rngRange } from "./Utils";
 import { Software, SoftwareCategory } from "./Software";
 import type { JigsawPiece } from "./Jigsaw";
+import type { Device } from "./Device";
 
 export abstract class Actor {
   x: number;
@@ -241,6 +242,28 @@ export class DozerBot extends Robot {
     this.memorySize = 2;
 
     this.software.push(new Software("Facility Firewall Gold Edition", SoftwareCategory.ICE, false, 1, 1));
+    
+    this.currFirewall = 5;    
+  }
+}
+
+export class ForkLifter extends Robot {
+  carriedDevice: Device | null = null;
+
+  constructor(x: number, y: number, gs: GameState) {
+    super(x, y, 'f', '#009d4a', gs);
+    this.name = "forklifter";
+    this.desc = "Early genAI designs had the flaw in that the algorithm thought it was to design a robot specifically to lift forks. Anyhow, this robot can carry stuff.";
+    this.x = x;
+    this.y = y;
+    this._maxHull = 10;    
+    this.currHull = 10;
+    this.accuracy = 1.2;
+    this.securityClearance = 2;
+    this.memorySize = 2;
+
+
+    this.software.push(new Software("Facility Firewall Platinum Edition", SoftwareCategory.ICE, false, 2, 1));
     
     this.currFirewall = 5;    
   }
