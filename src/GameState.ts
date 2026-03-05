@@ -1,6 +1,6 @@
 import * as ROT from "rot-js";
 import { Actor, DozerBot, Player, Robot, ShieldedBot } from "./Actor";
-import { Crate, Device, Terminal, TimerTrigger, WeightTrigger } from "./Device";
+import { Crate, Device, LightSource, LightTrigger, Mirror, Terminal, TimerTrigger, WeightTrigger } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
 import { InfoPopupController, YesNoController } from "./InputController";
@@ -40,6 +40,9 @@ export class GameState {
   fov: InstanceType<typeof ROT.FOV.PreciseShadowcasting>;
   game!: Game;
 
+  beamTiles: Set<string> = new Set();
+  beamHitsTarget: boolean = false;
+
   constructor() {
     this.width = 80;
     this.height = 25;
@@ -70,8 +73,49 @@ export class GameState {
     }
   }
 
+  computeBeam(): void {
+    this.beamTiles = new Set();
+    this.beamHitsTarget = false;
+
+    for (const [key, device] of Object.entries(this.devices[this.currLevel])) {
+      if (!(device instanceof LightSource) || !device.on) 
+        continue;
+
+      const [sx, sy] = key.split(',').map(Number);
+      let x = sx + device.dirX;
+      let y = sy + device.dirY;
+      let dx = device.dirX;
+      let dy = device.dirY;
+
+      for (let step = 0; step < 500; step++) {
+        const k = `${x},${y}`;
+        const terrain = this.maps[this.currLevel]?.[k];
+        if (terrain === undefined || terrain === Terrain.Wall) 
+          break;
+
+        this.beamTiles.add(k);
+
+        const tileDevice = this.devices[this.currLevel][k];
+        if (tileDevice instanceof Crate) 
+          break;
+        if (tileDevice instanceof LightTrigger) {
+          this.beamHitsTarget = true;
+          break;
+        }
+        if (tileDevice instanceof Mirror) {
+          // Reflect off a '╱' mirror: (dx, dy) → (-dy, -dx)
+          [dx, dy] = [-dy, -dx];
+        }
+
+        x += dx;
+        y += dy;
+      }
+    }
+  }
+
   roundEnd(): void {
     ++this.turn;
+    this.computeBeam();
 
     for (const timerTrigger of Object.values(this.devices[this.currLevel]).filter(d => d instanceof TimerTrigger)) {
       if (timerTrigger.countDown === 1) {

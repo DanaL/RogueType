@@ -6,6 +6,7 @@ type Cell = { glyph: string; fg: string; bg: string | null; sx: number; sy: numb
 
 const EXPLORED_COLOUR: string = "#3a3a4a";
 const RADIATION_BG: string = "#1a3d0a";
+const BEAM_BG: string = "#3d3800";
 
 export class Renderer {
   private display: ROT.Display;
@@ -62,12 +63,16 @@ export class Renderer {
       const def = TERRAIN_DEF[gs.maps[gs.currLevel][key]];
       const lvlKey = `${gs.currLevel},${key}`;
 
-      const radBg = gs.hazards[gs.currLevel][key] === EnvironmentHazard.RADIATION ? RADIATION_BG : null;
+      const tileBg = (k: string): string | null =>
+        gs.beamTiles.has(k) ? BEAM_BG
+        : gs.hazards[gs.currLevel][k] === EnvironmentHazard.RADIATION ? RADIATION_BG
+        : null;
+
       if (key == gs.highlightedLoc) {
         const cell = { glyph: def.glyph, fg: "#fff", bg: "#ff5cff", sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
       } else if (gs.visible[lvlKey]) {
-        const cell = { glyph: def.glyph, fg: def.fg, bg: radBg, sx: sx, sy: sy};
+        const cell = { glyph: def.glyph, fg: def.fg, bg: tileBg(key), sx: sx, sy: sy};
         cells[`${sx},${sy}`] = cell;
       } else if (gs.explored[lvlKey]) {
         const cell = { glyph: def.glyph, fg: EXPLORED_COLOUR, bg: null, sx: sx, sy: sy};
@@ -80,18 +85,18 @@ export class Renderer {
         if (!(visible || explored))
           continue;
 
-        const device = gs.devices[gs.currLevel][key];        
+        const device = gs.devices[gs.currLevel][key];
         if (key === gs.highlightedLoc) {
           const cell = { glyph: device.ch, fg: "#fff", bg: "#ff5cff", sx: sx, sy: sy};
           cells[`${sx},${sy}`] = cell;
         } else if (visible) {
-          const cell = { glyph: device.ch, fg: device.colour, bg: radBg, sx: sx, sy: sy};
+          const cell = { glyph: device.ch, fg: device.colour, bg: tileBg(key), sx: sx, sy: sy};
           cells[`${sx},${sy}`] = cell;
         } else if (explored) {
           const cell = { glyph: device.ch, fg: EXPLORED_COLOUR, bg: null, sx: sx, sy: sy};
           cells[`${sx},${sy}`] = cell;
         }
-      } 
+      }
     }
 
     for (const robot of gs.robots) {
@@ -106,8 +111,11 @@ export class Renderer {
         if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH)
           continue;
         const fg = coord == gs.highlightedLoc ? "#fff" : robot.colour;
-        const bg = coord == gs.highlightedLoc ? "#ff5cff" : (gs.hazards[gs.currLevel][coord] === EnvironmentHazard.RADIATION ? RADIATION_BG : "#000");
-        cells[`${robot.x},${robot.y}`] = { glyph: robot.ch, fg: fg, bg: bg, sx: sx, sy: sy};
+        const robotBg = coord == gs.highlightedLoc ? "#ff5cff"
+          : gs.beamTiles.has(coord) ? BEAM_BG
+          : gs.hazards[gs.currLevel][coord] === EnvironmentHazard.RADIATION ? RADIATION_BG
+          : "#000";
+        cells[`${robot.x},${robot.y}`] = { glyph: robot.ch, fg: fg, bg: robotBg, sx: sx, sy: sy};
       }
     }
 
