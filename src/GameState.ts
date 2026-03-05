@@ -52,8 +52,16 @@ export class GameState {
     });
   }
 
-  postTurn(): void {
+  postTurn(actor: Actor): void {
     this.checkWeightedGateState();
+
+    const loc = `${actor.x},${actor.y}`;
+    if (this.hazards[actor.level][loc] === EnvironmentHazard.RADIATION) {
+      actor.takeDamage(2);
+      if (this.visible[`${actor.level},${loc}`] && actor instanceof Player)
+        this.addMessage("Radiation is damaging your systems!");
+      this.checkDestroyed(actor);
+    }
   }
 
   roundEnd(): void {
@@ -199,31 +207,36 @@ export class GameState {
     return false;
   }
 
+  private checkDestroyed(actor: Actor): void {
+    if (actor.currHull > 0) 
+      return;
+
+    const actorLoc = `${actor.level},${actor.x},${actor.y}`;
+    if (actor instanceof Player) {
+      this.game.pushPopup(new Popup("", "Your robot was 86'd.", 4, 40, 25));
+      this.game.pushInputController(new InfoPopupController(this.game));
+      this.addMessage("Your robot was 86'd.");
+      this.player.hackedRobot = null;
+      this.disconnect();
+    } else if (actor instanceof Robot) {
+      if (this.visible[actorLoc])
+        this.addMessage(`The ${actor.name} is destroyed!`);
+      this.game.scheduler.remove(actor);
+      this.robots = this.robots.filter(r => r !== actor);
+    }
+  }
+
   assault(target: Actor, attacker: Actor, strength: number): void {
     const attackerName = attacker instanceof Player ? "You" : `The ${attacker.name}`;
     const targetName = target instanceof Player ? "you" : `the ${target.name};`
     const targetLoc = `${target.level},${target.x},${target.y}`;
-    const s = this.visible[targetLoc] 
-                ? `${attackerName} attacks ${targetName}!` 
+    const s = this.visible[targetLoc]
+                ? `${attackerName} attacks ${targetName}!`
                 : "You hear electronic squeals and the sounds of plastic and metal being battered.";
     this.addMessage(s);
 
     target.takeDamage(strength);
-    if (target.currHull === 0) {
-      if (target instanceof Player) {
-        this.game.pushPopup(new Popup("", "Your robot was 86'd.", 4, 40, 25));
-        this.game.pushInputController(new InfoPopupController(this.game));
-
-        this.addMessage("Your robot was 86'd.");
-        this.player.hackedRobot = null;
-        this.disconnect();
-      } else if (target instanceof Robot) {
-        if (this.visible[targetLoc])
-          this.addMessage(`The ${target.name} is destroyed!`);
-        this.game.scheduler.remove(target);
-        this.robots = this.robots.filter(r => r !== target);
-      }
-    }
+    this.checkDestroyed(target);
   }
 
   tryMove(dx: number, dy: number, game: Game | null, actor: Actor): ActionResult {

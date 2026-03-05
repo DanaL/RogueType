@@ -80,7 +80,7 @@ export abstract class Actor {
   }
 
   endTurn(): void {
-    this.gs.postTurn();
+    this.gs.postTurn(this);
   }
 
   abstract act(): Promise<void>;
