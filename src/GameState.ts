@@ -167,6 +167,7 @@ export class GameState {
         const [x, y] = key.split(',').map(Number);
         this.player.x = x;
         this.player.y = y;
+        this.player.level = nextLevel;
         break;
       }
     }
@@ -186,6 +187,33 @@ export class GameState {
     return false;
   }
 
+  assault(target: Actor, attacker: Actor, strength: number): void {
+    const attackerName = attacker instanceof Player ? "You" : `The ${attacker.name}`;
+    const targetName = target instanceof Player ? "you" : `the ${target.name};`
+    const targetLoc = `${target.level},${target.x},${target.y}`;
+    const s = this.visible[targetLoc] 
+                ? `${attackerName} attacks ${targetName}!` 
+                : "You hear electronic squeals and the sounds of plastic and metal being battered.";
+    this.addMessage(s);
+
+    target.takeDamage(strength);
+    if (target.currHull === 0) {
+      if (target instanceof Player) {
+        this.game.pushPopup(new Popup("", "Your robot was 86'd.", 4, 40, 25));
+        this.game.pushInputController(new InfoPopupController(this.game));
+
+        this.addMessage("Your robot was 86'd.");
+        this.player.hackedRobot = null;
+        this.disconnect();
+      } else if (target instanceof Robot) {
+        if (this.visible[targetLoc])
+          this.addMessage(`The ${target.name} is destroyed!`);
+        this.game.scheduler.remove(target);
+        this.robots = this.robots.filter(r => r !== target);
+      }
+    }
+  }
+
   tryMove(dx: number, dy: number, game: Game | null, actor: Actor): ActionResult {
     const nx = actor.x + dx;
     const ny = actor.y + dy;
@@ -199,7 +227,7 @@ export class GameState {
       return ActionResult.Failure;
     } else if (actor instanceof Player && terrain == Terrain.LiftDown) {
       this.stepOnLift(nx, ny, game);
-      return ActionResult.Success;
+      return ActionResult.Complete;
     } else if (this.occupied(nx, ny)) {
       if (isPlayer && this.bumpIntoRobot(nx, ny))
         return ActionResult.Pending;
@@ -214,7 +242,7 @@ export class GameState {
         return ActionResult.Pending;
     }
 
-    return ActionResult.Success;
+    return ActionResult.Complete;
   }
 
   private expunged() {

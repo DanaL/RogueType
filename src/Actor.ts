@@ -1,7 +1,7 @@
 import * as ROT from "rot-js";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
-import { ActionResult, ICELevel } from "./Utils";
+import { ActionResult, ICELevel, rngRange } from "./Utils";
 import { Software, SoftwareCategory } from "./Software";
 import type { JigsawPiece } from "./Jigsaw";
 
@@ -11,6 +11,7 @@ export abstract class Actor {
   level: number = 0; // level as in dungeon level, not an expression of power
   ch: string;
   colour: string;
+  name: string = "";
 
   protected gs: GameState;
 
@@ -43,6 +44,39 @@ export abstract class Actor {
     }
 
     return ActionResult.Failure;
+  }
+
+  private isAssaultTarget(levelNum: number, x: number, y: number): Actor | null {
+    if (levelNum === this.gs.player.level && x === this.gs.player.x && y === this.gs.player.y)
+      return this.gs.player;
+    
+    for (const robot of this.gs.robots) {
+      if (levelNum === robot.level && x === robot.x && y === robot.y)
+        return robot;
+    }
+
+    return null;
+  }
+
+  protected randomAssault(): ActionResult {
+    const dirs: [number, number][] = [[0, -1], [0, 1], [1, 0], [-1, 0]];
+    const targets: Actor[] = [];
+    for (const d of dirs) {
+      const target = this.isAssaultTarget(this.level, this.x + d[0], this.y + d[1]);
+      if (target)
+        targets.push(target);      
+    }
+
+    if (targets.length > 0) {
+      this.gs.assault(targets[rngRange(targets.length)], this, 2);
+      return ActionResult.Complete;
+    }
+
+    return ActionResult.Failure;
+  }
+
+  takeDamage(amount: number): void {
+    this.currHull = Math.max(0, this.currHull - amount);
   }
 
   endTurn(): void {
@@ -95,14 +129,12 @@ export class Player extends Actor {
 export abstract class Robot extends Actor {  
   static #nextId = 2;
   readonly id: number;
-  name: string = "";
   desc: string = "";
   accuracy: number = 0.0;
   software: Software[] = [];
   ice: ICELevel = ICELevel.Weak;
   memorySize = 0;
   previouslyHacked = false;
-  
   protected _maxHull: number = 0;
   get maxHull() { return this._maxHull; }
   protected _currHull: number = 0;
@@ -125,13 +157,27 @@ export abstract class Robot extends Actor {
     this.id = Robot.#nextId++;
   }
 
-  protected movement(gs: GameState): ActionResult {
+  act(): Promise<void> {
     for (const sw of this.software) {
-      if (sw.name === "DW Move Protocol")
-        return this.randomMove(gs);
-    }
+      if (sw.name === "Experimental Evil Algorithm") {
+        const res = this.randomAssault();
+        if (res === ActionResult.Complete)
+          break;
+      }
 
-    return ActionResult.Failure;
+      if (sw.name === "DW Move Protocol") {
+        const res = this.randomMove(this.gs);
+
+        // in a non-7DRL I wouldn't write shitty code like this...
+        if (res === ActionResult.Failure && this.name === "roomba" && this.gs.visible[`${this.level},${this.x},${this.y}`])
+          this.gs.addMessage("The roomba beeps.");
+        else if (res === ActionResult.Complete)
+          break;
+      }
+    }
+    
+    this.endTurn();
+    return Promise.resolve();
   }
 }
 
@@ -140,12 +186,6 @@ export class BasicBot extends Robot {
     super(x, y, ch, colour, gs);
     this.name = name;
     this.desc = desc;
-  }
-
-  act(): Promise<void> {
-    this.movement(this.gs);
-    this.endTurn();
-    return Promise.resolve();
   }
 }
 
@@ -156,8 +196,8 @@ export class Roomba extends Robot {
     this.desc = "A standard cleaning bot. Conveniently innocuous.";
     this.x = x;
     this.y = y;
-    this._maxHull = 3;    
-    this.currHull = 3;    
+    this._maxHull = 5;    
+    this.currHull = 5;    
     this.accuracy = 0.80;
     this.securityClearance = 1;
     this.memorySize = 3;
@@ -165,14 +205,5 @@ export class Roomba extends Robot {
     this.software.push(new Software("Facility Firewall Gold Edition", SoftwareCategory.ICE, false, 1, 1));
     this.software.push(new Software("DW Move Protocol", SoftwareCategory.Behaviour, false, 1, 1));
     this.currFirewall = 5;    
-  }
-
-  act(): Promise<void> {
-    if (this.movement(this.gs) === ActionResult.Failure && this.gs.visible[`${this.level},${this.x},${this.y}`]) {
-      this.gs.addMessage("The roomba beeps.");
-    }
-
-    this.endTurn();
-    return Promise.resolve();
   }
 }

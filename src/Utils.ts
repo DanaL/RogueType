@@ -1,7 +1,7 @@
 import * as ROT from "rot-js";
 import { JigsawPiece } from "./Jigsaw";
 
-export const ActionResult = { Success: 0, Failure: 1, Pending: 2 } as const;
+export const ActionResult = { Complete: 0, Failure: 1, Pending: 2 } as const;
 export type ActionResult = (typeof ActionResult)[keyof typeof ActionResult];
 
 export const ICELevel = { Weak: 0, Normal: 1, Strong: 2, Freezing: 3 } as const;
