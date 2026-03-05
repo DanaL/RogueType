@@ -1,5 +1,5 @@
 import * as ROT from "rot-js";
-import { Actor, Player, Robot, ShieldedBot } from "./Actor";
+import { Actor, DozerBot, Player, Robot, ShieldedBot } from "./Actor";
 import { Crate, Device, Terminal, TimerTrigger, WeightTrigger } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
@@ -92,6 +92,11 @@ export class GameState {
         .map(r => `${r.x},${r.y}`)
     ]);
     actorLocs.add(`${this.player.x},${this.player.y}`);
+
+    for (const [key, device] of Object.entries(this.devices[this.currLevel])) {
+      if (device instanceof Crate)
+        actorLocs.add(key);
+    }
 
     let weightTriggers: Record<string, WeightTrigger> = {};
     let gateOpen = false;
@@ -265,7 +270,11 @@ export class GameState {
 
     const device = this.devices[this.currLevel][key];
 
-    if (device instanceof Crate) {
+    const dozer = actor instanceof DozerBot || (isPlayer && this.player.hackedRobot instanceof DozerBot);
+    const crate = device instanceof Crate;
+    if (crate && dozer) {
+      return this.tryToPushCrate(actor, device, nx, ny, dx, dy);
+    } else if (crate) {
       if (isPlayer)
         this.addMessage("Your robot body is too weak to push that crate.");
       return ActionResult.Failure;
@@ -282,7 +291,37 @@ export class GameState {
     return ActionResult.Complete;
   }
 
-  private expunged() {
+  private tryToPushCrate(actor: Actor, crate: Crate, cx: number, cy: number, dx: number, dy: number): ActionResult {
+    const nx = cx + dx;
+    const ny = cy + dy;
+    const destKey = `${nx},${ny}`;
+    const terrain = this.maps[this.currLevel][destKey];
+
+    if (terrain === undefined || !TERRAIN_DEF[terrain].walkable)
+      return ActionResult.Failure;
+
+    if (this.occupied(nx, ny)) {
+      if (actor instanceof Player)
+        this.addMessage("You cannot move the crate.");
+      return ActionResult.Failure;
+    }
+    const destDevice = this.devices[this.currLevel][destKey];
+    if (destDevice instanceof Terminal) {
+      if (actor instanceof Player)
+        this.addMessage("You cannot move the crate.");
+      return ActionResult.Failure;
+    }
+
+    delete this.devices[this.currLevel][`${cx},${cy}`];
+    this.devices[this.currLevel][destKey] = crate;
+
+    actor.x = cx;
+    actor.y = cy;
+
+    return ActionResult.Complete;
+  }
+
+  private expunged(): void {
     this.game.pushPopup(new Popup("","\n[#d93e48 U HAVE BEEN EXPUNGED]\n\n-- press any key to continue --", 10, 20, 40));
     this.game.pushInputController(new InfoPopupController(this.game, this.onRestart));
   }

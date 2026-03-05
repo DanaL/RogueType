@@ -1,6 +1,6 @@
 import { DataFile, Crate, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
-import { BasicBot, Player, Roomba } from "./Actor";
+import { BasicBot, DozerBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH, NUM_LVLS } from "./Utils";
 import { buildLevel } from "./LevelGen";
@@ -75,6 +75,9 @@ export function setupWorld(game: Game): void {
   
   const roomba = new Roomba(41, 19, game.gs);
   game.gs.addRobot(roomba, 0, 41, 17);
+
+  const dozerBot = new DozerBot(42, 22, game.gs);
+  game.gs.addRobot(dozerBot, 0, 42, 22);
 
   const pwd = renderBitmap("AF5TD0");
 

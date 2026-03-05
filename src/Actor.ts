@@ -226,3 +226,22 @@ export class ShieldedBot extends Robot {
     this.currFirewall = 5;    
   }
 }
+
+export class DozerBot extends Robot {
+  constructor(x: number, y: number, gs: GameState) {
+    super(x, y, 'b', '#ff5cff', gs);
+    this.name = "dozer bot";
+    this.desc = "A miniature bulldozer. Or a very large toy bulldozer. Very pushy looking though.";
+    this.x = x;
+    this.y = y;
+    this._maxHull = 10;    
+    this.currHull = 10;    
+    this.accuracy = 1.2;
+    this.securityClearance = 1;
+    this.memorySize = 2;
+
+    this.software.push(new Software("Facility Firewall Gold Edition", SoftwareCategory.ICE, false, 1, 1));
+    
+    this.currFirewall = 5;    
+  }
+}
