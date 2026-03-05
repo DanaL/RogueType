@@ -183,6 +183,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   setStairs(level, gateIdx, levelNum);
 
   debugDumpMap(level, levelNum);
+  
   return level;
 }
 
@@ -195,7 +196,8 @@ function cleanupDoors(level: LevelInfo): void {
   for (let y = 1; y < MAP_ROWS - 1; y++) {
     for (let x = 1; x < MAP_WIDTH - 1; x++) {
       const k = `${x},${y}`;
-      if (level.map[k] !== Terrain.Door) continue;
+      if (level.map[k] !== Terrain.Door) 
+        continue;
 
       const hasEW = isWalkable(x - 1, y) && isWalkable(x + 1, y);
       const hasNS = isWalkable(x, y - 1) && isWalkable(x, y + 1);
@@ -546,16 +548,14 @@ type RoomCoord = { row: number; col: number };
 interface RoomTemplate {
   width: number;
   height: number;
-  tiles: TerrainType[][]; 
-  entrances: RoomCoord[]; 
-  terminals: RoomCoord[]; 
+  tiles: TerrainType[][];
+  terminals: RoomCoord[];
 }
 
 interface LogJamTemplate {
   width: number;
   height: number;
   tiles: TerrainType[][];
-  entrances:  RoomCoord[];
   gate: RoomCoord;
   triggers: RoomCoord[];
   timerTriggers: RoomCoord[];
@@ -608,7 +608,6 @@ function parseRooms(text: string): RoomTemplate[] {
       width: Math.max(...tiles.map(r => r.length)),
       height: tiles.length,
       tiles,
-      entrances: parseCoords(meta['Entrance'] ?? ''),
       terminals: parseCoords(meta['Terminal'] ?? ''),
     };
   });
@@ -622,10 +621,9 @@ function parseLogJams(text: string): LogJamTemplate[] {
       width: Math.max(...tiles.map(r => r.length)),
       height: tiles.length,
       tiles,
-      entrances: parseCoords(meta['Entrance']   ?? ''),
       gate: gateCoords[0] ?? { row: 0, col: 0 },
-      triggers: parseCoords(meta['WTrigger']   ?? ''),
-      timerTriggers: parseCoords(meta['TTrigger']   ?? ''),
+      triggers: parseCoords(meta['WTrigger'] ?? ''),
+      timerTriggers: parseCoords(meta['TTrigger'] ?? ''),
       restricted: meta['Restricted'] ?? '',
     };
   });

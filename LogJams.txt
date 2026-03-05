@@ -7,7 +7,6 @@
 #...1.#
 #######
 Gate:3,6
-Entrance:3,0
 WTrigger:2,4;5,4
 Restricted:East
 ----------
@@ -23,7 +22,6 @@ Restricted:East
 ###.....###
 #####+#####
 Gate:5,10
-Entrance:10,5;5,0
 WTrigger:3,5;8,8
 Restricted:East
 ----------
@@ -34,7 +32,6 @@ G..........#
 #.......1..#
 ############
 Gate:2,0
-Entrance:3,11
 TTrigger:4,8
 Restricted:West
 ----------
@@ -45,6 +42,5 @@ Restricted:West
 #..........G
 ############
 Gate:4,11
-Entrance:2,0
 TTrigger:1,2
 Restricted:East
