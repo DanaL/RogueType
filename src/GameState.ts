@@ -75,18 +75,20 @@ export class GameState {
   computeBeam(): void {
     this.beamTiles = new Set();
     let beamHitsTarget = false;
-    
-    for (const [key, device] of Object.entries(this.devices[this.currLevel])) {
-      if (!(device instanceof LightSource) || !device.on) 
-        continue;
 
-      const [sx, sy] = key.split(',').map(Number);
-      let x = sx + device.dirX;
-      let y = sy + device.dirY;
-      let dx = device.dirX;
-      let dy = device.dirY;
+    const lightSource = Object.entries(this.devices[this.currLevel])
+      .find(([, d]) => d instanceof LightSource && d.on);
+    if (!lightSource)
+      return;
 
-      for (let step = 0; step < 500; step++) {
+    const [key, device] = lightSource as [string, LightSource];
+    const [sx, sy] = key.split(',').map(Number);
+    let x = sx + device.dirX;
+    let y = sy + device.dirY;
+    let dx = device.dirX;
+    let dy = device.dirY;
+
+    for (let step = 0; step < 500; step++) {
         const k = `${x},${y}`;
         const terrain = this.maps[this.currLevel]?.[k];
         if (terrain === undefined || terrain === Terrain.Wall) 
@@ -108,7 +110,6 @@ export class GameState {
         x += dx;
         y += dy;
       }
-    }
 
     let gateLoc = "";
     for (const loc of Object.keys(this.maps[this.currLevel])) {
