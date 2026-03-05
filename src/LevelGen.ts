@@ -1,7 +1,7 @@
 import { GameState } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { Device, WeightTrigger } from "./Device";
+import { Device, WeightTrigger, TimerTrigger } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
@@ -66,7 +66,8 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 
   // Place the chokePoint near the centre of the map
   let nextRoomId = 1;
-  const chokePoint = LOG_JAMS[rndRange(LOG_JAMS.length)];
+  //const chokePoint = LOG_JAMS[rndRange(LOG_JAMS.length)];
+  const chokePoint = LOG_JAMS[2];
   const row = MAP_ROWS / 2 - 5 + rndRange(10);
   const col = MAP_WIDTH / 2 - 5 + rndRange(10);
   setupChokePoint(level, chokePoint, row, col, nextRoomId++, 1);
@@ -136,6 +137,13 @@ function setupChokePoint(level: LevelInfo, template: LogJamTemplate, row: number
     const gy = template.gate.row + row;
     const trigger = new WeightTrigger(gx, gy);
     level.devices[`${wt.col + col},${wt.row + row}`] = trigger;
+  }
+
+  for (const tt of template.timerTriggers) {
+    const gx = template.gate.col + col;
+    const gy = template.gate.row + row;
+    const trigger = new TimerTrigger(gx, gy);
+    level.devices[`${tt.col + col},${tt.row + row}`] = trigger;
   }
 }
 
@@ -438,7 +446,8 @@ interface LogJamTemplate {
   tiles: TerrainType[][];
   entrances:  RoomCoord[];
   gate: RoomCoord;
-  triggers: RoomCoord[]; 
+  triggers: RoomCoord[];
+  timerTriggers: RoomCoord[];
   restricted: string;
 }
 
@@ -505,6 +514,7 @@ function parseLogJams(text: string): LogJamTemplate[] {
       entrances:  parseCoords(meta['Entrance']   ?? ''),
       gate:       gateCoords[0] ?? { row: 0, col: 0 },
       triggers:   parseCoords(meta['WTrigger']   ?? ''),
+      timerTriggers:   parseCoords(meta['TTrigger']   ?? ''),
       restricted: meta['Restricted'] ?? '',
     };
   });

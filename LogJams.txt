@@ -26,3 +26,14 @@ Gate:5,10
 Entrance:10,5;5,0
 WTrigger:3,5;8,8
 Restricted:East
+----------
+############
+#..........#
+G..........#
+#..........+
+#.......1..#
+############
+Gate:2,0
+Entrance:3,11
+TTrigger:4,8
+Restricted:West

@@ -1,6 +1,6 @@
 import * as ROT from "rot-js";
 import { Actor, Player, Robot } from "./Actor";
-import { Device, Terminal, WeightTrigger } from "./Device";
+import { Device, Terminal, TimerTrigger, WeightTrigger } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
 import { InfoPopupController, YesNoController } from "./InputController";
@@ -52,6 +52,21 @@ export class GameState {
     this.checkGateState();
   }
 
+  roundEnd(): void {
+    for (const timerTrigger of Object.values(this.devices[this.currLevel]).filter(d => d instanceof TimerTrigger)) {
+      if (timerTrigger.countDown === 1) {
+        timerTrigger.countDown = 0;
+        const gateMapLoc = `${timerTrigger.gateX},${timerTrigger.gateY}`;
+        const gateLoc = `${this.currLevel},${gateMapLoc}`;
+        this.maps[this.currLevel][gateMapLoc] = Terrain.Gate;
+        if (this.visible[gateLoc])
+          this.addMessage("The gate closes with a hiss.");
+      } else if (timerTrigger.countDown > 1) {
+        --timerTrigger.countDown;
+      }
+    }
+  }
+
   private checkGateState() {
     const actorLocs = new Set<string>([
       ...this.robots
@@ -60,18 +75,40 @@ export class GameState {
     ]);
     actorLocs.add(`${this.player.x},${this.player.y}`);
 
-    let gateOpen = true;
+    let weightTriggers: Record<string, WeightTrigger> = {};
+    let timerTriggers: Record<string, TimerTrigger> = {};
+    let gateOpen = false;
     for (const [key, device] of Object.entries(this.devices[this.currLevel])) {
-      if (!(device instanceof WeightTrigger))
-        continue;
+      if (device instanceof WeightTrigger)
+        weightTriggers[key] = device;
+      else if (device instanceof TimerTrigger)
+        timerTriggers[key] = device;
+    }
 
-      if (!actorLocs.has(key))
-        gateOpen = false;
-
-      if (!device.weighted && actorLocs.has(key) && this.visible[`${this.currLevel},${key}`]) {
-        this.addMessage("You hear a click.");
+    if (Object.keys(weightTriggers).length > 0) {
+      gateOpen = true;
+      for (const loc in Object.keys(weightTriggers)) {
+        if (!actorLocs.has(loc)) {
+          gateOpen = false;
+          weightTriggers[loc].weighted = false;
+        } else {
+          weightTriggers[loc].weighted = true;
+          if (!weightTriggers[loc].weighted && this.visible[`${this.currLevel},${loc}`])
+            this.addMessage("You hear a click.");
+        } 
       }
-      device.weighted = actorLocs.has(key);
+    } else if (Object.keys(timerTriggers).length > 0) {
+      // There should only be one timer trigger on a floor (at least for the 7DRL version of the game)
+      const loc = Object.keys(timerTriggers)[0]
+      const timer = timerTriggers[loc];
+      if (actorLocs.has(loc) && timer.countDown === 0) {
+        timer.countDown = 5;
+        gateOpen = true;
+        if (this.visible[`${this.currLevel},${loc}`])
+            this.addMessage("You hear a click and a buzzer begins to sound.");
+      } else if (timer.countDown > 0) {
+        gateOpen = true;
+      }
     }
 
     let gateLoc = "";
@@ -90,7 +127,7 @@ export class GameState {
     } else if (!gateOpen && gate === Terrain.OpenGate) {
       this.maps[this.currLevel][gateLoc] = Terrain.Gate;
       if (this.visible[`${this.currLevel},${gateLoc}`])
-        this.addMessage("You hear a pneumatic hiss.");
+        this.addMessage("The gate closes with a hiss.");
     }
   }
 

@@ -41,6 +41,18 @@ export class WeightTrigger extends Device {
   }
 }
 
+export class TimerTrigger extends Device {
+  readonly gateX: number;
+  readonly gateY: number;
+  countDown: number = 0;
+
+  constructor(gx: number, gy: number) {
+    super("timer trigger", "A trigger that will be engaged by stepping on it.", '•', '#646365');
+    this.gateX = gx;
+    this.gateY = gy;
+  }
+}
+
 export class DataFile {
   readonly title: string;
   readonly contents: string;

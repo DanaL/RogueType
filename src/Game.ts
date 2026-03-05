@@ -28,6 +28,7 @@ export class Game {
   }
 
   start(): void {
+    this.scheduler.add({ act: () => { this.gs.roundEnd(); return Promise.resolve(); } }, true);
     this.engine.start();
   }
 
