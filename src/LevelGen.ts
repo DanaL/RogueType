@@ -105,8 +105,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 
   // Place the chokePoint near the centre of the map
   let nextRoomId = 1;
-  //const chokePoint = LOG_JAMS[rndRange(LOG_JAMS.length)];
-  const chokePoint = LOG_JAMS[2];
+  const chokePoint = LOG_JAMS[rndRange(LOG_JAMS.length)];
   const row = MAP_ROWS / 2 - 5 + rndRange(10);
   const col = MAP_WIDTH / 2 - 5 + rndRange(10);
   setupChokePoint(level, chokePoint, row, col, nextRoomId++, 1);
@@ -179,10 +178,36 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   joinDisjointRegions(level, arrColMin, arrColMax);
   joinDisjointRegions(level, resColMin, resColMax);
 
+  cleanupDoors(level);
+
   setStairs(level, gateIdx, levelNum);
 
   debugDumpMap(level, levelNum);
   return level;
+}
+
+function cleanupDoors(level: LevelInfo): void {
+  const isWalkable = (x: number, y: number) => {
+    const t = level.map[`${x},${y}`];
+    return t !== undefined && TERRAIN_DEF[t].walkable;
+  };
+
+  for (let y = 1; y < MAP_ROWS - 1; y++) {
+    for (let x = 1; x < MAP_WIDTH - 1; x++) {
+      const k = `${x},${y}`;
+      if (level.map[k] !== Terrain.Door) continue;
+
+      const hasEW = isWalkable(x - 1, y) && isWalkable(x + 1, y);
+      const hasNS = isWalkable(x, y - 1) && isWalkable(x, y + 1);
+
+      if (!hasEW && !hasNS) {
+        level.map[k] = Terrain.Wall;
+        const i = y * MAP_WIDTH + x;
+        level.roomMask[i] = 0;
+        level.roomId[i] = 0;
+      }
+    }
+  }
 }
 
 function placeFailsafeTerminal(level: LevelInfo, levelNum: number) {
