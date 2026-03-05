@@ -339,15 +339,22 @@ function placeFailsafeTerminal(level: LevelInfo, levelNum: number) {
     }
   }
 
+  const functions = LIFT_ACCESS | DISABLE_GATE;
   for (let j = 0; j < 25; j++) {
     const loc = candidates[rngRange(candidates.length)];
     if (level.devices[loc])
       continue;
-
     const [ x, y ] = loc.split(',').map(Number);
-    const functions = LIFT_ACCESS | DISABLE_GATE;
     placeTerminal(level, x, y, levelNum, functions);
-    break;
+    return;
+  }
+  // Fallback: scan in order to guarantee placement
+  for (const loc of candidates) {
+    if (!level.devices[loc]) {
+      const [ x, y ] = loc.split(',').map(Number);
+      placeTerminal(level, x, y, levelNum, functions);
+      return;
+    }
   }
 }
 

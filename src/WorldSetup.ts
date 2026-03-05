@@ -72,23 +72,34 @@ export function setupWorld(game: Game): void {
     buildLevel(game.gs, level);
 
   game.gs.downLifts[0] = true;
-  
+
   const roomba = new Roomba(41, 19, game.gs);
   game.gs.addRobot(roomba, 0, 41, 17);
 
   const dozerBot = new DozerBot(42, 22, game.gs);
   game.gs.addRobot(dozerBot, 0, 42, 22);
 
-  const pwd = renderBitmap("AF5TD0");
+  // Generate the mainframe password and scatter its bitmap rows across levels 1-8
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let pwdStr = '';
+  for (let i = 0; i < 6; i++)
+    pwdStr += CHARS[Math.floor(Math.random() * CHARS.length)];
 
-  terminal.files.push(pwd[4]);
+  const pieces = renderBitmap(pwdStr);
+  // Shuffle so pieces aren't placed in row order
+  for (let i = pieces.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
+  }
 
-  // game.gs.player.jigsawPieces.push(pwd[3]);
-  // game.gs.player.jigsawPieces.push(pwd[2]);
-  // game.gs.player.jigsawPieces.push(pwd[4]);
-  // game.gs.player.jigsawPieces.push(pwd[1]);
-  // game.gs.player.jigsawPieces.push(pwd[5]);
-  // game.gs.player.jigsawPieces.push(pwd[0]);
-  // game.gs.player.jigsawPieces.push(pwd[6]);
-
+  for (let level = 1; level < NUM_LVLS; level++) {
+    const piece = pieces[level - 1];
+    if (!piece) 
+      continue;
+    const terminals = Object.values(game.gs.devices[level])
+                            .filter(d => d instanceof Terminal) as Terminal[];
+    if (terminals.length === 0) 
+      continue;
+    terminals[Math.floor(Math.random() * terminals.length)].addFile(piece);
+  }
 }
