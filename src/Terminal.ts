@@ -1,4 +1,4 @@
-import { GameState } from "./GameState";
+import { EnvironmentHazard, GameState } from "./GameState";
 import * as Device from "./Device";
 import { InputController } from "./InputController";
 import { LineScanner } from "./LineScanner";
@@ -11,6 +11,7 @@ const LIFT_ACCESS = 1;
 const FILE_SYSTEM = 2;
 const FILE_VIEW   = 3;
 const DISABLE_GATE = 4;
+const VENT_RADIATION = 5;
 
 type TerminalFunction = { desc: string; flag: number };
 
@@ -31,6 +32,8 @@ export class TerminalController extends InputController {
       this.options.push({ desc: "lift access", flag: LIFT_ACCESS });
     if ((term.functions & Device.DISABLE_GATE) !== 0)
       this.options.push({ desc: "disable gate", flag: DISABLE_GATE });
+    if ((term.functions & Device.VENT_RADIATION) !== 0)
+      this.options.push({ desc: "vent radiation", flag: VENT_RADIATION });
 
     this.options.push({ desc: "local file system", flag: FILE_SYSTEM });
 
@@ -67,6 +70,11 @@ export class TerminalController extends InputController {
       this.gs.downLifts[this.gs.currLevel] = !this.gs.downLifts[this.gs.currLevel];
       const s = this.gs.downLifts[this.gs.currLevel] ? "Elevator enabled" : "Elevator disabled";
       this.gs.addMessage(s);
+    } else if (e.key === 'Enter' && this.state === VENT_RADIATION) {
+      for (const k of Object.keys(this.gs.hazards[this.gs.currLevel]))
+        this.gs.hazards[this.gs.currLevel][k] = EnvironmentHazard.NONE;
+      this.gs.addMessage("Radiation vented.");
+      this.setState(MAIN_MENU);
     } else if (e.key === 'Escape' && this.state === DISABLE_GATE) {
       this.setState(MAIN_MENU);
     } else if (this.state === DISABLE_GATE && !this.popup.gateDeactivated && e.key === 'n') {
@@ -77,6 +85,8 @@ export class TerminalController extends InputController {
       this.popup.selectedFile = this.currRow;
       this.setState(FILE_VIEW);
     } else if (e.key === 'Escape' && this.state === FILE_VIEW) {
+      this.setState(FILE_SYSTEM);      
+    } else if (e.key === 'Escape' && this.state === VENT_RADIATION) {
       this.setState(FILE_SYSTEM);
     } else if (e.key === 'Escape' && this.state !== MAIN_MENU) {
       this.setState(MAIN_MENU);
@@ -125,6 +135,8 @@ export class TerminalPopup extends Popup {
       row = this.fileView(renderer, row);
     else if (this.state === DISABLE_GATE)
       row = this.gateAccess(renderer, row);
+    else if (this.state === VENT_RADIATION)
+      row = this.ventRadiation(renderer, row);
 
     return row;
   }
@@ -200,6 +212,14 @@ export class TerminalPopup extends Popup {
       renderer.drawChar(row, col++, ch, '#000', '#fff');
     this.closeContentRow(renderer, row++, col);
 
+    return row;
+  }
+
+  private ventRadiation(renderer: Renderer, row: number): number {
+    let col = this.openContentRow(renderer, row);
+    for (const ch of "vent radiation? (Enter)")
+      renderer.drawChar(row, col++, ch, '#009d4a', '#000');
+    this.closeContentRow(renderer, row++, col);
     return row;
   }
 

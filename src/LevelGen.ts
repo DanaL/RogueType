@@ -1,7 +1,8 @@
+import * as ROT from "rot-js";
 import { GameState, EnvironmentHazard } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { Device, WeightTrigger, TimerTrigger, Terminal, LIFT_ACCESS, DISABLE_GATE } from "./Device";
+import { Device, WeightTrigger, TimerTrigger, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
@@ -77,9 +78,47 @@ export function buildLevel(gs: GameState, levelNum: number) {
       levelInfo.restrictedSideLoc.push(k);
     }
 
-    // TEMP add radiation to the squares of the gate room
-    if (levelInfo.map[k] === Terrain.Floor && region === 1)
-      gs.hazards[levelNum][k] = EnvironmentHazard.RADIATION;
+  }
+
+  // Find the room ID of the room containing the downward stairs
+  let stairsRoomId = -1;
+  for (const [k, t] of Object.entries(levelInfo.map)) {
+    if (t === Terrain.LiftDown) {
+      const [sx, sy] = k.split(',').map(Number);
+      stairsRoomId = levelInfo.roomId[sy * MAP_WIDTH + sx];
+      break;
+    }
+  }
+
+  // Flood either the logjam room (roomMask === 1) or the stairs room with radiation
+  const useLogjam = ROT.RNG.getUniform() < 0.5;
+  for (let i = 0; i < levelInfo.roomMask.length; i++) {
+    const y = Math.floor(i / MAP_WIDTH);
+    const x = i - y * MAP_WIDTH;
+    const k = `${x},${y}`;
+    const t = levelInfo.map[k];
+    if (t !== Terrain.Floor && t !== Terrain.LiftDown && t !== Terrain.LiftUp)
+      continue;
+    
+    if (useLogjam) {
+      if (levelInfo.roomMask[i] === 1)
+        gs.hazards[levelNum][k] = EnvironmentHazard.RADIATION;
+    } else {
+      if (stairsRoomId !== -1 && levelInfo.roomId[i] === stairsRoomId)
+        gs.hazards[levelNum][k] = EnvironmentHazard.RADIATION;
+    }
+  }
+
+  // Place a VENT_RADIATION terminal on a free floor tile in the radiation room
+  const radFloorCandidates = Object.keys(gs.hazards[levelNum]).filter(k =>
+    gs.hazards[levelNum][k] === EnvironmentHazard.RADIATION &&
+    levelInfo.map[k] === Terrain.Floor &&
+    !levelInfo.devices[k]
+  );
+  if (radFloorCandidates.length > 0) {
+    const loc = radFloorCandidates[rngRange(radFloorCandidates.length)];
+    const [tx, ty] = loc.split(',').map(Number);
+    placeTerminal(levelInfo, tx, ty, levelNum, VENT_RADIATION);
   }
 
   const used = new Set<string>();
