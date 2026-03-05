@@ -24,7 +24,7 @@ export class Game {
     this.scheduler = new ROT.Scheduler.Simple();
     this.engine = new ROT.Engine(this.scheduler);
 
-    this.wpm = 60;
+    this.wpm = 20;
   }
 
   start(): void {

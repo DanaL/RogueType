@@ -64,9 +64,11 @@ export class Crate extends Device {
 export class DataFile {
   readonly title: string;
   readonly contents: string;
+  readonly puzzleSnippet: boolean;
 
-  constructor(title: string, contents: string) {
+  constructor(title: string, contents: string, snippet: boolean = false) {
     this.title = title;
     this.contents = contents;
+    this.puzzleSnippet = snippet;
   }
 }

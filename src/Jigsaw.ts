@@ -2,15 +2,15 @@ import { InputController } from "./InputController";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
 import { Player } from "./Actor";
+import { DataFile } from "./Device";
 
-export class JigsawPiece {
+export class JigsawPiece extends DataFile {
   id: number;
   row: number = -1;
-  text: string;
 
   constructor(id: number, text: string) {
+    super("file snippet", text, true);
     this.id = id;
-    this.text = text;
   }
 }
 
@@ -98,7 +98,7 @@ export class JigsawPopup extends Popup {
       let cursorDefault = 9999;
       let row = 24;
       for (const piece of this.player.jigsawPieces.filter(j => j.row === -1)) {
-        lines[row] = piece.text;
+        lines[row] = piece.contents;
         piece.row = row;
         if (row < cursorDefault)
           cursorDefault = row;
@@ -106,18 +106,18 @@ export class JigsawPopup extends Popup {
 
         if (piece.id === this.controller.selectedId) {
           selectedRow = row;
-          selectedText = piece.text;
+          selectedText = piece.contents;
         }
       }
 
       for (const piece of this.player.jigsawPieces.filter(j => j.row !== -1)) {
-        lines[piece.row] = piece.text;
+        lines[piece.row] = piece.contents;
         row = piece.row;
         if (row < cursorDefault)
           cursorDefault = row;
         if (piece.id === this.controller.selectedId) {
           selectedRow = row;
-          selectedText = piece.text;
+          selectedText = piece.contents;
         }
       }
 

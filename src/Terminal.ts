@@ -5,6 +5,7 @@ import { LineScanner } from "./LineScanner";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
 import { Terrain } from "./Terrain";
+import { JigsawPiece } from "./Jigsaw";
 
 const MAIN_MENU   = 0;
 const LIFT_ACCESS = 1;
@@ -236,7 +237,8 @@ export class TerminalPopup extends Popup {
     this.closeContentRow(renderer, row++, col);
     this.drawBlankRow(renderer, row++);
 
-    const tokens = new LineScanner(file.contents).scan();
+    const contents = file instanceof JigsawPiece ? file.contents.substring(0, this.maxWidth - 9) + "   >> more" : file.contents;
+    const tokens = new LineScanner(contents).scan();
     col = this.openContentRow(renderer, row);
     for (const token of tokens) {
       if (token.text === '\n') {
@@ -252,6 +254,23 @@ export class TerminalPopup extends Popup {
         renderer.drawChar(row, col++, ch, token.colour, '#000');
     }
     this.closeContentRow(renderer, row++, col);
+
+    if (file instanceof JigsawPiece) {
+      this.drawBlankRow(renderer, row++);
+      col = this.openContentRow(renderer, row);
+      this.gs.addMessage("...data downloaded to vped cache");
+      for (const ch of "...data downloaded to vped cache") {
+        renderer.drawChar(row, col++, ch, '#fff', '#000');
+      }
+      this.closeContentRow(renderer, row++, col);
+
+      for (const piece of this.gs.player.jigsawPieces) {
+        if (piece.id === file.id)
+          return row;
+      }
+
+      this.gs.player.jigsawPieces.push(file);            
+    }
 
     return row;
   }
