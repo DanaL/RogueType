@@ -1,12 +1,11 @@
-import * as ROT from "rot-js";
 import { GameState, EnvironmentHazard } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { Device, WeightTrigger, TimerTrigger, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION } from "./Device";
+import { Crate, Device, WeightTrigger, TimerTrigger, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
-import { Roomba, BasicBot, ShieldedBot } from "./Actor";
+import { Roomba, BasicBot, ShieldedBot, DozerBot } from "./Actor";
 import { Software, SoftwareCategory } from "./Software";
 
 export class LevelInfo {
@@ -80,45 +79,48 @@ export function buildLevel(gs: GameState, levelNum: number) {
 
   }
 
-  // Find the room ID of the room containing the downward stairs
-  let stairsRoomId = -1;
-  for (const [k, t] of Object.entries(levelInfo.map)) {
-    if (t === Terrain.LiftDown) {
-      const [sx, sy] = k.split(',').map(Number);
-      stairsRoomId = levelInfo.roomId[sy * MAP_WIDTH + sx];
-      break;
-    }
-  }
+  const hasRadiation = rngRange(4) === 0;
 
-  // Flood either the logjam room (roomMask === 1) or the stairs room with radiation
-  const useLogjam = ROT.RNG.getUniform() < 0.5;
-  for (let i = 0; i < levelInfo.roomMask.length; i++) {
-    const y = Math.floor(i / MAP_WIDTH);
-    const x = i - y * MAP_WIDTH;
-    const k = `${x},${y}`;
-    const t = levelInfo.map[k];
-    if (t !== Terrain.Floor && t !== Terrain.LiftDown && t !== Terrain.LiftUp)
-      continue;
-    
-    if (useLogjam) {
-      if (levelInfo.roomMask[i] === 1)
-        gs.hazards[levelNum][k] = EnvironmentHazard.RADIATION;
-    } else {
-      if (stairsRoomId !== -1 && levelInfo.roomId[i] === stairsRoomId)
-        gs.hazards[levelNum][k] = EnvironmentHazard.RADIATION;
+  if (hasRadiation) {
+    // Find the room ID of the room containing the downward stairs
+    let stairsRoomId = -1;
+    for (const [k, t] of Object.entries(levelInfo.map)) {
+      if (t === Terrain.LiftDown) {
+        const [sx, sy] = k.split(',').map(Number);
+        stairsRoomId = levelInfo.roomId[sy * MAP_WIDTH + sx];
+        break;
+      }
     }
-  }
 
-  // Place a VENT_RADIATION terminal on a free floor tile in the radiation room
-  const radFloorCandidates = Object.keys(gs.hazards[levelNum]).filter(k =>
-    gs.hazards[levelNum][k] === EnvironmentHazard.RADIATION &&
-    levelInfo.map[k] === Terrain.Floor &&
-    !levelInfo.devices[k]
-  );
-  if (radFloorCandidates.length > 0) {
-    const loc = radFloorCandidates[rngRange(radFloorCandidates.length)];
-    const [tx, ty] = loc.split(',').map(Number);
-    placeTerminal(levelInfo, tx, ty, levelNum, VENT_RADIATION);
+    // Flood either the logjam room (roomMask === 1) or the stairs room with radiation
+    const useLogjam = rngRange(2) === 0;
+    for (let i = 0; i < levelInfo.roomMask.length; i++) {
+      const y = Math.floor(i / MAP_WIDTH);
+      const x = i - y * MAP_WIDTH;
+      const k = `${x},${y}`;
+      const t = levelInfo.map[k];
+      if (t !== Terrain.Floor && t !== Terrain.LiftDown && t !== Terrain.LiftUp)
+        continue;
+      if (useLogjam) {
+        if (levelInfo.roomMask[i] === 1)
+          gs.hazards[levelNum][k] = EnvironmentHazard.RADIATION;
+      } else {
+        if (stairsRoomId !== -1 && levelInfo.roomId[i] === stairsRoomId)
+          gs.hazards[levelNum][k] = EnvironmentHazard.RADIATION;
+      }
+    }
+
+    // Place a VENT_RADIATION terminal on a free floor tile in the radiation room
+    const radFloorCandidates = Object.keys(gs.hazards[levelNum]).filter(k =>
+      gs.hazards[levelNum][k] === EnvironmentHazard.RADIATION &&
+      levelInfo.map[k] === Terrain.Floor &&
+      !levelInfo.devices[k]
+    );
+    if (radFloorCandidates.length > 0) {
+      const loc = radFloorCandidates[rngRange(radFloorCandidates.length)];
+      const [tx, ty] = loc.split(',').map(Number);
+      placeTerminal(levelInfo, tx, ty, levelNum, VENT_RADIATION);
+    }
   }
 
   const used = new Set<string>();
@@ -146,7 +148,7 @@ export function buildLevel(gs: GameState, levelNum: number) {
         continue;
 
       const [x, y] = loc.split(',').map(Number);
-      let workerDrone = new BasicBot('worker drone', "Performs various non-vacuuming tasks around the facility.", 'b', '#f9d071', x, y, gs);    
+      let workerDrone = new BasicBot('worker drone', "Performs various non-vacuuming tasks around the facility.", 'b', '#f9d071', x, y, gs);
       workerDrone.maxHull = 5;
       workerDrone.currHull = 5;
       workerDrone.memorySize = 5;
@@ -164,17 +166,48 @@ export function buildLevel(gs: GameState, levelNum: number) {
     }
   }
 
-  // Place a ShieldedBot on the arrival side (radiation is always present)
-  for (let tries = 0; tries < 20; tries++) {
-    const idx = rngRange(levelInfo.arrivalSideLoc.length);
-    const loc = levelInfo.arrivalSideLoc[idx];
-    if (used.has(loc))
-      continue;
-    const [x, y] = loc.split(',').map(Number);
-    gs.addRobot(new ShieldedBot(x, y, gs), levelNum, x, y);
-    used.add(loc);
-    break;
+  if (hasRadiation) {
+    // Place a ShieldedBot on the arrival side
+    for (let tries = 0; tries < 20; tries++) {
+      const idx = rngRange(levelInfo.arrivalSideLoc.length);
+      const loc = levelInfo.arrivalSideLoc[idx];
+      if (used.has(loc))
+        continue;
+      const [x, y] = loc.split(',').map(Number);
+      gs.addRobot(new ShieldedBot(x, y, gs), levelNum, x, y);
+      used.add(loc);
+
+      if (rngRange(3) === 0) {
+        const surrounded = surroundLocWithCrates(levelInfo, x, y);
+        if (surrounded && rngRange(2) === 0) {
+          // 50% chance to also add a DozerBot on the arrival side
+          for (let dt = 0; dt < 20; dt++) {
+            const dozerLoc = levelInfo.arrivalSideLoc[rngRange(levelInfo.arrivalSideLoc.length)];
+            if (used.has(dozerLoc))
+              continue;
+            const [dx, dy] = dozerLoc.split(',').map(Number);
+            gs.addRobot(new DozerBot(dx, dy, gs), levelNum, dx, dy);
+            used.add(dozerLoc);
+            break;
+          }
+        }
+      }
+      break;
+    }
   }
+}
+
+function surroundLocWithCrates(level: LevelInfo, x: number, y: number): boolean {
+  const dirs: [number, number][] = [[0, -1], [0, 1], [1, 0], [-1, 0]];
+  const walkableNeighbors = dirs.filter(([dx, dy]) => {
+    const t = level.map[`${x + dx},${y + dy}`];
+    return t !== undefined && TERRAIN_DEF[t].walkable;
+  });
+  if (walkableNeighbors.length < 3)
+    return false;
+  for (const [dx, dy] of walkableNeighbors)
+    level.devices[`${x + dx},${y + dy}`] = new Crate();
+  return true;
 }
 
 function generateMap(h: number, w: number, levelNum: number): LevelInfo {
