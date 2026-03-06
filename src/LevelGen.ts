@@ -521,7 +521,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 
   setStairs(level, gateIdx, levelNum);
 
-  //debugDumpMap(level, levelNum);
+  debugDumpMap(level, levelNum);
 
   return level;
 }
@@ -605,6 +605,14 @@ function setupChokePoint(level: LevelInfo, template: LogJamTemplate, row: number
 
 }
 
+function adjDoors(x: number, y: number, map: Record<string, TerrainType>): boolean {
+  for (const [dx, dy] of NEIGHBORS_4) {
+    if (map[`${x + dx},${y + dy}`] === Terrain.Door) 
+      return true;
+  }
+  return false;
+}
+
 function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
   const upCandidates: { k: string; d: number }[] = [];
   const downCandidates: { k: string; d: number }[] = [];
@@ -616,10 +624,10 @@ function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
     const y = Math.floor(i / MAP_WIDTH);
     const x = i - y * MAP_WIDTH;
     const k = `${x},${y}`;
-    if (level.roomMask[i] === 2 && level.map[k] === Terrain.Floor) {      
+    if (level.roomMask[i] === 2 && level.map[k] === Terrain.Floor && !adjDoors(x, y, level.map)) {      
       upCandidates.push({ k: k, d: distance(x, y, gx, gy)})
     }
-    if (level.roomMask[i] === 3 && level.map[k] === Terrain.Floor) {      
+    if (level.roomMask[i] === 3 && level.map[k] === Terrain.Floor && !adjDoors(x, y, level.map)) {      
       downCandidates.push({ k: k, d: distance(x, y, gx, gy)})
     }
   }
