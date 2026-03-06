@@ -303,7 +303,7 @@ export class TerminalPopup extends Popup {
     if (file instanceof JigsawPiece) {
       this.drawBlankRow(renderer, row++);
       col = this.openContentRow(renderer, row);
-      this.gs.addMessage("...data downloaded to vped cache");
+      
       for (const ch of "...data downloaded to vped cache") {
         renderer.drawChar(row, col++, ch, '#fff', '#000');
       }
@@ -314,6 +314,7 @@ export class TerminalPopup extends Popup {
           return row;
       }
 
+      this.gs.addMessage("...data downloaded to vped cache");
       this.gs.player.jigsawPieces.push(file);            
     }
 
