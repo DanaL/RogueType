@@ -220,6 +220,77 @@ export function buildLevel(gs: GameState, levelNum: number) {
       break;
     }
   }
+
+  if (levelNum === NUM_LVLS - 1) {
+    let termX = 0, termY = 0;
+    // Group restricted-side floor tiles by room ID
+    const roomTiles = new Map<number, { x: number; y: number }[]>();
+    for (const loc of levelInfo.restrictedSideLoc) {
+      const [x, y] = loc.split(',').map(Number);
+      const id = levelInfo.roomId[y * MAP_WIDTH + x];
+      if (!roomTiles.has(id)) 
+        roomTiles.set(id, []);
+      roomTiles.get(id)!.push({ x, y });
+    }
+
+    // Find the room whose center has a clear 3x3 area
+    let placed = false;
+    for (const [, tiles] of roomTiles) {
+      const cx = Math.round(tiles.reduce((s, t) => s + t.x, 0) / tiles.length);
+      const cy = Math.round(tiles.reduce((s, t) => s + t.y, 0) / tiles.length);
+
+      // Check all 3x3 tiles are floor (not wall/undefined)
+      let clear = true;
+      for (let dy = -1; dy <= 1 && clear; dy++) {
+        for (let dx = -1; dx <= 1 && clear; dx++) {
+          const t = levelInfo.map[`${cx + dx},${cy + dy}`];
+          if (t === undefined || t === Terrain.Wall) 
+            clear = false;
+        }
+      }
+      if (!clear) continue;
+
+      // Find a cardinal direction where 2 tiles out are both floor (accessible opening)
+      const cardinals: [number, number][] = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+      const opening = cardinals.find(([odx, ody]) => {
+        const t1 = levelInfo.map[`${cx + odx},${cy + ody}`];
+        const t2 = levelInfo.map[`${cx + odx * 2},${cy + ody * 2}`];
+        return (t1 !== undefined && t1 !== Terrain.Wall) &&
+               (t2 !== undefined && t2 !== Terrain.Wall);
+      });
+      if (!opening) continue;
+      const [odx, ody] = opening;
+
+      termX = cx;
+      termY = cy;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === odx && dy === ody)
+            continue; // opening side stays floor (entry point)
+          else if (dx === 0 && dy === 0)
+            gs.maps[levelNum][`${cx},${cy}`] = Terrain.Mainframe;
+          else
+            gs.maps[levelNum][`${cx + dx},${cy + dy}`] = Terrain.DataBank;
+        }
+      }
+      placed = true;
+      break;
+    }
+
+    const map = gs.maps[levelNum];
+    if (map[`${termX},${termY+1}`] === Terrain.DataBank && map[`${termX},${termY+2}`] === Terrain.Door) 
+      map[`${termX},${termY+2}`] = Terrain.Wall;
+    if (map[`${termX},${termY-1}`] === Terrain.DataBank && map[`${termX},${termY-2}`] === Terrain.Door) 
+      map[`${termX},${termY-2}`] = Terrain.Wall;
+    if (map[`${termX-1},${termY}`] === Terrain.DataBank && map[`${termX-2},${termY}`] === Terrain.Door) 
+      map[`${termX-2},${termY}`] = Terrain.Wall;
+    if (map[`${termX+1},${termY}`] === Terrain.DataBank && map[`${termX+2},${termY}`] === Terrain.Door) 
+      map[`${termX+2},${termY}`] = Terrain.Wall;
+    if (!placed)
+      console.warn("Could not place mainframe pattern on final level");
+
+    debugDumpMap(levelInfo, levelNum);
+  }
 }
 
 function surroundLocWithCrates(level: LevelInfo, x: number, y: number): boolean {
