@@ -6,6 +6,7 @@ import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
 import { Terrain } from "./Terrain";
 import { JigsawPiece } from "./Jigsaw";
+import { Software } from "./Software";
 
 const MAIN_MENU   = 0;
 const LIFT_ACCESS = 1;
@@ -316,6 +317,18 @@ export class TerminalPopup extends Popup {
 
       this.gs.addMessage("...data downloaded to vped cache");
       this.gs.player.jigsawPieces.push(file);            
+    }
+
+    if (file instanceof Software) {
+      col = this.openContentRow(renderer, row);
+
+      for (const ch of "...copied to aux databank") {
+        renderer.drawChar(row, col++, ch, '#fff', '#000');
+      }
+      this.closeContentRow(renderer, row++, col);
+
+      if (!this.gs.player.softwareArchive.some(s => s.title === file.title))
+        this.gs.player.softwareArchive.push(file);
     }
 
     return row;

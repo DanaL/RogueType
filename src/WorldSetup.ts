@@ -49,7 +49,7 @@ export function setupWorld(game: Game): void {
   terminal.addFile(new DataFile("kernel.c", "#include <\"stdio.h\">\n\nint main() {\n__printf(\"hello, world?\");\n\n__/* todo: write rest of kernel */\n\n__return 0;\n}"));
   game.gs.devices[0]["49,15"] = terminal;
   game.gs.devices[0]["44,13"] = new Crate();
-
+  
   game.gs.player = new Player(44, 16, 'b', "#005260", game.gs);
   game.gs.player.maxHull = 5;
   game.gs.player.currHull = 5;
@@ -126,7 +126,7 @@ function seedComputerFiles(game: Game) {
   }
 
   //  Kuang Grade Mark Eleven
-  
+
   const df0 = new DataFile("Evil robot research", "To those who question why we need to develop evil robots, I say: if not us than who? It's a simple matter of economics. If evil robots can be made, they will be made. It's better to be the manufacturer of evil robots than their victim!");
   terminals[rngRange(terminals.length)].addFile(df0);
 
