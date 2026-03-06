@@ -242,15 +242,8 @@ export class GameState {
 
     this.currLevel = newLevel;
 
-    for (const robot of this.robots.filter(r => r.level === this.currLevel))
+    for (const robot of this.robots.filter(r => r.level === this.currLevel)) {
       this.game.scheduler.add(robot, true);
-
-    for (const h of Object.values(this.hazards[newLevel])) {
-      if (h === EnvironmentHazard.RADIATION) {
-        this.game.pushPopup(new Popup("", "\n[#ff004e * unusual levels of radiation detected]", 3, 30, 40));
-        this.game.pushInputController(new InfoPopupController(this.game));
-        break;
-      }
     }
   }
 

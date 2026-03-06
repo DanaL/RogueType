@@ -24,7 +24,7 @@ export class StartScreenPopup extends Popup {
    way, search for snippets of the Facility mainframe admin password. You will be able 
    to view and arrange the snippets you find by tapping '[#fff v]'.
 
-   Hacking challenges are portrayed as typing contests. Please select your difficulty:
+   Hacking challenges are played as typing contests. Please select your difficulty:
    (expressed in typing speed WPM)
 
    ________________________________ [#add4fa <] [#fff ${this.game.wpm}] [#add4fa >]
