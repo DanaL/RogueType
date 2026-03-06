@@ -6,18 +6,20 @@
     <title>rogue type -- a cyberpunk roguelike adventure</title>
     
     <style>
-      body { margin: 0; padding: 8px; background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
-      #layout { display: flex; flex-direction: row; align-items: flex-start; gap: 28px; }
+      body { margin: 0; padding: 8px; background: #000; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; box-sizing: border-box; }
+      #layout { display: flex; flex-direction: column; align-items: center; gap: 28px; }
       #game-col { display: flex; flex-direction: column; align-items: center; }
       h1 { color: #aaa; font-family: monospace; margin: 0 0 8px 0; letter-spacing: 2px; }
       #app { border: 2px solid #2a2e79; }
-      #help { font-family: monospace; color: #aaa; margin-top: 32px; min-width: 180px; font-size: 1.2em; }
+      #help { font-family: monospace; color: #aaa; font-size: 1.2em; width: 100%; }
       #help h2 { color: #ccc; font-size: 0.9em; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 12px 0; border-bottom: 1px solid #333; padding-bottom: 6px; }
       #help table { border-collapse: collapse; width: 100%; }
       #help tr { line-height: 1.8; }
       #help td { vertical-align: top; }
       #help .key { color: #b45252; padding-right: 12px; white-space: nowrap; }
       #help .sep { border-top: 1px solid #222; height: 8px; }
+      .footer { font-family: monospace; color: #aaa; font-size: 1.2em; width: 100%; text-align: center; }
+      .footer a { color: #b45252 }
     </style>
   </head>
   <body>
@@ -26,6 +28,35 @@
         <h1>rogue type</h1>
         <div id="app"></div>
       </div>
+      <div id="help">
+        <h2>Commands</h2>
+        <table>
+          <tr><td><div class="key">wasd / arrows</div>(vi-keys work too!)</td><td>move</td>
+              <td class="key">u</td><td>use robot ability</td>
+              <td class="key">x</td><td>examine/look around</td>
+          </tr>
+          <tr>
+              <td class="key">v</td><td>view password snippets</td>
+              <td class="key">m</td><td>manage software on robot</td>
+              <td class="key">D</td><td>disconnect from current robot</td>              
+          </tr>
+          <tr>
+              <td class="key">.</td><td>rest/pass turn</td>
+              <td class="key">Q</td><td>quit run/restart</td>
+          </tr>
+          <!--
+          <tr></tr>
+          
+          <tr></tr>
+          <tr><td class="sep" colspan="2"></td></tr>
+          <tr><td class="sep" colspan="2"></td></tr>
+          <tr><td class="key">&lt; / &gt;</td><td>use stairs / lift</td></tr>
+          <tr><td class="key">.</td><td>wait a turn</td></tr>
+          <tr><td class="key">?</td><td>help</td></tr>-->
+        </table>
+      </div>
+
+      <div class="footer">rogue type's <a href="https://github.com/DanaL/RogueType">source code is available on github</a> under a CC0 license</div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
