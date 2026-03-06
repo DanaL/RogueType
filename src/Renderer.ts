@@ -1,6 +1,7 @@
 import * as ROT from "rot-js";
 import { GameState, EnvironmentHazard } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
+import { MAP_WIDTH } from "./Utils";
 
 type Cell = { glyph: string; fg: string; bg: string | null; sx: number; sy: number };
 
@@ -185,6 +186,10 @@ export class Renderer {
     for (const ch of s) {
       this.display.draw(col++, 0, ch, colour, "#111");
     }
+
+    col = MAP_WIDTH - 9;
+    for (const ch of `floor: ${gs.currLevel}`)
+      this.display.draw(col++, 0, ch, "#009d4a", "#111");
 
     // Write message log
     const msgColors = ["#444", "#777", "#bbb"]; // oldest → newest
