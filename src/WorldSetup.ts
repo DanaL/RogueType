@@ -1,10 +1,10 @@
-import { DataFile, Crate, LIFT_ACCESS, Terminal } from "./Device";
+import { Crate, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
 import { BasicBot, DozerBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange } from "./Utils";
 import { buildLevel } from "./LevelGen";
-import { Software, SoftwareCategory } from "./Software";
+import { Software, SoftwareCategory, DataFile } from "./Software";
 import { renderBitmap, shuffleArray } from "./Utils";
 
 export function setupWorld(game: Game): void {

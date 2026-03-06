@@ -2,7 +2,7 @@ import { InputController } from "./InputController";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
 import { Player } from "./Actor";
-import { DataFile } from "./Device";
+import { DataFile } from "./Software";
 
 export class JigsawPiece extends DataFile {
   id: number;

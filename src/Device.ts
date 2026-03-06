@@ -1,3 +1,5 @@
+import { DataFile } from "./Software";
+
 export abstract class Device {
   name: string;
   desc: string;
@@ -95,17 +97,5 @@ export class LightSource extends Device {
     super("light source", "A focused emitter. It projects a concentrated beam in one direction.", '★', '#ff0');
     this.dirX = dirX;
     this.dirY = dirY;
-  }
-}
-
-export class DataFile {
-  readonly title: string;
-  readonly contents: string;
-  readonly puzzleSnippet: boolean;
-
-  constructor(title: string, contents: string, snippet: boolean = false) {
-    this.title = title;
-    this.contents = contents;
-    this.puzzleSnippet = snippet;
   }
 }

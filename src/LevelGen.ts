@@ -582,6 +582,9 @@ function placeFailsafeTerminal(level: LevelInfo, levelNum: number) {
 }
 
 function placeTerminal(level: LevelInfo, x: number, y: number, levelNum: number, functions: number = LIFT_ACCESS): void {
+  if (levelNum === 8)
+    functions = functions & ~LIFT_ACCESS;
+  
   const terminal = new Terminal(functions);
   level.devices[`${x},${y}`] = terminal;
 }

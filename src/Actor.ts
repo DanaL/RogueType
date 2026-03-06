@@ -163,13 +163,13 @@ export abstract class Robot extends Actor {
 
   act(): Promise<void> {
     for (const sw of this.software) {
-      if (sw.name === "Experimental Evil Algorithm") {
+      if (sw.title === "Experimental Evil Algorithm") {
         const res = this.randomAssault();
         if (res === ActionResult.Complete)
           break;
       }
 
-      if (sw.name === "DW Move Protocol") {
+      if (sw.title === "DW Move Protocol") {
         const res = this.randomMove(this.gs);
 
         // in a non-7DRL I wouldn't write shitty code like this...

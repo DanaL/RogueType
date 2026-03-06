@@ -1,11 +1,10 @@
-import { InfoPopupController, InputController } from "./InputController";
+import { InputController } from "./InputController";
 import { Game } from "./Game";
 import type { Examinable } from "./ExamineController";
 import { ExamineController } from "./ExamineController";
 import { Terrain } from "./Terrain";
 import { capitalize, indefArticle, MOVE_KEYS, ActionResult } from "./Utils";
 import { SWManagementController } from "./SWManagementController";
-import { Popup } from "./Popup";
 import { JigsawController } from "./Jigsaw";
 import { ForkLifter } from "./Actor";
 import { Mirror } from "./Device";

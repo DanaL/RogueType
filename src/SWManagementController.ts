@@ -97,7 +97,7 @@ export class SWManagementController extends InputController {
     }
 
     for (const sw of this.gs.player.hackedRobot.software) {
-      if (sw.name === pckg.name) {
+      if (sw.title === pckg.title) {
         this.state = DUPLICATE_PACKAGE;
         return;
       }
@@ -115,7 +115,7 @@ export class SWManagementController extends InputController {
 
     let found = false;
     for (const sw of this.gs.player.softwareArchive) {
-      if (sw.name === deleted?.name) {
+      if (sw.title === deleted?.title) {
         found = true;
         break;
       }
@@ -152,8 +152,8 @@ class SWManagementPopup extends Popup {
   }
 
   private installMenu(): void {
-    const archived = this.player.softwareArchive.map(sw => sw.name);
-    const installed = this.player.hackedRobot!.software.map(sw => sw.name);
+    const archived = this.player.softwareArchive.map(sw => sw.title);
+    const installed = this.player.hackedRobot!.software.map(sw => sw.title);
     const memUsed = this.player.hackedRobot!.software.reduce((sum, sw) => sum + sw.size, 0);
     const memSize = this.player.hackedRobot?.memorySize ?? 0;
     for (let j = memUsed; j < memSize; j++) {
@@ -190,7 +190,7 @@ class SWManagementPopup extends Popup {
 
   private deleteMenu(): void {
     const sw = this.player.hackedRobot?.software[this.selection];
-    let s = `Delete [#add4fa ${sw?.name}]?\n[#4a6b8a (software will remain available from aux databank)]`;
+    let s = `Delete [#add4fa ${sw?.title}]?\n[#4a6b8a (software will remain available from aux databank)]`;
     s += "\n\n__[#fff (][#ac29ce y][#fff )]es [#fff (][#ac29ce n][#fff )]o";
 
     this.text = s;
@@ -203,7 +203,7 @@ class SWManagementPopup extends Popup {
       return lines;
 
     const capacity = this.player.hackedRobot.memorySize;
-    const width = Math.max(10, ...this.player.hackedRobot.software.map(sw => sw.name.length)) + 2;
+    const width = Math.max(10, ...this.player.hackedRobot.software.map(sw => sw.title.length)) + 2;
 
     let slotsUsed = 0;
     let swNum = 0;    
@@ -220,8 +220,8 @@ class SWManagementPopup extends Popup {
       
 
       line += `[#000,${bg} ${bl}]`;
-      line += `[#000,${bg} ${sw.name}]`;
-      line += `[#000,${bg} ${'_'.repeat(width - sw.name.length - 2)}${br}]\n`;
+      line += `[#000,${bg} ${sw.title}]`;
+      line += `[#000,${bg} ${'_'.repeat(width - sw.title.length - 2)}${br}]\n`;
       lines.push(line);
 
       for (let j = 1; j < sw.size; j++) {
