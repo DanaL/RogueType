@@ -79,7 +79,11 @@ export function setupWorld(game: Game): void {
   const dozerBot = new DozerBot(42, 22, game.gs);
   game.gs.addRobot(dozerBot, 0, 42, 22);
 
-  // Generate the mainframe password and scatter its bitmap rows across levels 1-8
+  setMainframePassword(game);
+  seedComputerFiles(game);
+}
+
+function setMainframePassword(game: Game) {
   const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let pwdStr = '';
   for (let i = 0; i < 6; i++)
@@ -107,4 +111,25 @@ export function setupWorld(game: Game): void {
       break;
     } while (true);
   }
+}
+
+function seedComputerFiles(game: Game) {
+  let terminals: Terminal[] = [];
+  for (let lvl = 1; lvl < NUM_LVLS; lvl++) {
+    terminals.push(...Object.values(game.gs.devices[lvl])
+                            .filter(d => d instanceof Terminal));
+  }
+
+  for (let j = 0; j < 3; j++) {
+    const sw = new Software("Emacs Hacker Mode", SoftwareCategory.ICEBreaker, false, 2, 1);
+    terminals[rngRange(terminals.length)].addFile(sw);
+  }
+
+  //  Kuang Grade Mark Eleven
+  
+  const df0 = new DataFile("Evil robot research", "To those who question why we need to develop evil robots, I say: if not us than who? It's a simple matter of economics. If evil robots can be made, they will be made. It's better to be the manufacturer of evil robots than their victim!");
+  terminals[rngRange(terminals.length)].addFile(df0);
+
+  const df1 = new DataFile("PO #37609", "Yes, I ordered several dozen large mirrors. Yes I plan to use them in ways which enhance shareholder value. No, I do not like my discretionary spending being micro-managed.");
+  terminals[rngRange(terminals.length)].addFile(df1);
 }
