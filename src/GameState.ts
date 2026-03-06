@@ -523,8 +523,9 @@ export class GameState {
     const wordCount = Math.round(this.game.wpm / 4);
     const controller = new RobotHackController(this.game, this, robot, popup, wordCount, taunt, (success) => {
       if (success) {
+        robot.pwned = false;
+        
         if (!initiatedByPlayer) {
-          robot.pwned = false;
           const msg = `You expelled the attacker from the ${robot.name}.`;
           const popup = new Popup("", `\n${msg}`, 5, 10, 40);
           this.addMessage(msg);
