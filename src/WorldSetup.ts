@@ -2,10 +2,10 @@ import { DataFile, Crate, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
 import { BasicBot, DozerBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
-import { MAP_ROWS, MAP_WIDTH, NUM_LVLS } from "./Utils";
+import { MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange } from "./Utils";
 import { buildLevel } from "./LevelGen";
 import { Software, SoftwareCategory } from "./Software";
-import { renderBitmap } from "./Utils";
+import { renderBitmap, shuffleArray } from "./Utils";
 
 export function setupWorld(game: Game): void {
   let overworld: Record<string, TerrainType> = {};
@@ -85,21 +85,26 @@ export function setupWorld(game: Game): void {
   for (let i = 0; i < 6; i++)
     pwdStr += CHARS[Math.floor(Math.random() * CHARS.length)];
 
-  const pieces = renderBitmap(pwdStr);
-  // Shuffle so pieces aren't placed in row order
-  for (let i = pieces.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
-  }
+  let pieces = renderBitmap(pwdStr);
+  pieces.pop(); // the bottom row is always all blank pixels
+  pieces = shuffleArray(pieces);
 
-  for (let level = 1; level < NUM_LVLS; level++) {
-    const piece = pieces[level - 1];
-    if (!piece) 
-      continue;
-    const terminals = Object.values(game.gs.devices[level])
+  let levels = shuffleArray(Array.from({length: 8}, (_, i) => i + 1));
+  let lvlIdx = 0;
+
+  for (const piece of pieces) {
+    do {
+      const lvl = levels[lvlIdx];
+      lvlIdx = (lvlIdx + 1) % levels.length;
+      const terminals = Object.values(game.gs.devices[lvl])
                             .filter(d => d instanceof Terminal) as Terminal[];
-    if (terminals.length === 0) 
-      continue;
-    terminals[Math.floor(Math.random() * terminals.length)].addFile(piece);
+      if (terminals.length === 0) {
+        continue;
+      }
+
+      const term = terminals[rngRange(terminals.length)];
+      term.addFile(piece);
+      break;
+    } while (true);
   }
 }

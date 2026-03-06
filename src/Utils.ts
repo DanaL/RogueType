@@ -77,6 +77,26 @@ export function adj8Locs(x: number, y: number): [number, number][] {
   return adj8.map(([dx, dy]) => [x + dx, y + dy]);
 }
 
+export function shuffleArray<T>(array: readonly T[]): T[] {
+  const shuffled = [...array];
+  let curr = shuffled.length;
+  let rnd: number;
+
+  while (curr !== 0) {
+    // Pick a remaining element.
+    rnd = rngRange(curr);
+    curr--;
+
+    // And swap it with the current element using array destructuring.
+    [shuffled[curr], shuffled[rnd]] = [
+      shuffled[rnd],
+      shuffled[curr],
+    ];
+  }
+
+  return shuffled;
+}
+
 const TEXT_FILES = ['alice.txt', 'frank.txt', 'janeeyre.txt', 'moby.txt', '20kleagues.txt', 'warworlds.txt'];
 const textCache = new Map<string, string[]>();
 

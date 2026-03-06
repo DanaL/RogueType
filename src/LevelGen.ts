@@ -395,7 +395,8 @@ function setupLightPuzzle(level: LevelInfo, template: LogJamTemplate, originRow:
     level.devices[`${lt.col + originCol},${lt.row + originRow}`] = new LightTrigger(gx, gy);
 
   for (let i = 0; i < level.roomId.length; i++) {
-    if (level.roomId[i] !== farRoomId) continue;
+    if (level.roomId[i] !== farRoomId) 
+      continue;
     const tx = i % MAP_WIDTH;
     const ty = Math.floor(i / MAP_WIDTH);
     const tk = `${tx},${ty}`;
