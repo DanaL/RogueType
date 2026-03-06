@@ -166,12 +166,10 @@ export function buildLevel(gs: GameState, levelNum: number) {
   }
 
   if (hasRadiation) {
-    // Place a ShieldedBot on the arrival side
-    for (let tries = 0; tries < 20; tries++) {
-      const idx = rngRange(levelInfo.arrivalSideLoc.length);
-      const loc = levelInfo.arrivalSideLoc[idx];
-      if (used.has(loc))
-        continue;
+    // Place a ShieldedBot on the arrival side — guaranteed placement
+    const freeArrival = levelInfo.arrivalSideLoc.filter(l => !used.has(l));
+    if (freeArrival.length > 0) {
+      const loc = freeArrival[rngRange(freeArrival.length)];
       const [x, y] = loc.split(',').map(Number);
       gs.addRobot(new ShieldedBot(x, y, gs), levelNum, x, y);
       used.add(loc);
@@ -191,7 +189,6 @@ export function buildLevel(gs: GameState, levelNum: number) {
           }
         }
       }
-      break;
     }
   }
 
@@ -241,7 +238,7 @@ function surroundLocWithCrates(level: LevelInfo, x: number, y: number): boolean 
     
   for (const [dx, dy] of walkableNeighbors)
     level.devices[`${x + dx},${y + dy}`] = new Crate();
-
+  
   return true;
 }
 
