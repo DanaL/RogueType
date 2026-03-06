@@ -439,7 +439,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 
   // Place the chokePoint near the centre of the map
   let nextRoomId = 1;
-  const chokePoindIdx = levelNum === 1 ? LOG_JAMS.length - 1 : rndRange(LOG_JAMS.length);
+  const chokePoindIdx = rndRange(LOG_JAMS.length);
   const chokePoint = LOG_JAMS[chokePoindIdx];
   
   const row = MAP_ROWS / 2 - 5 + rndRange(10);
