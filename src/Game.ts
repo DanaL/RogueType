@@ -15,7 +15,8 @@ export class Game {
   private engine: ROT.Engine;
   readonly scheduler: Scheduler;
   readonly wpm: number;
-
+  mainFramePassword: string = "";
+  
   constructor(state: GameState, renderer: Renderer) {
     this.gs = state;
     this.renderer = renderer;
@@ -24,7 +25,7 @@ export class Game {
     this.scheduler = new ROT.Scheduler.Simple();
     this.engine = new ROT.Engine(this.scheduler);
 
-    this.wpm = 60;
+    this.wpm = 40;
   }
 
   start(): void {

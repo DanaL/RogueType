@@ -1,6 +1,5 @@
 import { Game } from "./Game";
 import { GameState } from "./GameState";
-import { Robot } from "./Actor";
 import { InputController } from "./InputController";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
@@ -11,7 +10,9 @@ const PANEL_WIDTH = 36;
 const SEP_WIDTH = 3;
 const FIREWALL_BARS = 20;
 
-const ROBOT_WPM_SCALE = [0.80, 1.00, 1.10, 1.25]; // indexed by ICELevel value
+const LAUNCH_SCREEN: number = 0;
+const HACKING: number = 1;
+const LOGIN_SCREEN: number = 2;
 
 function truncateExcerpt(excerpt: string, wordCount: number): string {
   const hasLeading = excerpt.startsWith('...');
@@ -25,7 +26,7 @@ function truncateExcerpt(excerpt: string, wordCount: number): string {
 
 type PanelCell = { char: string; idx: number }; // idx === -1 means decorative dot
 
-export class RobotHackPopup extends Popup {
+export class EndGamePopup extends Popup {
   playerPos: number = 0;
   robotFloatPos: number = 0;
   robotCurrFirewall: number;
@@ -33,18 +34,21 @@ export class RobotHackPopup extends Popup {
   playerErrorPos: number = -1;
   playerErrorUntil: number = 0;
 
-  playerText: string = "";
-  robotText: string = "";
+  excerpt: string = "";
   playerStartIdx: number = 0;
   playerEndIdx: number = 0;
   robotStartIdx: number = 0;
   robotEndIdx: number = 0;
-  taunt: string = "";
 
-  constructor(robotName: string, robotCurrFirewall: number, robotMaxFirewall: number, row: number, col: number) {
-    super(`[#009d4a accessing ][#fff ${robotName}][#009d4a ...]`, "", row, col, PANEL_WIDTH * 2 + SEP_WIDTH);
-    this.robotCurrFirewall = robotCurrFirewall;
-    this.robotMaxFirewall = robotMaxFirewall;
+  state: number = LAUNCH_SCREEN;
+
+  enteredPassword: string = "";
+  attemptsRemaining: number = 3;
+
+  constructor(row: number, col: number) {
+    super('[#009d4a accessing ][#fff Facility mainframe FMS][#009d4a ...]', "", row, col, PANEL_WIDTH * 2 + SEP_WIDTH);
+    this.robotCurrFirewall = 15;
+    this.robotMaxFirewall = 15;
   }
 
   get robotPos(): number {
@@ -56,13 +60,12 @@ export class RobotHackPopup extends Popup {
     this.playerErrorUntil = Date.now() + 250;
   }
 
-  resetForNewRound(playerText: string, robotText: string): void {
-    this.playerText = playerText;
-    this.robotText = robotText;
-    this.playerStartIdx = playerText.startsWith('...') ? 3 : 0;
-    this.playerEndIdx = playerText.endsWith('...') ? playerText.length - 3 : playerText.length;
-    this.robotStartIdx = robotText.startsWith('...') ? 3 : 0;
-    this.robotEndIdx = robotText.endsWith('...') ? robotText.length - 3 : robotText.length;
+  resetForNewRound(excerpt: string): void {
+    this.excerpt = excerpt;
+    this.playerStartIdx = excerpt.startsWith('...') ? 3 : 0;
+    this.playerEndIdx = excerpt.endsWith('...') ? excerpt.length - 3 : excerpt.length;
+    this.robotStartIdx = excerpt.startsWith('...') ? 3 : 0;
+    this.robotEndIdx = excerpt.endsWith('...') ? excerpt.length - 3 : excerpt.length;
     this.playerPos = this.playerStartIdx;
     this.robotFloatPos = this.robotStartIdx;
     this.playerErrorPos = -1;
@@ -104,6 +107,30 @@ export class RobotHackPopup extends Popup {
   }
 
   protected drawContent(renderer: Renderer, row: number): number {
+    if (this.state === LAUNCH_SCREEN) {
+      const blurb = "[#ff004e WARNING]: you are able to access Facility mainframe. You will need to hack through its firewalls before entering the admin password. If you fail you will likely be flatlined.\n\nTap ([#fff Y]) to engage Mainframe or [#fff ESC] if you are not ready.";
+      this.text = blurb;
+      row = super.drawContent(renderer, row);
+    } else if (this.state === HACKING) {
+      row = this.drawHackContent(renderer, row);
+    } else if (this.state === LOGIN_SCREEN) {
+      row = this.drawLoginScreen(renderer, row);
+    }
+
+    return row;
+  }
+
+  protected drawLoginScreen(renderer: Renderer, row: number): number {
+    this.text = `\n__mainframe login> ${this.enteredPassword}[#009d4a,#009d4a _]\n\n__ `;
+    if (this.attemptsRemaining > 1)
+      this.text += "attempts remaining: " + this.attemptsRemaining;
+    else
+      this.text += `[ff004e attempts remaining: ${this.attemptsRemaining}]`;
+
+    return super.drawContent(renderer, row);
+  }
+
+  protected drawHackContent(renderer: Renderer, row: number): number {
     const contentLeft = this.col + 2;
     const robotLeft = contentLeft + PANEL_WIDTH + SEP_WIDTH;
 
@@ -122,8 +149,8 @@ export class RobotHackPopup extends Popup {
     this.drawBlankRow(renderer, row++);
 
     const now = Date.now();
-    const playerRows = this.layoutText(this.playerText, this.playerStartIdx, this.playerEndIdx);
-    const robotRows = this.layoutText(this.robotText, this.robotStartIdx, this.robotEndIdx);
+    const playerRows = this.layoutText(this.excerpt, this.playerStartIdx, this.playerEndIdx);
+    const robotRows = this.layoutText(this.excerpt, this.robotStartIdx, this.robotEndIdx);
     const numRows = Math.max(playerRows.length, robotRows.length);
 
     for (let r = 0; r < numRows; r++) {
@@ -177,110 +204,127 @@ export class RobotHackPopup extends Popup {
       this.closeContentRow(renderer, row++, robotLeft + PANEL_WIDTH);
     }
 
-    if (this.taunt !== "") {
-      this.drawBlankRow(renderer, row++);
-      this.drawBlankRow(renderer, row++);
-      const padding = ' '.repeat(this.maxWidth / 2 - this.taunt.length / 2 - 2);
-      const s = padding + this.taunt;
-      let col = this.openContentRow(renderer, row);
-      for (const ch of s) {
-        renderer.drawChar(row, col++, ch, "#ff004e", '#000');
-      }
-      this.closeContentRow(renderer, row++, col);
-    }
-
     return row;
   }
 }
 
-export class RobotHackController extends InputController {
+export class EndGameController extends InputController {
   private game: Game;
   private gs: GameState;
-  private robot: Robot;
-  private playerExcerpt: string = "";
-  private wordCount: number;
-  private popup: RobotHackPopup;
+  private excerpt: string = "";
+  private wordCount: number = 25;
+  private popup: EndGamePopup;
   private progressPerMs: number;
   private onComplete: (success: boolean) => void;
   private done: boolean = false;
-  taunt: string = "";
+  private state = LAUNCH_SCREEN;
+  private mainframeFirewall = 15;
+  private enteredPassword = "";
+  private attemptsRemaining = 3;
 
-  constructor(game: Game, gs: GameState, robot: Robot, popup: RobotHackPopup, wordCount: number, taunt: string, onComplete: (success: boolean) => void) {
+  constructor(game: Game, gs: GameState, popup: EndGamePopup, onComplete: (success: boolean) => void) {
     super();
     this.game = game;
     this.gs = gs;
-    this.robot = robot;
-    this.wordCount = wordCount;
     this.popup = popup;
-    popup.taunt = taunt;
-    this.setExcerpts(robot.previouslyHacked);
+    this.setExcerpt();
     this.onComplete = onComplete;
 
-    const scale = ROBOT_WPM_SCALE[robot.ice] ?? 1.0;
-    const robotWpm = game.wpm * scale;
+    const wpm = game.wpm;
 
     const iceBreaker = gs.player.hackedRobot!.software
       .filter(sw => sw.cat === SoftwareCategory.ICEBreaker)
       .reduce((sum, sw) => sum + sw.level, 0);
-    const acc = robot.accuracy - (iceBreaker * 0.05);
-    this.progressPerMs = (robotWpm * 5 / 60_000) * acc;
+    const acc = 1.1 - (iceBreaker * 0.05);
+    this.progressPerMs = (wpm * 5 / 60_000) * acc;
   }
 
   handleInput(e: KeyboardEvent): void {
     if (this.done)
       return;
 
-    const pos = this.popup.playerPos;
-    if (e.key === this.playerExcerpt[pos]) {
-      this.popup.playerPos++;
-      if (this.popup.playerPos >= this.popup.playerEndIdx)
-        this.resolveRound(true);
-    } else if (e.key !== 'Shift') {
-      this.popup.showPlayerError(pos);
+    if (this.state === LAUNCH_SCREEN && e.key === 'Escape') {
+      this.game.popPopup();
+      this.game.popInputController();
+
+      return;
+    } else if (this.state === LAUNCH_SCREEN && e.key === 'Y') {
+      this.state = HACKING;
+      this.popup.state = HACKING;
+    } else if (this.state === HACKING) {
+      const pos = this.popup.playerPos;
+      if (e.key === this.excerpt[pos]) {
+        this.popup.playerPos++;
+        if (this.popup.playerPos >= this.popup.playerEndIdx)
+          this.resolveRound(true);
+      } else if (e.key !== 'Shift') {
+        this.popup.showPlayerError(pos);
+      }
+    } else if (this.state === LOGIN_SCREEN && e.key === "Backspace") {
+      this.enteredPassword = this.enteredPassword.length > 0 ? this.enteredPassword.slice(0, -1) : "";
+      this.popup.enteredPassword = this.enteredPassword;
+    } else if (this.state === LOGIN_SCREEN && e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key) && this.enteredPassword.length < 6) {
+      this.enteredPassword += e.key.toUpperCase();
+      this.popup.enteredPassword = this.enteredPassword;
+    } else if (this.state === LOGIN_SCREEN && e.key === "Enter") {
+      this.checkPassword();
     }
+  }
+
+  private checkPassword(): void {
+    const correct = this.enteredPassword === this.game.mainFramePassword;
+    if (correct) {
+      this.endHack();
+      this.onComplete(true);
+    } else {
+      --this.attemptsRemaining;
+      this.popup.attemptsRemaining = this.attemptsRemaining;
+      this.enteredPassword = "";
+      this.popup.enteredPassword = "";
+      if (this.attemptsRemaining === 0) {
+        this.endHack();
+        this.onComplete(false);
+      }
+    }    
   }
 
   update(deltaMs: number): void {
     if (this.done)
       return;
 
-    this.popup.robotFloatPos += this.progressPerMs * deltaMs;
-    if (this.popup.robotPos >= this.popup.robotEndIdx)
-      this.resolveRound(false);
+    if (this.state === HACKING) {
+      this.popup.robotFloatPos += this.progressPerMs * deltaMs;
+      if (this.popup.robotPos >= this.popup.robotEndIdx)
+        this.resolveRound(false);
+    }
   }
 
   private resolveRound(playerWon: boolean): void {
     this.done = true;
 
     if (playerWon) {
-      this.robot.currFirewall = Math.max(0, this.robot.currFirewall - 5);
-      this.popup.robotCurrFirewall = this.robot.currFirewall;
+      this.mainframeFirewall = Math.max(0, this.mainframeFirewall - 5);
+      this.popup.robotCurrFirewall = this.mainframeFirewall;
     } else {
       this.gs.player.currFirewall = Math.max(0, this.gs.player.currFirewall - 5);
     }
 
-    if (this.robot.currFirewall <= 0) {
-      this.endHack();
-      this.onComplete(true);
+    if (this.mainframeFirewall <= 0) {
+      this.state = LOGIN_SCREEN;
+      this.popup.state = LOGIN_SCREEN;
     } if (this.gs.player.currFirewall <= 0) {
       this.endHack();
       this.onComplete(false);
     } else {
       // New round
-      this.setExcerpts(this.robot.previouslyHacked);
+      this.setExcerpt();
       this.done = false;
     }
   }
 
-  private setExcerpts(previouslyHacked: boolean): void {
-    const playerScale = previouslyHacked ? 0.5 : 1.0;
-    const robotScale = 1.0;
-    const pLen = Math.max(1, Math.round(this.wordCount * playerScale));
-    const rLen = Math.max(1, Math.round(this.wordCount * robotScale));
-    const fullExcerpt = randomTextExcerptSync(Math.max(pLen, rLen));
-    this.playerExcerpt = pLen < rLen ? truncateExcerpt(fullExcerpt, pLen) : fullExcerpt;
-    const robotExcerpt = rLen < pLen ? truncateExcerpt(fullExcerpt, rLen) : fullExcerpt;
-    this.popup.resetForNewRound(this.playerExcerpt, robotExcerpt);
+  private setExcerpt(): void {
+    this.excerpt = randomTextExcerptSync(this.wordCount);
+    this.popup.resetForNewRound(this.excerpt);
   }
 
   private endHack(): void {

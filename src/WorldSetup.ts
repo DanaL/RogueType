@@ -42,6 +42,18 @@ export function setupWorld(game: Game): void {
   overworld["50,18"] = Terrain.Wall;
   overworld["51,18"] = Terrain.Wall;
 
+  // temp
+  overworld["53,14"] = Terrain.DataBank;
+  overworld["54,14"] = Terrain.DataBank;
+  overworld["55,14"] = Terrain.DataBank;
+
+  overworld["53,15"] = Terrain.DataBank;
+  overworld["54,15"] = Terrain.Mainframe;
+  overworld["55,15"] = Terrain.DataBank;
+
+  overworld["53,16"] = Terrain.DataBank;
+  overworld["55,16"] = Terrain.DataBank;
+
   game.gs.maps.push(overworld);
   
   const terminal = new Terminal(LIFT_ACCESS);
@@ -75,8 +87,8 @@ export function setupWorld(game: Game): void {
 
   const roomba = new Roomba(41, 19, game.gs);
   
-  roomba.pwned = true;
-  roomba.ice = ICELevel.Strong;
+  //roomba.pwned = true;
+  //roomba.ice = ICELevel.Strong;
 
   game.gs.addRobot(roomba, 0, 41, 17);
 
@@ -89,11 +101,14 @@ export function setupWorld(game: Game): void {
 
 function setMainframePassword(game: Game) {
   const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let pwdStr = '';
+  let pwd = '';
   for (let i = 0; i < 6; i++)
-    pwdStr += CHARS[Math.floor(Math.random() * CHARS.length)];
+    pwd += CHARS[Math.floor(Math.random() * CHARS.length)];
 
-  let pieces = renderBitmap(pwdStr);
+  game.mainFramePassword = pwd;
+  console.log(pwd);
+  
+  let pieces = renderBitmap(pwd);
   pieces.pop(); // the bottom row is always all blank pixels
   pieces = shuffleArray(pieces);
 

@@ -40,6 +40,9 @@ export class PlayerCommandController extends InputController {
           case Terrain.LiftUp:
             targets.push({ x, y, name: "Up Elevator", desc: "For security reasons, elevators in the Facility only go between two floors each." });
             break;
+          case Terrain.Mainframe:
+            targets.push({ x, y, name: "Mainframe Terminal", desc: "This is it. Hack through the firewalls, end the [#fff admin password], and upload the Cookie Monster virus." });
+            break;
         }
       }
 

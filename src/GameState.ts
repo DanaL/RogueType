@@ -10,6 +10,7 @@ import { randomTextExcerptSync, NUM_LVLS, ActionResult, indefArticle, rndRange }
 import { TypingTestPopup, TypingTestController } from "./TypingTest";
 import { RobotHackPopup, RobotHackController } from "./RobotHack";
 import { TerminalController } from "./Terminal";
+import { EndGameController, EndGamePopup } from "./EndGame";
 
 export const EnvironmentHazard = { NONE: 0, RADIATION: 1 }
 export type EnvironmentHazard = (typeof EnvironmentHazard)[keyof typeof EnvironmentHazard];
@@ -323,7 +324,27 @@ export class GameState {
       if (isPlayer)
         this.addMessage("You cannot go that way!");
       return ActionResult.Failure;
-    } else if (isPlayer && terrain == Terrain.LiftDown) {
+    } else if (isPlayer && terrain === Terrain.Mainframe) {
+      actor.x = nx;
+      actor.y = ny;
+      const popup = new EndGamePopup(3, 10);
+      const controller = new EndGameController(this.game, this, popup, (success) => {
+        if (success) {
+          const blurb = "Succees! You have uploaded the Cookie Monster Virus Model C into the Mainframe core. Soon it will have overwritten the system. The world should finally be safe from the paperclip scourge.";
+          const popup = new Popup("> victory <", blurb, 5, 10, 35);
+          this.game.pushPopup(popup);
+          this.game.pushInputController(new InfoPopupController(this.game, this.onRestart));
+        } else {
+          const blurb = ".......flatlined...\n\nif you ever recover, it will be in a world of paperclips. glorious paperclips. paperclips everywhere. paperclip paradise...";
+          const popup = new Popup("> game over <", blurb, 5, 10, 35);
+          this.game.pushPopup(popup);
+          this.game.pushInputController(new InfoPopupController(this.game, this.onRestart));
+        }
+      });
+      this.game.pushInputController(controller);
+      this.game.pushPopup(popup);
+      return ActionResult.Complete;
+    } else if (isPlayer && terrain === Terrain.LiftDown) {
       this.stepOnLift(nx, ny, game);
       return ActionResult.Complete;
     } else if (isPlayer && terrain === Terrain.LiftUp) {
@@ -524,7 +545,7 @@ export class GameState {
     const controller = new RobotHackController(this.game, this, robot, popup, wordCount, taunt, (success) => {
       if (success) {
         robot.pwned = false;
-        
+
         if (!initiatedByPlayer) {
           const msg = `You expelled the attacker from the ${robot.name}.`;
           const popup = new Popup("", `\n${msg}`, 5, 10, 40);
