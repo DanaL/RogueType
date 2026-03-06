@@ -143,6 +143,8 @@ export abstract class Robot extends Actor {
   set currHull(val: number) { this._currHull = Math.min(val, this.maxHull) };
   set maxHull(val: number) { this._maxHull = val };
 
+  pwned: boolean = false;
+
   get maxFirewall() {
     return this.software
       .filter(sw => sw.cat === SoftwareCategory.ICE)
@@ -161,7 +163,40 @@ export abstract class Robot extends Actor {
       this.software.push(new Software("Experimental Evil Algorithm", SoftwareCategory.Behaviour, false, 1, 2));      
   }
 
+  private pwnedAct(): void {
+    const player = this.gs.player;
+    if (this.level !== player.level) return;
+    if (this.gs.game.hasPopup) return;
+
+    const adx = Math.abs(this.x - player.x);
+    const ady = Math.abs(this.y - player.y);
+
+    if (adx + ady === 1) {
+      this.gs.addMessage("That robot was already hacked! Some other hacker is trying to own you!");
+      this.gs.startRobotHack(this, false);
+      return;
+    }
+
+    // Move one step toward the player
+    const path = new ROT.Path.AStar(player.x, player.y, (x, y) => {
+      const t = this.gs.maps[this.level][`${x},${y}`];
+      return t !== undefined && TERRAIN_DEF[t].walkable;
+    }, { topology: 4 });
+
+    let stepCount = 0;
+    path.compute(this.x, this.y, (x, y) => {
+      if (stepCount++ === 1)
+        this.gs.tryMove(x - this.x, y - this.y, null, this);
+    });
+  }
+
   act(): Promise<void> {
+    if (this.pwned) {
+      this.pwnedAct();
+      this.endTurn();
+      return Promise.resolve();
+    }
+
     for (const sw of this.software) {
       if (sw.title === "Experimental Evil Algorithm") {
         const res = this.randomAssault();

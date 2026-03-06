@@ -451,7 +451,7 @@ export class GameState {
     this.game.pushPopup(new YesNoPopup("", `\nAttempt to hack ${robot.name}`, 5, 10, 30));
     this.game.pushInputController(new YesNoController(this.game, (yes) => {
       if (yes) {
-        this.startRobotHack(robot);
+        this.startRobotHack(robot, true);
       } else {
         this.computeFov();
         this.player.endTurn();
@@ -512,21 +512,30 @@ export class GameState {
     return false;
   }
 
-  private startRobotHack(robot: Robot): void {
+  startRobotHack(robot: Robot, initiatedByPlayer: boolean): void {
     const popup = new RobotHackPopup(robot.name, robot.currFirewall, robot.maxFirewall, 2, 1);
     const wordCount = Math.round(this.game.wpm / 4);
     const controller = new RobotHackController(this.game, this, robot, popup, wordCount, (success) => {
       if (success) {
-        this.player.previousRobots.push(robot.id);
-        const msg = `You have taken control of the ${robot.name}.`;
-        const popup = new Popup("", msg, 5, 10, 35);
-        this.addMessage(msg);
-        this.game.pushPopup(popup);
-        this.game.pushInputController(new InfoPopupController(this.game));
+        if (!initiatedByPlayer) {
+          robot.pwned = false;
+          const msg = `You expelled the attacker from the ${robot.name}.`;
+          const popup = new Popup("", `\n${msg}`, 5, 10, 40);
+          this.addMessage(msg);
+          this.game.pushPopup(popup);
+          this.game.pushInputController(new InfoPopupController(this.game));
+        } else {
+          this.player.previousRobots.push(robot.id);
+          const msg = `You have taken control of the ${robot.name}.`;
+          const popup = new Popup("", msg, 5, 10, 35);
+          this.addMessage(msg);
+          this.game.pushPopup(popup);
+          this.game.pushInputController(new InfoPopupController(this.game));
 
-        this.switchToRobot(robot);
-        robot.previouslyHacked = true;   
-        robot.currFirewall = Math.round(robot.maxFirewall / 3);
+          this.switchToRobot(robot);
+          robot.previouslyHacked = true;
+          robot.currFirewall = Math.round(robot.maxFirewall / 3);
+        }
       } else {
         if (this.player.currFirewall === 0) {
           const popup = new Popup("", "\nconne[#ac29ce c]tion terminated.", 5, 10, 35);
@@ -540,8 +549,10 @@ export class GameState {
         }
       }
 
-      this.computeFov();
-      this.player.endTurn();
+      if (initiatedByPlayer) {
+        this.computeFov();
+        this.player.endTurn();
+      }      
     });
 
     this.game.pushPopup(popup);

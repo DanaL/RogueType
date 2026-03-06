@@ -2,7 +2,7 @@ import { Crate, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
 import { BasicBot, DozerBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
-import { MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange } from "./Utils";
+import { ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange } from "./Utils";
 import { buildLevel } from "./LevelGen";
 import { Software, SoftwareCategory, DataFile } from "./Software";
 import { renderBitmap, shuffleArray } from "./Utils";
@@ -74,6 +74,10 @@ export function setupWorld(game: Game): void {
   game.gs.downLifts[0] = true;
 
   const roomba = new Roomba(41, 19, game.gs);
+  
+  roomba.pwned = true;
+  roomba.ice = ICELevel.Strong;
+
   game.gs.addRobot(roomba, 0, 41, 17);
 
   const dozerBot = new DozerBot(42, 22, game.gs);

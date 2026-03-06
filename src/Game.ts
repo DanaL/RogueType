@@ -24,7 +24,7 @@ export class Game {
     this.scheduler = new ROT.Scheduler.Simple();
     this.engine = new ROT.Engine(this.scheduler);
 
-    this.wpm = 20;
+    this.wpm = 60;
   }
 
   start(): void {
@@ -47,6 +47,8 @@ export class Game {
   popPopup(): void {
     this.popupStack.pop();
   }
+
+  get hasPopup(): boolean { return this.popupStack.length > 0; }
 
   get currentController(): InputController | undefined {
     return this.controllerStack.at(-1);
