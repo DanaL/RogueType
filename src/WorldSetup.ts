@@ -2,7 +2,7 @@ import { Crate, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
 import { BasicBot, DozerBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
-import { ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange } from "./Utils";
+import { MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange } from "./Utils";
 import { buildLevel } from "./LevelGen";
 import { Software, SoftwareCategory, DataFile } from "./Software";
 import { renderBitmap, shuffleArray } from "./Utils";

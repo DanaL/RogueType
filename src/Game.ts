@@ -14,7 +14,7 @@ export class Game {
   private inputQueue: KeyboardEvent[] = [];
   private engine: ROT.Engine;
   readonly scheduler: Scheduler;
-  readonly wpm: number;
+  wpm: number;
   mainFramePassword: string = "";
   
   constructor(state: GameState, renderer: Renderer) {

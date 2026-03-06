@@ -1,8 +1,7 @@
 import { GameState } from "./GameState";
 import { Game } from "./Game";
 import { Renderer } from "./Renderer";
-import { Popup } from "./Popup";
-import { InfoPopupController } from "./InputController";
+import { StartScreenController } from "./StartScreen";
 import { PlayerCommandController } from "./PlayerCommandController";
 import { MAP_ROWS, MAP_WIDTH, warmTextCache, warmFontCache } from "./Utils";
 import { setupWorld } from "./WorldSetup";
@@ -26,11 +25,8 @@ function startGame(): void {
   setupWorld(g);
 
   g.pushInputController(new PlayerCommandController(g));
+  g.pushInputController(new StartScreenController(g));
 
-  // Greetings pop-up
-  const popup = new Popup("[#009d4a welcome to rogue type]", "> remote c[#ac29ce o]nnection established at 127.0.0.-1...\n> robot control prot[#ac29ce o]col active on remote h[#ac29ce o]st...\n> RO[#4e6ea8 V] class: Burrito B[#ac29ce o]t 3000\n\n-- press any key to begin infiltratio[#4e6ea8 n] --", 3, 10, 50);
-  g.pushPopup(popup);
-  g.pushInputController(new InfoPopupController(g));
   g.gs.computeFov();
   g.gs.onRestart = startGame;
   g.start();
