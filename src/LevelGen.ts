@@ -521,7 +521,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 
   setStairs(level, gateIdx, levelNum);
 
-  debugDumpMap(level, levelNum);
+  //debugDumpMap(level, levelNum);
 
   return level;
 }
