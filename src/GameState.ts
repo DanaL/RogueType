@@ -6,7 +6,7 @@ import { Popup, YesNoPopup } from "./Popup";
 import { InfoPopupController, YesNoController } from "./InputController";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { randomTextExcerptSync, NUM_LVLS, ActionResult } from "./Utils";
+import { randomTextExcerptSync, NUM_LVLS, ActionResult, indefArticle } from "./Utils";
 import { TypingTestPopup, TypingTestController } from "./TypingTest";
 import { RobotHackPopup, RobotHackController } from "./RobotHack";
 import { TerminalController } from "./Terminal";
@@ -325,7 +325,7 @@ export class GameState {
       return ActionResult.Failure;
     } else if (isPlayer && terrain == Terrain.LiftDown) {
       this.stepOnLift(nx, ny, game);
-      return ActionResult.Complete;      
+      return ActionResult.Complete;
     } else if (isPlayer && terrain === Terrain.LiftUp) {
       this.takeLift(this.currLevel - 1, Terrain.LiftDown);
       return ActionResult.Complete;
@@ -351,6 +351,8 @@ export class GameState {
     actor.y = ny;
 
     if (device) {
+      if (isPlayer)
+        this.addMessage(`There is ${indefArticle(device.name)} here.`);
       if (this.handleDevice(actor, device))
         return ActionResult.Pending;
     }
