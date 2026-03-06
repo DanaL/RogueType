@@ -160,7 +160,9 @@ export abstract class Robot extends Actor {
     this.id = Robot.#nextId++;
 
     if (rndRange(5) === 0)
-      this.software.push(new Software("Experimental Evil Algorithm", SoftwareCategory.Behaviour, false, 1, 2));      
+      this.software.push(new Software("Experimental Evil Algorithm", SoftwareCategory.Behaviour, false, 1, 2));
+    else if (rndRange(5) === 0)
+      this.pwned = true;
   }
 
   private pwnedAct(): void {
