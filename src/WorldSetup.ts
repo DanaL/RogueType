@@ -106,8 +106,7 @@ function setMainframePassword(game: Game) {
     pwd += CHARS[Math.floor(Math.random() * CHARS.length)];
 
   game.mainFramePassword = pwd;
-  console.log(pwd);
-  
+
   let pieces = renderBitmap(pwd);
   pieces.pop(); // the bottom row is always all blank pixels
   pieces = shuffleArray(pieces);

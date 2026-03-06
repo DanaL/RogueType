@@ -288,8 +288,6 @@ export function buildLevel(gs: GameState, levelNum: number) {
       map[`${termX+2},${termY}`] = Terrain.Wall;
     if (!placed)
       console.warn("Could not place mainframe pattern on final level");
-
-    debugDumpMap(levelInfo, levelNum);
   }
 }
 
