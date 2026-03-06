@@ -4,7 +4,7 @@ import { Robot } from "./Actor";
 import { InputController } from "./InputController";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
-import { randomTextExcerptSync } from "./Utils";
+import { randomTextExcerptSync, rndRange } from "./Utils";
 import { SoftwareCategory } from "./Software";
 
 const PANEL_WIDTH = 36;
@@ -39,6 +39,7 @@ export class RobotHackPopup extends Popup {
   playerEndIdx: number = 0;
   robotStartIdx: number = 0;
   robotEndIdx: number = 0;
+  taunt: string = "";
 
   constructor(robotName: string, robotCurrFirewall: number, robotMaxFirewall: number, row: number, col: number) {
     super(`[#009d4a accessing ][#fff ${robotName}][#009d4a ...]`, "", row, col, PANEL_WIDTH * 2 + SEP_WIDTH);
@@ -176,6 +177,18 @@ export class RobotHackPopup extends Popup {
       this.closeContentRow(renderer, row++, robotLeft + PANEL_WIDTH);
     }
 
+    if (this.taunt !== "") {
+      this.drawBlankRow(renderer, row++);
+      this.drawBlankRow(renderer, row++);
+      const padding = ' '.repeat(this.maxWidth / 2 - this.taunt.length / 2 - 2);
+      const s = padding + this.taunt;
+      let col = this.openContentRow(renderer, row);
+      for (const ch of s) {
+        renderer.drawChar(row, col++, ch, "#ff004e", '#000');
+      }
+      this.closeContentRow(renderer, row++, col);
+    }
+
     return row;
   }
 }
@@ -190,14 +203,16 @@ export class RobotHackController extends InputController {
   private progressPerMs: number;
   private onComplete: (success: boolean) => void;
   private done: boolean = false;
+  taunt: string = "";
 
-  constructor(game: Game, gs: GameState, robot: Robot, popup: RobotHackPopup, wordCount: number, onComplete: (success: boolean) => void) {
+  constructor(game: Game, gs: GameState, robot: Robot, popup: RobotHackPopup, wordCount: number, taunt: string, onComplete: (success: boolean) => void) {
     super();
     this.game = game;
     this.gs = gs;
     this.robot = robot;
     this.wordCount = wordCount;
     this.popup = popup;
+    popup.taunt = taunt;
     this.setExcerpts(robot.previouslyHacked);
     this.onComplete = onComplete;
 

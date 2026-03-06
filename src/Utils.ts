@@ -17,9 +17,9 @@ export const MOVE_KEYS: Record<string, [number, number]> = {
   h: [-1, 0], j: [0, 1], k: [0, -1], l: [1, 0]
 };
 
-export function rngRange(n: number): number;
-export function rngRange(min: number, max: number): number;
-export function rngRange(minOrN: number, max?: number): number {
+export function rndRange(n: number): number;
+export function rndRange(min: number, max: number): number;
+export function rndRange(minOrN: number, max?: number): number {
   if (max === undefined)
     return Math.floor(ROT.RNG.getUniform() * minOrN);
   return minOrN + Math.floor(ROT.RNG.getUniform() * (max - minOrN + 1));
@@ -84,7 +84,7 @@ export function shuffleArray<T>(array: readonly T[]): T[] {
 
   while (curr !== 0) {
     // Pick a remaining element.
-    rnd = rngRange(curr);
+    rnd = rndRange(curr);
     curr--;
 
     // And swap it with the current element using array destructuring.

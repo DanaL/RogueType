@@ -6,7 +6,7 @@ import { Popup, YesNoPopup } from "./Popup";
 import { InfoPopupController, YesNoController } from "./InputController";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { randomTextExcerptSync, NUM_LVLS, ActionResult, indefArticle } from "./Utils";
+import { randomTextExcerptSync, NUM_LVLS, ActionResult, indefArticle, rndRange } from "./Utils";
 import { TypingTestPopup, TypingTestController } from "./TypingTest";
 import { RobotHackPopup, RobotHackController } from "./RobotHack";
 import { TerminalController } from "./Terminal";
@@ -513,9 +513,15 @@ export class GameState {
   }
 
   startRobotHack(robot: Robot, initiatedByPlayer: boolean): void {
+    let taunt = "";    
+    if (!initiatedByPlayer) {
+      const taunts = ["MESS WITH THE BEST DIE LIKE THE REST", "MY KUNGFU IS THE BEST", "LOSER", "DO U THINK U CAN DEFEAT ME?? L0L"];
+      taunt = taunts[rndRange(taunts.length)];
+    }
+
     const popup = new RobotHackPopup(robot.name, robot.currFirewall, robot.maxFirewall, 2, 1);
     const wordCount = Math.round(this.game.wpm / 4);
-    const controller = new RobotHackController(this.game, this, robot, popup, wordCount, (success) => {
+    const controller = new RobotHackController(this.game, this, robot, popup, wordCount, taunt, (success) => {
       if (success) {
         if (!initiatedByPlayer) {
           robot.pwned = false;

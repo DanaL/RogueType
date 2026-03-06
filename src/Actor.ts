@@ -1,7 +1,7 @@
 import * as ROT from "rot-js";
 import { GameState } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
-import { ActionResult, ICELevel, rngRange } from "./Utils";
+import { ActionResult, ICELevel, rndRange } from "./Utils";
 import { Software, SoftwareCategory } from "./Software";
 import type { JigsawPiece } from "./Jigsaw";
 import type { Device } from "./Device";
@@ -69,7 +69,7 @@ export abstract class Actor {
     }
 
     if (targets.length > 0) {
-      this.gs.assault(targets[rngRange(targets.length)], this, 2);
+      this.gs.assault(targets[rndRange(targets.length)], this, 2);
       return ActionResult.Complete;
     }
 
@@ -159,7 +159,7 @@ export abstract class Robot extends Actor {
     super(x, y, ch, colour, gs);
     this.id = Robot.#nextId++;
 
-    if (rngRange(5) === 0)
+    if (rndRange(5) === 0)
       this.software.push(new Software("Experimental Evil Algorithm", SoftwareCategory.Behaviour, false, 1, 2));      
   }
 

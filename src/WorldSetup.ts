@@ -2,7 +2,7 @@ import { Crate, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
 import { BasicBot, DozerBot, Player, Roomba } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
-import { ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange } from "./Utils";
+import { ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange } from "./Utils";
 import { buildLevel } from "./LevelGen";
 import { Software, SoftwareCategory, DataFile } from "./Software";
 import { renderBitmap, shuffleArray } from "./Utils";
@@ -110,7 +110,7 @@ function setMainframePassword(game: Game) {
         continue;
       }
 
-      const term = terminals[rngRange(terminals.length)];
+      const term = terminals[rndRange(terminals.length)];
       term.addFile(piece);
       break;
     } while (true);
@@ -126,14 +126,14 @@ function seedComputerFiles(game: Game) {
 
   for (let j = 0; j < 3; j++) {
     const sw = new Software("Emacs Hacker Mode", SoftwareCategory.ICEBreaker, false, 2, 1);
-    terminals[rngRange(terminals.length)].addFile(sw);
+    terminals[rndRange(terminals.length)].addFile(sw);
   }
 
   //  Kuang Grade Mark Eleven
 
   const df0 = new DataFile("Evil robot research", "To those who question why we need to develop evil robots, I say: if not us than who? It's a simple matter of economics. If evil robots can be made, they will be made. It's better to be the manufacturer of evil robots than their victim!");
-  terminals[rngRange(terminals.length)].addFile(df0);
+  terminals[rndRange(terminals.length)].addFile(df0);
 
   const df1 = new DataFile("PO #37609", "Yes, I ordered several dozen large mirrors. Yes I plan to use them in ways which enhance shareholder value. No, I do not like my discretionary spending being micro-managed.");
-  terminals[rngRange(terminals.length)].addFile(df1);
+  terminals[rndRange(terminals.length)].addFile(df1);
 }

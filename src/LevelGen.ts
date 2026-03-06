@@ -4,7 +4,7 @@ import type { TerrainType } from "./Terrain";
 import { Crate, Device, WeightTrigger, TimerTrigger, LightTrigger, LightSource, Mirror, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION, LIGHT_SOURCE } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
-import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rngRange as rndRange, rngRange } from "./Utils";
+import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange } from "./Utils";
 import { Roomba, BasicBot, ShieldedBot, DozerBot, ForkLifter } from "./Actor";
 import { Software, SoftwareCategory } from "./Software";
 
@@ -79,7 +79,7 @@ export function buildLevel(gs: GameState, levelNum: number) {
 
   }
 
-  const hasRadiation = rngRange(4) === 0;
+  const hasRadiation = rndRange(4) === 0;
 
   if (hasRadiation) {
     // Find the room ID of the room containing the downward stairs
@@ -93,7 +93,7 @@ export function buildLevel(gs: GameState, levelNum: number) {
     }
 
     // Flood either the logjam room (roomMask === 1) or the stairs room with radiation
-    const useLogjam = rngRange(2) === 0;
+    const useLogjam = rndRange(2) === 0;
     for (let i = 0; i < levelInfo.roomMask.length; i++) {
       const y = Math.floor(i / MAP_WIDTH);
       const x = i - y * MAP_WIDTH;
@@ -117,7 +117,7 @@ export function buildLevel(gs: GameState, levelNum: number) {
       !levelInfo.devices[k]
     );
     if (radFloorCandidates.length > 0) {
-      const loc = radFloorCandidates[rngRange(radFloorCandidates.length)];
+      const loc = radFloorCandidates[rndRange(radFloorCandidates.length)];
       const [tx, ty] = loc.split(',').map(Number);
       placeTerminal(levelInfo, tx, ty, levelNum, VENT_RADIATION);
     }
@@ -126,7 +126,7 @@ export function buildLevel(gs: GameState, levelNum: number) {
   const used = new Set<string>();
   for (let j = 0; j < 3; j++) {
     for (let tries = 0; tries < 20; ++tries) {
-      const idx = rngRange(levelInfo.arrivalSideLoc.length);
+      const idx = rndRange(levelInfo.arrivalSideLoc.length);
       const loc = levelInfo.arrivalSideLoc[idx];
       if (used.has(loc))
         continue;
@@ -142,7 +142,7 @@ export function buildLevel(gs: GameState, levelNum: number) {
   const locs = [...levelInfo.arrivalSideLoc, ...levelInfo.restrictedSideLoc];
   for (let j = 0; j < 2; j++) {
     for (let tries = 0; tries < 20; ++tries) {
-      const idx = rngRange(locs.length);
+      const idx = rndRange(locs.length);
       const loc = locs[idx];
       if (used.has(loc))
         continue;
@@ -169,17 +169,17 @@ export function buildLevel(gs: GameState, levelNum: number) {
     // Place a ShieldedBot on the arrival side — guaranteed placement
     const freeArrival = levelInfo.arrivalSideLoc.filter(l => !used.has(l));
     if (freeArrival.length > 0) {
-      const loc = freeArrival[rngRange(freeArrival.length)];
+      const loc = freeArrival[rndRange(freeArrival.length)];
       const [x, y] = loc.split(',').map(Number);
       gs.addRobot(new ShieldedBot(x, y, gs), levelNum, x, y);
       used.add(loc);
 
-      if (rngRange(3) === 0) {
+      if (rndRange(3) === 0) {
         const surrounded = surroundLocWithCrates(levelInfo, x, y);
-        if (surrounded && rngRange(2) === 0) {
+        if (surrounded && rndRange(2) === 0) {
           // 50% chance to also add a DozerBot on the arrival side
           for (let dt = 0; dt < 20; dt++) {
-            const dozerLoc = levelInfo.arrivalSideLoc[rngRange(levelInfo.arrivalSideLoc.length)];
+            const dozerLoc = levelInfo.arrivalSideLoc[rndRange(levelInfo.arrivalSideLoc.length)];
             if (used.has(dozerLoc))
               continue;
             const [dx, dy] = dozerLoc.split(',').map(Number);
@@ -195,7 +195,7 @@ export function buildLevel(gs: GameState, levelNum: number) {
   const hasLightPuzzle = Object.values(levelInfo.devices).some(d => d instanceof LightSource);
   if (hasLightPuzzle) {
     for (let tries = 0; tries < 20; tries++) {
-      const idx = rngRange(levelInfo.arrivalSideLoc.length);
+      const idx = rndRange(levelInfo.arrivalSideLoc.length);
       const loc = levelInfo.arrivalSideLoc[idx];
       if (used.has(loc))
         continue;
@@ -203,11 +203,11 @@ export function buildLevel(gs: GameState, levelNum: number) {
       gs.addRobot(new ForkLifter(x, y, gs), levelNum, x, y);
       used.add(loc);
 
-      if (rngRange(10) < 3) {
+      if (rndRange(10) < 3) {
         const surrounded = surroundLocWithCrates(levelInfo, x, y);
         if (surrounded) {
           for (let dt = 0; dt < 20; dt++) {
-            const dozerLoc = levelInfo.arrivalSideLoc[rngRange(levelInfo.arrivalSideLoc.length)];
+            const dozerLoc = levelInfo.arrivalSideLoc[rndRange(levelInfo.arrivalSideLoc.length)];
             if (used.has(dozerLoc))
               continue;
             const [dx, dy] = dozerLoc.split(',').map(Number);
@@ -417,7 +417,7 @@ function setupLightPuzzle(level: LevelInfo, template: LogJamTemplate, originRow:
       arrivalFloors.push(ak);
   }
   for (let i = arrivalFloors.length - 1; i > 0; i--) {
-    const j = rngRange(i + 1);
+    const j = rndRange(i + 1);
     [arrivalFloors[i], arrivalFloors[j]] = [arrivalFloors[j], arrivalFloors[i]];
   }
   for (let i = 0; i < best.mirrorsNeeded && i < arrivalFloors.length; i++)
@@ -564,7 +564,7 @@ function placeFailsafeTerminal(level: LevelInfo, levelNum: number) {
 
   const functions = LIFT_ACCESS | DISABLE_GATE;
   for (let j = 0; j < 25; j++) {
-    const loc = candidates[rngRange(candidates.length)];
+    const loc = candidates[rndRange(candidates.length)];
     if (level.devices[loc])
       continue;
     const [ x, y ] = loc.split(',').map(Number);
