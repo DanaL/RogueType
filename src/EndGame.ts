@@ -14,16 +14,6 @@ const LAUNCH_SCREEN: number = 0;
 const HACKING: number = 1;
 const LOGIN_SCREEN: number = 2;
 
-function truncateExcerpt(excerpt: string, wordCount: number): string {
-  const hasLeading = excerpt.startsWith('...');
-  const start = hasLeading ? 3 : 0;
-  const hasTrailing = excerpt.endsWith('...');
-  const end = hasTrailing ? excerpt.length - 3 : excerpt.length;
-  const words = excerpt.slice(start, end).trim().split(' ');
-  if (words.length <= wordCount) return excerpt;
-  return (hasLeading ? '...' : '') + words.slice(0, wordCount).join(' ') + '...';
-}
-
 type PanelCell = { char: string; idx: number }; // idx === -1 means decorative dot
 
 export class EndGamePopup extends Popup {

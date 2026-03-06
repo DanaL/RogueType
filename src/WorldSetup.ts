@@ -83,8 +83,6 @@ export function setupWorld(game: Game): void {
   for (let level = 1; level < NUM_LVLS; level++)
     buildLevel(game.gs, level);
 
-  game.gs.downLifts[0] = true;
-
   const roomba = new Roomba(41, 19, game.gs);
   
   //roomba.pwned = true;
