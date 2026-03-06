@@ -78,19 +78,18 @@ export function setupWorld(game: Game): void {
   burritoBot.software.push(new Software("DW Move Protocol", SoftwareCategory.Behaviour, false, 1, 1));
   burritoBot.currFirewall = 10;
   burritoBot.accuracy = 0.80;
+  burritoBot.pwned = false;
   game.gs.player.hackedRobot = burritoBot;
 
   for (let level = 1; level < NUM_LVLS; level++)
     buildLevel(game.gs, level);
 
   const roomba = new Roomba(41, 19, game.gs);
-  
-  //roomba.pwned = true;
-  //roomba.ice = ICELevel.Strong;
-
+  roomba.pwned = false;
   game.gs.addRobot(roomba, 0, 41, 17);
 
   const dozerBot = new DozerBot(42, 22, game.gs);
+  dozerBot.pwned = false;
   game.gs.addRobot(dozerBot, 0, 42, 22);
 
   setMainframePassword(game);
