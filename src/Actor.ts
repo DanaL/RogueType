@@ -203,6 +203,10 @@ export abstract class Robot extends Actor {
     return false;
   }
 
+  isEvil(): boolean {
+    return this.software.some(sw => sw.title === "Experimental Evil Algorithm")
+  }
+
   act(): Promise<void> {
     if (this.pwned) {
       this.pwnedAct();
@@ -234,7 +238,7 @@ export abstract class Robot extends Actor {
       if (sw.title === "Facility technical specs vol. III - robot servants") {
         let repaired = false;
         for (const adj of ADJ_4) {
-          const neighbor = this.gs.robots.find(r => r !== this && r.level === this.level && r.x === this.x + adj[0] && r.y === this.y + adj[1] && r.currHull < r.maxHull);
+          const neighbor = this.gs.robots.find(r => !r.isEvil() && r.level === this.level && r.x === this.x + adj[0] && r.y === this.y + adj[1] && r.currHull < r.maxHull);
           if (neighbor) {
             neighbor.currHull = Math.min(neighbor.currHull + 3, neighbor.maxHull);
             if (this.gs.visible[`${this.level},${this.x},${this.y}`])
@@ -243,7 +247,8 @@ export abstract class Robot extends Actor {
             break;
           }
         }
-        if (repaired) break;
+        if (repaired) 
+          break;
       }
 
       if (sw.title === "DW Move Protocol") {

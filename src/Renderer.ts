@@ -112,9 +112,8 @@ export class Renderer {
         if (sx < 0 || sx >= vpW || sy < 0 || sy >= vpH)
           continue;
 
-        const evil = robot.software.some(sw => sw.title === "Experimental Evil Algorithm");
         const fg = coord == gs.highlightedLoc 
-            ? "#fff" : (evil ? "#ff004e" : robot.colour);
+            ? "#fff" : (robot.isEvil() ? "#ff004e" : robot.colour);
 
         const robotBg = coord == gs.highlightedLoc ? "#ff5cff"
           : gs.beamTiles.has(coord) ? BEAM_BG
