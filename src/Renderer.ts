@@ -115,7 +115,7 @@ export class Renderer {
         const evil = robot.software.some(sw => sw.title === "Experimental Evil Algorithm");
         const fg = coord == gs.highlightedLoc 
             ? "#fff" : (evil ? "#ff004e" : robot.colour);
-            
+
         const robotBg = coord == gs.highlightedLoc ? "#ff5cff"
           : gs.beamTiles.has(coord) ? BEAM_BG
           : gs.hazards[gs.currLevel][coord] === EnvironmentHazard.RADIATION ? RADIATION_BG

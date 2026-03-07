@@ -231,6 +231,21 @@ export abstract class Robot extends Actor {
           break;
       }
 
+      if (sw.title === "Facility technical specs vol. III - robot servants") {
+        let repaired = false;
+        for (const adj of ADJ_4) {
+          const neighbor = this.gs.robots.find(r => r !== this && r.level === this.level && r.x === this.x + adj[0] && r.y === this.y + adj[1] && r.currHull < r.maxHull);
+          if (neighbor) {
+            neighbor.currHull = Math.min(neighbor.currHull + 3, neighbor.maxHull);
+            if (this.gs.visible[`${this.level},${this.x},${this.y}`])
+              this.gs.addMessage(`The repair bot patches up the ${neighbor.name}.`);
+            repaired = true;
+            break;
+          }
+        }
+        if (repaired) break;
+      }
+
       if (sw.title === "DW Move Protocol") {
         const res = this.randomMove(this.gs);
 
@@ -354,6 +369,32 @@ export class SecBot extends Robot {
     this.software.push(new Software("Intrusion Interdiction Pckg", SoftwareCategory.Behaviour, true, 1, 1));
     this.software.push(new Software("A* navigation tool 136.2", SoftwareCategory.Behaviour, false, 1, 1));
     this.software.push(new Software("Facility Firewall Platinum Edition", SoftwareCategory.ICE, false, 2, 1));
+
+    this.currFirewall = 10;
+  }
+}
+
+export class RepairBot extends Robot {
+  carriedDevice: Device | null = null;
+
+  constructor(x: number, y: number, gs: GameState) {
+    super(x, y, 'h', '#00f7ff', gs);
+    this.name = "repair bot";
+    this.desc = "Keeping the other robots in good shape. Facility believes in the right to repair.";
+    this.x = x;
+    this.y = y;
+    this._maxHull = 10;    
+    this.currHull = 10;
+    this.accuracy = 1.0;
+    this.securityClearance = 2;
+    this.memorySize = 4;
+    this.ice = ICELevel.Normal;
+    this.pwned = false;
+    
+    this.software = []; // Ensure RepairBots start with exactly these packages:
+    this.software.push(new Software("Facility technical specs vol. III - robot servants", SoftwareCategory.Behaviour, true, 1, 1));
+    this.software.push(new Software("DW Move Protocol", SoftwareCategory.Behaviour, false, 1, 1));
+    this.software.push(new Software("Facility Firewall Gold Edition", SoftwareCategory.ICE, false, 1, 1));
 
     this.currFirewall = 10;
   }
