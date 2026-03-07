@@ -43,7 +43,7 @@ export class RobotHackPopup extends Popup {
   taunt: string = "";
 
   constructor(robotName: string, robotCurrFirewall: number, robotMaxFirewall: number, row: number, col: number) {
-    super(`[#009d4a accessing ][#fff ${robotName}][#009d4a ...]`, "", row, col, PANEL_WIDTH * 2 + SEP_WIDTH);
+    super(`[#009d4a accessing ]${robotName}[#009d4a ...]`, "", row, col, PANEL_WIDTH * 2 + SEP_WIDTH);
     this.robotCurrFirewall = robotCurrFirewall;
     this.robotMaxFirewall = robotMaxFirewall;
   }
