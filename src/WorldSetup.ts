@@ -42,18 +42,6 @@ export function setupWorld(game: Game): void {
   overworld["50,18"] = Terrain.Wall;
   overworld["51,18"] = Terrain.Wall;
 
-  // temp
-  overworld["53,14"] = Terrain.DataBank;
-  overworld["54,14"] = Terrain.DataBank;
-  overworld["55,14"] = Terrain.DataBank;
-
-  overworld["53,15"] = Terrain.DataBank;
-  overworld["54,15"] = Terrain.Mainframe;
-  overworld["55,15"] = Terrain.DataBank;
-
-  overworld["53,16"] = Terrain.DataBank;
-  overworld["55,16"] = Terrain.DataBank;
-
   game.gs.maps.push(overworld);
   
   const terminal = new Terminal(LIFT_ACCESS);
@@ -91,11 +79,6 @@ export function setupWorld(game: Game): void {
   const dozerBot = new DozerBot(42, 22, game.gs);
   dozerBot.pwned = false;
   game.gs.addRobot(dozerBot, 0, 42, 22);
-
-  // temp 
-  const secBot = new SecBot(45, 21, game.gs);
-  game.gs.addRobot(secBot, 0, 45, 21);
-
 
   setMainframePassword(game);
   seedComputerFiles(game);
