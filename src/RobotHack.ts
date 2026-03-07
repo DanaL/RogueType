@@ -4,7 +4,7 @@ import { Robot } from "./Actor";
 import { InputController } from "./InputController";
 import { Popup } from "./Popup";
 import { Renderer } from "./Renderer";
-import { randomTextExcerptSync } from "./Utils";
+import { randomTextExcerptSync, rndRange } from "./Utils";
 import { SoftwareCategory } from "./Software";
 
 const PANEL_WIDTH = 36;
@@ -25,6 +25,7 @@ function truncateExcerpt(excerpt: string, wordCount: number): string {
 
 type PanelCell = { char: string; idx: number }; // idx === -1 means decorative dot
 
+ // \x00
 export class RobotHackPopup extends Popup {
   playerPos: number = 0;
   robotFloatPos: number = 0;
@@ -139,14 +140,20 @@ export class RobotHackPopup extends Popup {
           renderer.drawChar(row, contentLeft + c, ' ', '#000', '#000');
           continue;
         }
-        const { char, idx } = cell;
+        let { char, idx } = cell;        
         if (idx === -1) {
           renderer.drawChar(row, contentLeft + c, char, '#4e6ea8', '#000');
           continue;
         }
         const pIsErr = idx === this.playerErrorPos && now < this.playerErrorUntil;
         const pIsCur = idx === this.playerPos;
-        const pFg = (pIsErr || pIsCur) ? '#000' : idx < this.playerPos ? '#0aff52' : '#009d4a';
+        let pFg: string;
+        if (pIsErr || pIsCur) 
+          pFg = '#000';
+        else if (idx < this.playerPos)
+          pFg = '#0aff52';
+        else
+          pFg = '#009d4a';
         const pBg = pIsErr ? '#ff004e' : pIsCur ? '#0aff52' : '#000';
         renderer.drawChar(row, contentLeft + c, char, pFg, pBg);
       }
@@ -197,15 +204,17 @@ export class RobotHackController extends InputController {
   private game: Game;
   private gs: GameState;
   private robot: Robot;
-  private playerExcerpt: string = "";
+  private trueExcerpt: string = "";
   private wordCount: number;
   private popup: RobotHackPopup;
   private progressPerMs: number;
   private onComplete: (success: boolean) => void;
   private done: boolean = false;
+  private hardMode: boolean;
+
   taunt: string = "";
 
-  constructor(game: Game, gs: GameState, robot: Robot, popup: RobotHackPopup, wordCount: number, taunt: string, onComplete: (success: boolean) => void) {
+  constructor(game: Game, gs: GameState, robot: Robot, popup: RobotHackPopup, wordCount: number, hardMode: boolean, taunt: string, onComplete: (success: boolean) => void) {
     super();
     this.game = game;
     this.gs = gs;
@@ -213,9 +222,10 @@ export class RobotHackController extends InputController {
     this.wordCount = wordCount;
     this.popup = popup;
     popup.taunt = taunt;
+    this.hardMode = hardMode;
     this.setExcerpts(robot.previouslyHacked);
     this.onComplete = onComplete;
-
+    
     const scale = ROBOT_WPM_SCALE[robot.ice] ?? 1.0;
     const robotWpm = game.wpm * scale;
 
@@ -231,7 +241,7 @@ export class RobotHackController extends InputController {
       return;
 
     const pos = this.popup.playerPos;
-    if (e.key === this.playerExcerpt[pos]) {
+    if (e.key === this.trueExcerpt[pos]) {
       this.popup.playerPos++;
       if (this.popup.playerPos >= this.popup.playerEndIdx)
         this.resolveRound(true);
@@ -272,15 +282,48 @@ export class RobotHackController extends InputController {
     }
   }
 
+  private hardModeExcerpt(excerpt: string): { display: string; trueExcerpt: string } {
+    const redacted = '█';
+
+    if (rndRange(10) <= 7) {
+      const num = excerpt.length / 10;
+      const letters = excerpt.split('');
+      for (let j = 0; j < num; j++) {
+        do {
+          const idx = rndRange(excerpt.length);
+          if (/[a-zA-Z]/.test(letters[idx]) &&
+              letters[idx - 1] !== redacted && letters[idx + 1] !== redacted) {
+            letters[idx] = redacted;
+            break;
+          }
+        } while (true);
+      }
+
+      return { display: letters.join(''), trueExcerpt: excerpt };
+    } else {
+      const reversed = excerpt.split('').reverse().join('');
+      return { display: reversed, trueExcerpt: reversed };
+    }
+  }
+
   private setExcerpts(previouslyHacked: boolean): void {
     const playerScale = previouslyHacked ? 0.5 : 1.0;
     const robotScale = 1.0;
     const pLen = Math.max(1, Math.round(this.wordCount * playerScale));
     const rLen = Math.max(1, Math.round(this.wordCount * robotScale));
-    const fullExcerpt = randomTextExcerptSync(Math.max(pLen, rLen));
-    this.playerExcerpt = pLen < rLen ? truncateExcerpt(fullExcerpt, pLen) : fullExcerpt;
+    let fullExcerpt = randomTextExcerptSync(Math.max(pLen, rLen));
+    this.trueExcerpt = fullExcerpt;
+
+    if (this.hardMode) {
+      const result = this.hardModeExcerpt(fullExcerpt);
+      fullExcerpt = result.display;
+      this.trueExcerpt = result.trueExcerpt;
+    }
+
+    const displayExcerpt = pLen < rLen ? truncateExcerpt(fullExcerpt, pLen) : fullExcerpt;
     const robotExcerpt = rLen < pLen ? truncateExcerpt(fullExcerpt, rLen) : fullExcerpt;
-    this.popup.resetForNewRound(this.playerExcerpt, robotExcerpt);
+
+    this.popup.resetForNewRound(displayExcerpt, robotExcerpt);
   }
 
   private endHack(): void {

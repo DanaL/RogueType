@@ -618,9 +618,10 @@ export class GameState {
       taunt = "INTRUDER DETECTED"
     }
 
+    const hardMode = initiatedBy === HackInitiatedBy.SecBot 
     const popup = new RobotHackPopup(robot.name, robot.currFirewall, robot.maxFirewall, 2, 1);
     const wordCount = Math.round(this.game.wpm / 4);
-    const controller = new RobotHackController(this.game, this, robot, popup, wordCount, taunt, (success) => {
+    const controller = new RobotHackController(this.game, this, robot, popup, wordCount, hardMode, taunt, (success) => {
       if (success) {
         robot.pwned = false;
 
