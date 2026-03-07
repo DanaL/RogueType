@@ -37,7 +37,7 @@ function startGame(): void {
 startGame();
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Tab" || e.key === "/" || e.key === "'" || e.key === " ") e.preventDefault();
+  if (e.key === "Tab" || e.key === "/" || e.key === "'" || e.key === " " || e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
   game.queueInput(e);
 });
 
