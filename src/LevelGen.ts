@@ -1,12 +1,13 @@
 import { GameState, EnvironmentHazard } from "./GameState";
 import { Terrain, TERRAIN_DEF } from "./Terrain";
 import type { TerrainType } from "./Terrain";
-import { Crate, Device, WeightTrigger, TimerTrigger, LightTrigger, LightSource, Mirror, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION, LIGHT_SOURCE } from "./Device";
+import { Crate, Device, WeightTrigger, TimerTrigger, LightTrigger, LightSource, Mirror, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION, LIGHT_SOURCE, ColourPuzzleGoal, ColourPuzzleTile } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
-import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange, ADJ_4 } from "./Utils";
+import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange, ADJ_4, adj8Locs } from "./Utils";
 import { Roomba, BasicBot, ShieldedBot, DozerBot, ForkLifter, SecBot } from "./Actor";
 import { Software, SoftwareCategory } from "./Software";
+import { colourToRGB, genColourPuzzle } from "./ColourPuzzle";
 
 export class LevelInfo {
   map: Record<string, TerrainType> = {};
@@ -526,8 +527,8 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
 
   // Place the chokePoint near the centre of the map
   let nextRoomId = 1;
-  const chokePoindIdx = rndRange(LOG_JAMS.length);
-  const chokePoint = LOG_JAMS[chokePoindIdx];
+  const chokePointIdx = rndRange(LOG_JAMS.length);
+  const chokePoint = levelNum === 1 ? LOG_JAMS[LOG_JAMS.length -2] : LOG_JAMS[chokePointIdx];
   
   const row = MAP_ROWS / 2 - 5 + rndRange(10);
   const col = MAP_WIDTH / 2 - 5 + rndRange(10);
@@ -693,6 +694,22 @@ function setupChokePoint(level: LevelInfo, template: LogJamTemplate, row: number
     level.devices[`${tt.col + col},${tt.row + row}`] = trigger;
   }
 
+  if (template.colourPuzzle) {
+    const puzzleTiles = genColourPuzzle(6);
+    const goal = colourToRGB(puzzleTiles[4]);
+    const gx = template.colourPuzzle.col + col;
+    const gy = template.colourPuzzle.row + row;
+    level.devices[`${gx},${gy}`] = new ColourPuzzleGoal(goal);
+
+    level.devices[`${gx - 1},${gy - 1}`] = new ColourPuzzleTile(puzzleTiles[0], 0);
+    level.devices[`${gx},${gy - 1}`] = new ColourPuzzleTile(puzzleTiles[1], 1);
+    level.devices[`${gx + 1},${gy - 1}`] = new ColourPuzzleTile(puzzleTiles[2], 2);
+    level.devices[`${gx - 1},${gy}`] = new ColourPuzzleTile(puzzleTiles[3], 3);
+    level.devices[`${gx + 1},${gy}`] = new ColourPuzzleTile(puzzleTiles[5], 5);
+    level.devices[`${gx - 1},${gy + 1}`] = new ColourPuzzleTile(puzzleTiles[6], 6);
+    level.devices[`${gx},${gy + 1}`] = new ColourPuzzleTile(puzzleTiles[7], 7);
+    level.devices[`${gx + 1},${gy + 1}`] = new ColourPuzzleTile(puzzleTiles[8], 8);
+  }
 }
 
 function adjDoors(x: number, y: number, map: Record<string, TerrainType>): boolean {
@@ -1004,6 +1021,7 @@ interface LogJamTemplate {
   triggers: RoomCoord[];
   timerTriggers: RoomCoord[];
   lTriggers: RoomCoord[];
+  colourPuzzle: RoomCoord | null;
   restricted: string;
 }
 
@@ -1014,6 +1032,7 @@ const CHAR_TO_TERRAIN: Record<string, TerrainType> = {
   '=': Terrain.Floor,
   '1': Terrain.Floor,
   'L': Terrain.Floor,
+  'C': Terrain.Floor,
   '+': Terrain.Door,
   'G': Terrain.Gate,
 };
@@ -1071,6 +1090,7 @@ function parseLogJams(text: string): LogJamTemplate[] {
       triggers: parseCoords(meta['WTrigger'] ?? ''),
       timerTriggers: parseCoords(meta['TTrigger'] ?? ''),
       lTriggers: parseCoords(meta['LTrigger'] ?? ''),
+      colourPuzzle: meta['CPuzzle'] ? parseCoords(meta['CPuzzle'])[0] ?? null : null,
       restricted: meta['Restricted'] ?? '',
     };
   });

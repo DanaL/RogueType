@@ -1,6 +1,6 @@
 import * as ROT from "rot-js";
 import { Actor, DozerBot, Player, Robot, ShieldedBot } from "./Actor";
-import { Crate, Device, LightSource, LightTrigger, Mirror, Terminal, TimerTrigger, WeightTrigger } from "./Device";
+import { ColourPuzzleGoal, Crate, Device, LightSource, LightTrigger, Mirror, Terminal, TimerTrigger, WeightTrigger } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
 import { InfoPopupController, YesNoController } from "./InputController";
@@ -357,6 +357,11 @@ export class GameState {
     }
 
     const device = this.devices[this.currLevel][key];
+
+    if (device instanceof ColourPuzzleGoal) {      
+      this.addMessage("You cannot go that way!");
+      return ActionResult.Failure;
+    }
 
     const dozer = actor instanceof DozerBot || (isPlayer && this.player.hackedRobot instanceof DozerBot);
     const crate = device instanceof Crate;

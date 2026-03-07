@@ -1,3 +1,5 @@
+import { GameState } from "./GameState";
+import { colourToRGB } from "./ColourPuzzle";
 import { DataFile } from "./Software";
 
 export abstract class Device {
@@ -72,6 +74,49 @@ export class LightTrigger extends Device {
 export class Crate extends Device {
   constructor() {
     super("crate", "A large, heavy wooden box with a paperclip stamped on it.", '▧', '#c47231' );
+  }
+}
+
+export class ColourPuzzleGoal extends Device {
+  constructor(colour: string) {
+    super("coloured tile", "A brightly coloured plastic tile embedded in the floor.", '▣', colour);
+  }
+}
+
+export class ColourPuzzleTile extends Device {
+  private position: number;
+  colourNum: number;
+  
+  /*
+
+const colourPuzzleNeighbours: Record<number, number[]> = {
+  0: [1, 3], // top-left
+  1: [0], // top
+  2: [1, 5], // top-right
+  3: [6], // left
+  5: [2], // right
+  6: [3, 7], // bottom-left
+  7: [8], // bottom
+  8: [5, 7] // bottom-right
+};
+
+  */
+
+  constructor(colour: number, position: number) {
+    const rbg = colourToRGB(colour);
+    super("coloured tile", "A brightly coloured plastic tile embedded in the floor.", '▣', rbg);
+    this.colourNum = colour;
+    this.position = position;
+  }
+
+  switchColour(gs: GameState) {
+    if (this.position === 0) { // top-left
+      
+    }
+
+
+    this.colourNum = (this.colourNum + 1) % 5;
+    this.colour = colourToRGB(this.colourNum);
   }
 }
 

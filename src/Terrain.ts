@@ -8,7 +8,7 @@ const Terrain = {
   OpenGate: 6,
   DeactivatedGate: 7,
   DataBank: 8,
-  Mainframe: 9,
+  Mainframe: 9
 } as const;
 
 type TerrainType = typeof Terrain[keyof typeof Terrain];

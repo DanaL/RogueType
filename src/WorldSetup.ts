@@ -7,7 +7,7 @@ import { buildLevel } from "./LevelGen";
 import { Software, SoftwareCategory, DataFile } from "./Software";
 import { renderBitmap, shuffleArray } from "./Utils";
 
-import { genPuzzle } from "./ColourPuzzle";
+import { genColourPuzzle } from "./ColourPuzzle";
 
 export function setupWorld(game: Game): void {
   let overworld: Record<string, TerrainType> = {};
@@ -141,5 +141,5 @@ function seedComputerFiles(game: Game) {
   const df2 = new DataFile("Drunken Walk Algorithm", "I have an elgeant proof that the drunken walk algorithm is the most efficient and effecitve routine for our robots to go about their business in Facility but my remaining disk quota is too small to contain it.");
   terminals[rndRange(terminals.length)].addFile(df2);
 
-  const puzzle = genPuzzle(7);
+  const puzzle = genColourPuzzle(7);
 }

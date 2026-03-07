@@ -17,7 +17,7 @@ import { rndRange } from "./Utils";
 //       ↑
 //       BL→B
 //
-// T, L, B, R switch tile to the right (counter clockwise)
+// T, L, B, R switch tile to the right (clockwise)
 //
 // B→BR, R->TR, T→TL, L→BL
 //
@@ -30,7 +30,7 @@ const GREEN:number = 2;
 const BLUE:number = 3;
 const PURPLE:number = 4;
 
-const moves: Record<number, number[]> = {
+const colourPuzzleMoves: Record<number, number[]> = {
   0: [1, 3], // top-left
   1: [0], // top
   2: [1, 5], // top-right
@@ -41,16 +41,31 @@ const moves: Record<number, number[]> = {
   8: [5, 7] // bottom-right
 };
 
-export function genPuzzle(numMoves: number): number[] {
+export function colourToRGB(colour: number): string {
+  switch (colour) {
+    case RED:
+      return "#ff004e";
+    case YELLOW:
+      return "#f9d071";
+    case GREEN:
+      return "#009d4a";
+    case BLUE:
+      return "#008ac5";
+    default:
+      return "#ac29ce";
+  }
+}
+
+export function genColourPuzzle(numMoves: number): number[] {
   const colour = rndRange(5);
   const puzzle = Array(9).fill(colour);
   
-  const keys = Object.keys(moves).map(Number);
+  const keys = Object.keys(colourPuzzleMoves).map(Number);
   for (let j = 0; j < numMoves; j++) {
     const mv = keys[rndRange(keys.length)];
     console.log("move: " + (mv));
     let s = "";
-    for (const sq of moves[mv]) {
+    for (const sq of colourPuzzleMoves[mv]) {
       s += "  " + sq;
       puzzle[sq] = (puzzle[sq] + 4) % 5;
     }
