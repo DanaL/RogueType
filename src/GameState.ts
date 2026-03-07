@@ -1,6 +1,6 @@
 import * as ROT from "rot-js";
 import { Actor, DozerBot, Player, Robot, ShieldedBot } from "./Actor";
-import { ColourPuzzleGoal, Crate, Device, LightSource, LightTrigger, Mirror, Terminal, TimerTrigger, WeightTrigger } from "./Device";
+import { ColourPuzzleGoal, ColourPuzzleTile, Crate, Device, LightSource, LightTrigger, Mirror, Terminal, TimerTrigger, WeightTrigger } from "./Device";
 import { Game } from "./Game";
 import { Popup, YesNoPopup } from "./Popup";
 import { InfoPopupController, YesNoController } from "./InputController";
@@ -533,9 +533,57 @@ export class GameState {
         if (this.visible[`${this.currLevel},${device.gateX},${device.gateY}`])
           this.addMessage("You hear a pneumatic hiss.");
       }
+    } else if (device instanceof ColourPuzzleTile) {
+      this.switchColourPuzzleTile(device, actor.x, actor.y);
     }
 
     return false;
+  }
+
+  private switchColourPuzzleTile(tile: ColourPuzzleTile, x: number, y: number): void {
+    let n: Device | undefined;
+    switch (tile.position) {
+      case 0: // top-left
+        n = this.devices[this.currLevel][`${x+1},${y}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        n = this.devices[this.currLevel][`${x},${y+1}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        break;
+      case 1: // top
+        n = this.devices[this.currLevel][`${x-1},${y}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        break;
+      case 2: // top-right
+        n = this.devices[this.currLevel][`${x-1},${y}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        n = this.devices[this.currLevel][`${x},${y+1}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        break;
+      case 3: // left
+        n = this.devices[this.currLevel][`${x},${y+1}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        break;
+      case 5: // right
+        n = this.devices[this.currLevel][`${x},${y-1}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        break;
+      case 6: // bottom-left
+        n = this.devices[this.currLevel][`${x+1},${y}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        n = this.devices[this.currLevel][`${x},${y-1}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        break;
+      case 7: // bottom
+        n = this.devices[this.currLevel][`${x+1},${y}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        break;
+      default: // bottom-right
+        n = this.devices[this.currLevel][`${x-1},${y}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        n = this.devices[this.currLevel][`${x},${y-1}`];
+        if (n instanceof ColourPuzzleTile) n.switchColour();
+        break;
+    }
   }
 
   startRobotHack(robot: Robot, initiatedBy: HackInitiatedBy): void {

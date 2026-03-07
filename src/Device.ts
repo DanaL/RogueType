@@ -84,24 +84,9 @@ export class ColourPuzzleGoal extends Device {
 }
 
 export class ColourPuzzleTile extends Device {
-  private position: number;
+  readonly position: number;
   colourNum: number;
   
-  /*
-
-const colourPuzzleNeighbours: Record<number, number[]> = {
-  0: [1, 3], // top-left
-  1: [0], // top
-  2: [1, 5], // top-right
-  3: [6], // left
-  5: [2], // right
-  6: [3, 7], // bottom-left
-  7: [8], // bottom
-  8: [5, 7] // bottom-right
-};
-
-  */
-
   constructor(colour: number, position: number) {
     const rbg = colourToRGB(colour);
     super("coloured tile", "A brightly coloured plastic tile embedded in the floor.", '▣', rbg);
@@ -109,12 +94,7 @@ const colourPuzzleNeighbours: Record<number, number[]> = {
     this.position = position;
   }
 
-  switchColour(gs: GameState) {
-    if (this.position === 0) { // top-left
-      
-    }
-
-
+  switchColour() {
     this.colourNum = (this.colourNum + 1) % 5;
     this.colour = colourToRGB(this.colourNum);
   }
