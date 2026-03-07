@@ -142,7 +142,8 @@ export class GameState {
     ++this.turn;
     this.computeBeam();
 
-    for (const timerTrigger of Object.values(this.devices[this.currLevel]).filter(d => d instanceof TimerTrigger)) {
+    const devices = Object.values(this.devices[this.currLevel]);
+    for (const timerTrigger of devices.filter(d => d instanceof TimerTrigger)) {
       if (timerTrigger.countDown === 1) {
         timerTrigger.countDown = 0;
         const gateMapLoc = `${timerTrigger.gateX},${timerTrigger.gateY}`;
@@ -156,6 +157,28 @@ export class GameState {
           this.addMessage("The gate closes with a hiss.");
       } else if (timerTrigger.countDown > 1) {
         --timerTrigger.countDown;
+      }
+    }
+
+    // check the state of the colour puzzle if there is one.
+    const colourPuzzleGoal = devices.find(d => d instanceof ColourPuzzleGoal);
+    if (colourPuzzleGoal) {      
+      const goalColour = colourPuzzleGoal.colourNum;
+      const complete = !devices.some(d => d instanceof ColourPuzzleTile && d.colourNum !== goalColour);
+      const gateMapLoc = `${colourPuzzleGoal.gateX},${colourPuzzleGoal.gateY}`;
+      const gateLoc = `${this.currLevel},${gateMapLoc}`;
+      const gateTile = this.maps[this.currLevel][gateMapLoc];
+
+      if (gateTile === Terrain.DeactivatedGate) {
+        return;
+      } else if (complete && gateTile === Terrain.Gate) {
+        this.maps[this.currLevel][gateMapLoc] = Terrain.OpenGate;
+        if (this.visible[gateLoc])
+          this.addMessage("You hear a pneumatic hiss.");
+      } else if (!complete && gateTile === Terrain.OpenGate) {
+        this.maps[this.currLevel][gateMapLoc] = Terrain.Gate;
+        if (this.visible[gateLoc])
+          this.addMessage("The gate closes with a hiss.");
       }
     }
   }

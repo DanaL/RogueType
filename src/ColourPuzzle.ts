@@ -63,13 +63,10 @@ export function genColourPuzzle(numMoves: number): number[] {
   const keys = Object.keys(colourPuzzleMoves).map(Number);
   for (let j = 0; j < numMoves; j++) {
     const mv = keys[rndRange(keys.length)];
-    console.log("move: " + (mv));
-    let s = "";
+
     for (const sq of colourPuzzleMoves[mv]) {
-      s += "  " + sq;
       puzzle[sq] = (puzzle[sq] + 4) % 5;
     }
-    console.log(s);
   }
 
   return puzzle;

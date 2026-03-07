@@ -78,8 +78,15 @@ export class Crate extends Device {
 }
 
 export class ColourPuzzleGoal extends Device {
-  constructor(colour: string) {
+  readonly gateX: number;
+  readonly gateY: number;
+  readonly colourNum: number;
+
+  constructor(colour: string, colourNum: number, gx: number, gy: number) {
     super("coloured tile", "A brightly coloured plastic tile embedded in the floor.", '▣', colour);
+    this.colourNum = colourNum;
+    this.gateX = gx;
+    this.gateY = gy;
   }
 }
 

@@ -528,7 +528,7 @@ function generateMap(h: number, w: number, levelNum: number): LevelInfo {
   // Place the chokePoint near the centre of the map
   let nextRoomId = 1;
   const chokePointIdx = rndRange(LOG_JAMS.length);
-  const chokePoint = levelNum === 1 ? LOG_JAMS[LOG_JAMS.length -2] : LOG_JAMS[chokePointIdx];
+  const chokePoint = LOG_JAMS[chokePointIdx];
   
   const row = MAP_ROWS / 2 - 5 + rndRange(10);
   const col = MAP_WIDTH / 2 - 5 + rndRange(10);
@@ -695,20 +695,23 @@ function setupChokePoint(level: LevelInfo, template: LogJamTemplate, row: number
   }
 
   if (template.colourPuzzle) {
+    const gateX = template.gate.col + col;
+    const gateY = template.gate.row + row;
+
     const puzzleTiles = genColourPuzzle(6);
     const goal = colourToRGB(puzzleTiles[4]);
-    const gx = template.colourPuzzle.col + col;
-    const gy = template.colourPuzzle.row + row;
-    level.devices[`${gx},${gy}`] = new ColourPuzzleGoal(goal);
+    const goalX = template.colourPuzzle.col + col;
+    const goalY = template.colourPuzzle.row + row;
+    level.devices[`${goalX},${goalY}`] = new ColourPuzzleGoal(goal, puzzleTiles[4], gateX, gateY);
 
-    level.devices[`${gx - 1},${gy - 1}`] = new ColourPuzzleTile(puzzleTiles[0], 0);
-    level.devices[`${gx},${gy - 1}`] = new ColourPuzzleTile(puzzleTiles[1], 1);
-    level.devices[`${gx + 1},${gy - 1}`] = new ColourPuzzleTile(puzzleTiles[2], 2);
-    level.devices[`${gx - 1},${gy}`] = new ColourPuzzleTile(puzzleTiles[3], 3);
-    level.devices[`${gx + 1},${gy}`] = new ColourPuzzleTile(puzzleTiles[5], 5);
-    level.devices[`${gx - 1},${gy + 1}`] = new ColourPuzzleTile(puzzleTiles[6], 6);
-    level.devices[`${gx},${gy + 1}`] = new ColourPuzzleTile(puzzleTiles[7], 7);
-    level.devices[`${gx + 1},${gy + 1}`] = new ColourPuzzleTile(puzzleTiles[8], 8);
+    level.devices[`${goalX - 1},${goalY - 1}`] = new ColourPuzzleTile(puzzleTiles[0], 0);
+    level.devices[`${goalX},${goalY - 1}`] = new ColourPuzzleTile(puzzleTiles[1], 1);
+    level.devices[`${goalX + 1},${goalY - 1}`] = new ColourPuzzleTile(puzzleTiles[2], 2);
+    level.devices[`${goalX - 1},${goalY}`] = new ColourPuzzleTile(puzzleTiles[3], 3);
+    level.devices[`${goalX + 1},${goalY}`] = new ColourPuzzleTile(puzzleTiles[5], 5);
+    level.devices[`${goalX - 1},${goalY + 1}`] = new ColourPuzzleTile(puzzleTiles[6], 6);
+    level.devices[`${goalX},${goalY + 1}`] = new ColourPuzzleTile(puzzleTiles[7], 7);
+    level.devices[`${goalX + 1},${goalY + 1}`] = new ColourPuzzleTile(puzzleTiles[8], 8);
   }
 }
 
