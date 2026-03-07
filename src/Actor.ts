@@ -1,7 +1,7 @@
 import * as ROT from "rot-js";
 import { GameState, HackInitiatedBy } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
-import { ActionResult, ADJ_4, distance, ICELevel, rndRange } from "./Utils";
+import { ActionResult, ADJ_4, ICELevel, rndRange } from "./Utils";
 import { Software, SoftwareCategory } from "./Software";
 import type { JigsawPiece } from "./Jigsaw";
 import type { Device } from "./Device";
