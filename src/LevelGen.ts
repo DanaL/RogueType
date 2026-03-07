@@ -5,7 +5,7 @@ import { Crate, Device, WeightTrigger, TimerTrigger, LightTrigger, LightSource, 
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
 import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange, ADJ_4 } from "./Utils";
-import { Roomba, BasicBot, ShieldedBot, DozerBot, ForkLifter } from "./Actor";
+import { Roomba, BasicBot, ShieldedBot, DozerBot, ForkLifter, SecBot } from "./Actor";
 import { Software, SoftwareCategory } from "./Software";
 
 export class LevelInfo {
@@ -165,6 +165,24 @@ export function buildLevel(gs: GameState, levelNum: number) {
     }
   }
 
+  if (levelNum > 2) {
+    const count = levelNum > 4 ? 2 : 1;
+    for (let j = 0; j < count; j++) {
+      for (let tries = 0; tries < 20; ++tries) {
+        const idx = rndRange(locs.length);
+        const loc = locs[idx];
+        if (used.has(loc))
+          continue;
+
+        const [x, y] = loc.split(',').map(Number);
+        const secBot = new SecBot(x, y, gs);      
+        gs.addRobot(secBot, levelNum, x, y);
+        used.add(loc);
+        break;
+      }
+    }
+  }
+  
   if (hasRadiation) {
     // Place a ShieldedBot on the arrival side — guaranteed placement
     const freeArrival = levelInfo.arrivalSideLoc.filter(l => !used.has(l));

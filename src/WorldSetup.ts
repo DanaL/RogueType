@@ -69,9 +69,6 @@ export function setupWorld(game: Game): void {
   burritoBot.pwned = false;
   game.gs.player.hackedRobot = burritoBot;
 
-  for (let level = 1; level < NUM_LVLS; level++)
-    buildLevel(game.gs, level);
-
   const roomba = new Roomba(41, 19, game.gs);
   roomba.pwned = false;
   game.gs.addRobot(roomba, 0, 41, 17);
@@ -80,6 +77,9 @@ export function setupWorld(game: Game): void {
   dozerBot.pwned = false;
   game.gs.addRobot(dozerBot, 0, 42, 22);
 
+  for (let level = 1; level < NUM_LVLS; level++)
+    buildLevel(game.gs, level);
+  
   setMainframePassword(game);
   seedComputerFiles(game);
 }
