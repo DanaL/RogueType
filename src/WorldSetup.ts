@@ -141,5 +141,8 @@ function seedComputerFiles(game: Game) {
   const df2 = new DataFile("Drunken Walk Algorithm", "I have an elgeant proof that the drunken walk algorithm is the most efficient and effecitve routine for our robots to go about their business in Facility but my remaining disk quota is too small to contain it.");
   terminals[rndRange(terminals.length)].addFile(df2);
 
+  const df3 = new DataFile("Colour-based security", "Repeated vivisections and observations of social media suggest humans are very bad at colour-based pattern recognition. Colour-based gate security systems currently in trial phase.");
+  terminals[rndRange(terminals.length)].addFile(df3);
+
   const puzzle = genColourPuzzle(7);
 }
