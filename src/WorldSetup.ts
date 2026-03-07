@@ -147,4 +147,7 @@ function seedComputerFiles(game: Game) {
 
   const df1 = new DataFile("PO #37609", "Yes, I ordered several dozen large mirrors. Yes I plan to use them in ways which enhance shareholder value. No, I do not like my discretionary spending being micro-managed.");
   terminals[rndRange(terminals.length)].addFile(df1);
+
+  const df2 = new DataFile("Drunken Walk Algorithm", "I have an elgeant proof that the drunken walk algorithm is the most efficient and effecitve routine for our robots to go about their business in Facility but my remaining disk quota is too small to contain it.");
+  terminals[rndRange(terminals.length)].addFile(df2);
 }

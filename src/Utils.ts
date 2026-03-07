@@ -103,7 +103,7 @@ const textCache = new Map<string, string[]>();
 async function loadTextWords(filename: string): Promise<string[]> {
   if (textCache.has(filename)) 
     return textCache.get(filename)!;
-  const response = await fetch(`/texts/${filename}`);
+  const response = await fetch(`./texts/${filename}`);
   const text = await response.text();
   const words = text.split(/\s+/).filter(w => w.length > 0);
   textCache.set(filename, words);
@@ -177,7 +177,7 @@ function parsePetFont(text: string): Map<string, string[]> {
 export async function warmFontCache(): Promise<void> {
   if (petFont) 
     return;
-  const response = await fetch('/pet-font.txt');
+  const response = await fetch('./pet-font.txt');
   const text = await response.text();
   petFont = parsePetFont(text);
 }
