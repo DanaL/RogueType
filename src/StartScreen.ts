@@ -24,6 +24,9 @@ export class StartScreenPopup extends Popup {
    way, search for snippets of the Facility mainframe admin password. You will be able 
    to view and arrange the snippets you find by tapping '[#fff v]'.
 
+   You will need to control various robots and switch between them. '[#fff D]' 
+   disconnects from your current robot and jumps back to the previous one you controlled. '[#fff m]' is useful for managing the onboard software for a robot.
+
    Hacking challenges are played as typing contests. Please select your difficulty:
    (expressed in typing speed WPM)
 
