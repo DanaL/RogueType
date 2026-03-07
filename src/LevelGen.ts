@@ -4,7 +4,7 @@ import type { TerrainType } from "./Terrain";
 import { Crate, Device, WeightTrigger, TimerTrigger, LightTrigger, LightSource, Mirror, Terminal, LIFT_ACCESS, DISABLE_GATE, VENT_RADIATION, LIGHT_SOURCE } from "./Device";
 import roomsText from '../Rooms.txt?raw';
 import logJamsText from '../LogJams.txt?raw';
-import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange } from "./Utils";
+import { distance, ICELevel, MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange, ADJ_4 } from "./Utils";
 import { Roomba, BasicBot, ShieldedBot, DozerBot, ForkLifter } from "./Actor";
 import { Software, SoftwareCategory } from "./Software";
 
@@ -678,7 +678,7 @@ function setupChokePoint(level: LevelInfo, template: LogJamTemplate, row: number
 }
 
 function adjDoors(x: number, y: number, map: Record<string, TerrainType>): boolean {
-  for (const [dx, dy] of NEIGHBORS_4) {
+  for (const [dx, dy] of ADJ_4) {
     if (map[`${x + dx},${y + dy}`] === Terrain.Door) 
       return true;
   }
@@ -738,7 +738,6 @@ function debugDumpMap(level: LevelInfo, levelNum: number): void {
 }
 
 const ROOM_GAP = 2;
-const NEIGHBORS_4: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
 function floodFill(seeds: number[], canVisit: (ni: number, nx: number, ny: number) => boolean, onVisit: (ni: number, dist: number) => void): void {
   const dist = new Int32Array(MAP_ROWS * MAP_WIDTH).fill(-1);
@@ -754,7 +753,7 @@ function floodFill(seeds: number[], canVisit: (ni: number, nx: number, ny: numbe
   for (let qi = 0; qi < queue.length; qi++) {
     const cur = queue[qi];
     const cx = cur % MAP_WIDTH, cy = Math.floor(cur / MAP_WIDTH);
-    for (const [dx, dy] of NEIGHBORS_4) {
+    for (const [dx, dy] of ADJ_4) {
       const nx = cx + dx, ny = cy + dy;
       const ni = ny * MAP_WIDTH + nx;
       if (dist[ni] !== -1) continue;
@@ -827,7 +826,7 @@ function carveHallways(level: LevelInfo, colMin: number, colMax: number, gateIdx
       const cx = cur % MAP_WIDTH;
       const cy = Math.floor(cur / MAP_WIDTH);
 
-      for (const [dx, dy] of NEIGHBORS_4) {
+      for (const [dx, dy] of ADJ_4) {
         const nx = cx + dx;
         const ny = cy + dy;
         if (nx <= 0 || nx >= MAP_WIDTH - 1 || ny <= 0 || ny >= MAP_ROWS - 1) 

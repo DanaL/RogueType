@@ -1,6 +1,6 @@
 import { Crate, LIFT_ACCESS, Terminal } from "./Device";
 import { Game } from "./Game";
-import { BasicBot, DozerBot, Player, Roomba } from "./Actor";
+import { BasicBot, DozerBot, Player, Roomba, SecBot } from "./Actor";
 import { Terrain, type TerrainType } from "./Terrain";
 import { MAP_ROWS, MAP_WIDTH, NUM_LVLS, rndRange } from "./Utils";
 import { buildLevel } from "./LevelGen";
@@ -91,6 +91,11 @@ export function setupWorld(game: Game): void {
   const dozerBot = new DozerBot(42, 22, game.gs);
   dozerBot.pwned = false;
   game.gs.addRobot(dozerBot, 0, 42, 22);
+
+  // temp 
+  const secBot = new SecBot(45, 21, game.gs);
+  game.gs.addRobot(secBot, 0, 45, 21);
+
 
   setMainframePassword(game);
   seedComputerFiles(game);

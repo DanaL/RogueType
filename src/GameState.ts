@@ -15,6 +15,13 @@ import { EndGameController, EndGamePopup } from "./EndGame";
 export const EnvironmentHazard = { NONE: 0, RADIATION: 1 }
 export type EnvironmentHazard = (typeof EnvironmentHazard)[keyof typeof EnvironmentHazard];
 
+export const HackInitiatedBy = {
+  Player: 0,
+  Hacker: 1,
+  SecBot: 2,
+} as const;
+export type HackInitiatedBy = typeof HackInitiatedBy[keyof typeof HackInitiatedBy];
+
 export class GameState {
   readonly width: number;
   readonly height: number;
@@ -465,7 +472,7 @@ export class GameState {
     this.game.pushPopup(new YesNoPopup("", `\nAttempt to hack ${robot.name}`, 5, 10, 30));
     this.game.pushInputController(new YesNoController(this.game, (yes) => {
       if (yes) {
-        this.startRobotHack(robot, true);
+        this.startRobotHack(robot, HackInitiatedBy.Player);
       } else {
         this.computeFov();
         this.player.endTurn();
@@ -526,11 +533,13 @@ export class GameState {
     return false;
   }
 
-  startRobotHack(robot: Robot, initiatedByPlayer: boolean): void {
+  startRobotHack(robot: Robot, initiatedBy: HackInitiatedBy): void {
     let taunt = "";    
-    if (!initiatedByPlayer) {
+    if (initiatedBy === HackInitiatedBy.Hacker) {
       const taunts = ["MESS WITH THE BEST DIE LIKE THE REST", "MY KUNGFU IS THE BEST", "LOSER", "DO U THINK U CAN DEFEAT ME?? L0L"];
       taunt = taunts[rndRange(taunts.length)];
+    } else if (initiatedBy === HackInitiatedBy.SecBot) {
+      taunt = "INTRUDER DETECTED"
     }
 
     const popup = new RobotHackPopup(robot.name, robot.currFirewall, robot.maxFirewall, 2, 1);
@@ -539,8 +548,8 @@ export class GameState {
       if (success) {
         robot.pwned = false;
 
-        if (!initiatedByPlayer) {
-          const msg = `You expelled the attacker from the ${robot.name}.`;
+        if (initiatedBy === HackInitiatedBy.Hacker) {
+          const msg = `You expelled the other hacker from the ${robot.name}.`;
           const popup = new Popup("", `\n${msg}`, 5, 10, 40);
           this.addMessage(msg);
           this.game.pushPopup(popup);
@@ -570,7 +579,7 @@ export class GameState {
         }
       }
 
-      if (initiatedByPlayer) {
+      if (initiatedBy === HackInitiatedBy.Player) {
         this.computeFov();
         this.player.endTurn();
       }      

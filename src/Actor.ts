@@ -1,7 +1,7 @@
 import * as ROT from "rot-js";
-import { GameState } from "./GameState";
+import { GameState, HackInitiatedBy } from "./GameState";
 import { TERRAIN_DEF } from "./Terrain";
-import { ActionResult, ICELevel, rndRange } from "./Utils";
+import { ActionResult, ADJ_4, distance, ICELevel, rndRange } from "./Utils";
 import { Software, SoftwareCategory } from "./Software";
 import type { JigsawPiece } from "./Jigsaw";
 import type { Device } from "./Device";
@@ -165,21 +165,7 @@ export abstract class Robot extends Actor {
       this.pwned = true;
   }
 
-  private pwnedAct(): void {
-    const player = this.gs.player;
-    if (this.level !== player.level) return;
-    if (this.gs.game.hasPopup) return;
-
-    const adx = Math.abs(this.x - player.x);
-    const ady = Math.abs(this.y - player.y);
-
-    if (adx + ady === 1) {
-      this.gs.addMessage("That robot was already hacked! Some other hacker is trying to own you!");
-      this.gs.startRobotHack(this, false);
-      return;
-    }
-
-    // Move one step toward the player
+  private moveAStar(player: Player): void {
     const path = new ROT.Path.AStar(player.x, player.y, (x, y) => {
       const t = this.gs.maps[this.level][`${x},${y}`];
       return t !== undefined && TERRAIN_DEF[t].walkable;
@@ -192,6 +178,31 @@ export abstract class Robot extends Actor {
     });
   }
 
+  private pwnedAct(): void {
+    const player = this.gs.player;
+    if (this.level !== player.level) 
+      return;
+    if (this.gs.game.hasPopup) 
+      return;
+
+    if (this.adjToPlayer()) {
+      this.gs.addMessage("That robot was already hacked! Some other hacker is trying to own you!");
+      this.gs.startRobotHack(this, HackInitiatedBy.Hacker);
+      return;
+    }
+
+    this.moveAStar(player);
+  }
+
+  private adjToPlayer(): boolean {
+    for (const adj of ADJ_4) {
+      if (this.x + adj[0] === this.gs.player.x && this.y + adj[1] === this.gs.player.y)
+        return true;
+    }
+
+    return false;
+  }
+
   act(): Promise<void> {
     if (this.pwned) {
       this.pwnedAct();
@@ -200,6 +211,20 @@ export abstract class Robot extends Actor {
     }
 
     for (const sw of this.software) {
+      if (sw.title === "Intrusion Interdiction Pckg") {
+        const player = this.gs.player;
+        if (this.level === player.level && this.adjToPlayer()) {
+          this.gs.addMessage("The security bot is attempting to expel you!");
+          this.gs.startRobotHack(this, HackInitiatedBy.SecBot); 
+          break;
+        }
+      }
+
+      if (sw.title === "A* navigation tool 136.2") {
+        this.moveAStar(this.gs.player);
+        break;
+      }
+
       if (sw.title === "Experimental Evil Algorithm") {
         const res = this.randomAssault();
         if (res === ActionResult.Complete)
@@ -302,9 +327,34 @@ export class ForkLifter extends Robot {
     this.securityClearance = 2;
     this.memorySize = 2;
 
-
     this.software.push(new Software("Facility Firewall Platinum Edition", SoftwareCategory.ICE, false, 2, 1));
     
     this.currFirewall = 5;    
+  }
+}
+
+export class SecBot extends Robot {
+  carriedDevice: Device | null = null;
+
+  constructor(x: number, y: number, gs: GameState) {
+    super(x, y, 'S', '#ff004e', gs);
+    this.name = "security bot";
+    this.desc = "Robots specifically designed to find and expel compromised units. Ie., you.";
+    this.x = x;
+    this.y = y;
+    this._maxHull = 10;    
+    this.currHull = 10;
+    this.accuracy = 1.2;
+    this.securityClearance = 2;
+    this.memorySize = 6;
+    this.ice = ICELevel.Strong;
+    this.pwned = false;
+    
+    this.software = []; // Ensure SecBots start with exactly these packages:
+    this.software.push(new Software("Intrusion Interdiction Pckg", SoftwareCategory.Behaviour, true, 1, 1));
+    this.software.push(new Software("A* navigation tool 136.2", SoftwareCategory.Behaviour, false, 1, 1));
+    this.software.push(new Software("Facility Firewall Platinum Edition", SoftwareCategory.ICE, false, 2, 1));
+
+    this.currFirewall = 10;
   }
 }
