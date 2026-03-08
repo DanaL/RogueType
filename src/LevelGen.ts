@@ -739,6 +739,17 @@ function adjDoors(x: number, y: number, map: Record<string, TerrainType>): boole
 }
 
 function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
+  function goodSpot(terrain: TerrainType, x: number, y: number, k: string): boolean {
+    if (terrain !== Terrain.Floor)
+      return false;
+    if (adjDoors(x, y, level.map))
+      return false;
+    if (level.devices[k])
+      return false;
+
+    return true;
+  }
+
   const upCandidates: { k: string; d: number }[] = [];
   const downCandidates: { k: string; d: number }[] = [];
 
@@ -749,10 +760,10 @@ function setStairs(level: LevelInfo, gateIdx: number, levelNum: number): void {
     const y = Math.floor(i / MAP_WIDTH);
     const x = i - y * MAP_WIDTH;
     const k = `${x},${y}`;
-    if (level.roomMask[i] === 2 && level.map[k] === Terrain.Floor && !adjDoors(x, y, level.map)) {      
+    if (level.roomMask[i] === 2 && goodSpot(level.map[k], x, y, k)) {
       upCandidates.push({ k: k, d: distance(x, y, gx, gy)})
     }
-    if (level.roomMask[i] === 3 && level.map[k] === Terrain.Floor && !adjDoors(x, y, level.map)) {      
+    if (level.roomMask[i] === 3 && goodSpot(level.map[k], x, y, k)) {      
       downCandidates.push({ k: k, d: distance(x, y, gx, gy)})
     }
   }
