@@ -79,10 +79,6 @@ export function setupWorld(game: Game): void {
   dozerBot.pwned = false;
   game.gs.addRobot(dozerBot, 0, 42, 22);
 
-  const repairBot = new RepairBot(44, 20, game.gs);
-  repairBot.pwned = false;
-  game.gs.addRobot(repairBot, 0, 44, 20);
-
   for (let level = 1; level < NUM_LVLS; level++)
     buildLevel(game.gs, level);
 
