@@ -86,7 +86,7 @@ export class TerminalController extends InputController {
       this.setState(MAIN_MENU);
     } else if (this.state === DISABLE_GATE && !this.popup.gateDeactivated && e.key === 'y') {
       this.disableGate();
-    } else if (e.key === 'Enter' && this.state === FILE_SYSTEM) {
+    } else if (e.key === 'Enter' && this.state === FILE_SYSTEM && this.term.files.length > 0) {
       this.popup.selectedFile = this.currRow;
       this.setState(FILE_VIEW);
     } else if (this.state === LIGHT_SOURCE && e.key === 'Enter') {
