@@ -35,10 +35,10 @@ export class PlayerCommandController extends InputController {
         const [x, y] = key.split(',').map(Number);
         switch (terrain) {
           case Terrain.LiftDown:
-            targets.push({ x, y, name: "Down Elevator", desc: "For security reasons, elevators in the Facility only go between two floors each." });
+            targets.push({ x, y, name: "Down Elevator", desc: "For security reasons, elevators in Facility only go between two floors each." });
             break;
           case Terrain.LiftUp:
-            targets.push({ x, y, name: "Up Elevator", desc: "For security reasons, elevators in the Facility only go between two floors each." });
+            targets.push({ x, y, name: "Up Elevator", desc: "For security reasons, elevators in Facility only go between two floors each." });
             break;
           case Terrain.Mainframe:
             targets.push({ x, y, name: "Mainframe Terminal", desc: "This is it. Hack through the firewalls, end the [#fff admin password], and upload the Cookie Monster virus." });

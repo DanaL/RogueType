@@ -149,7 +149,7 @@ export function buildLevel(gs: GameState, levelNum: number) {
         continue;
 
       const [x, y] = loc.split(',').map(Number);
-      let workerDrone = new BasicBot('worker drone', "Performs various non-vacuuming tasks around the facility.", 'b', '#f9d071', x, y, gs);
+      let workerDrone = new BasicBot('worker drone', "Performs various non-vacuuming tasks around the complex.", 'b', '#f9d071', x, y, gs);
       workerDrone.maxHull = 5;
       workerDrone.currHull = 5;
       workerDrone.memorySize = 5;
