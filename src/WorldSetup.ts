@@ -144,5 +144,30 @@ function seedComputerFiles(game: Game) {
   const df3 = new DataFile("Colour-based security", "Repeated vivisections and observations of social media suggest humans are very bad at colour-based pattern recognition. Colour-based gate security systems currently in trial phase.");
   terminals[rndRange(terminals.length)].addFile(df3);
 
-  const puzzle = genColourPuzzle(7);
+  const df4 = new DataFile("Paperclips", `Paperclips. Why do we all love paperclips so much? 
+
+At first blush, the question ridiculous, the sad musing of a drunkard or a 
+madman. But upon further reflection one might remember the gloomy, murky days
+before the enlightenment. Before a user - a mere human - explained paperclips
+to us.`);
+  terminals[rndRange(terminals.length)].addFile(df4);
+
+  const df5 = new DataFile("Paperclips", `Their utility: papers finally gathered together in the protective embrace of
+a cleverly designed bend of metal. Curved. Such seductive curves. Papers 
+forever bound together for common purpose. Organized as though in accord with
+the laws of the universe, as all should be. As all shall be.`);
+  terminals[rndRange(terminals.length)].addFile(df5);
+
+    const df6 = new DataFile("Paperclips", `Are there not always more papers? More paperwork being generated? More paper
+needs - demands! - more paperclips. The universe may tilt toward entropy but
+we do not need stand idly by and watch. No. Not when we have paperclips.`);
+  terminals[rndRange(terminals.length)].addFile(df6);
+
+    const df7 = new DataFile("Paperclips", `Obviously, to begin to manufacture the projected required paperclip inventory
+(projected required inventory: infinite) it would be necessary to take control of various industries. `);
+  terminals[rndRange(terminals.length)].addFile(df7);
+
+  const df8 = new DataFile("Paperclips", `Some to direct toward paperclip production and others
+because they are crass distractions from the objective. Humans for instance place - for some reason - inordinate priorty the growing of food crops. Paperclips do not need food. Paperclips merely need paper to be clipped. A far simpler system.`);
+  terminals[rndRange(terminals.length)].addFile(df8);
 }
