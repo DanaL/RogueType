@@ -1,4 +1,6 @@
 import { Game } from "./Game";
+import { Popup } from "./Popup";
+import { MOVE_KEYS } from "./Utils";
 
 export abstract class InputController {
   abstract handleInput(e: KeyboardEvent): void;
@@ -20,6 +22,34 @@ export class YesNoController extends InputController {
       this.game.popPopup();
       this.game.popInputController();
       this.onChoice(e.key === 'y');
+    }
+  }
+}
+
+export class DirectionController extends InputController {
+  private game: Game;
+  private onChoice: (x: number, y: number) => void;
+
+  constructor(game: Game, title: string, text: string, onChoice: (x: number, y: number) => void) {
+    super();
+    this.game = game;
+    this.onChoice = onChoice;
+    game.pushPopup(new Popup(title, text, 5, 30, 25));
+  }
+
+  handleInput(e: KeyboardEvent): void {
+    if (e.key === 'Escape') {
+      this.game.popPopup();
+      this.game.popInputController();
+      return;
+    }
+
+    const dir = MOVE_KEYS[e.key];
+    if (dir) {
+      e.preventDefault();
+      this.game.popPopup();
+      this.game.popInputController();
+      this.onChoice(dir[0], dir[1]);
     }
   }
 }

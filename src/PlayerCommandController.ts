@@ -1,4 +1,4 @@
-import { InputController } from "./InputController";
+import { InputController, DirectionController } from "./InputController";
 import { Game } from "./Game";
 import type { Examinable } from "./ExamineController";
 import { ExamineController } from "./ExamineController";
@@ -6,8 +6,9 @@ import { Terrain } from "./Terrain";
 import { capitalize, indefArticle, MOVE_KEYS, ActionResult } from "./Utils";
 import { SWManagementController } from "./SWManagementController";
 import { JigsawController } from "./Jigsaw";
-import { ForkLifter } from "./Actor";
+import { ForkLifter, RepairBot } from "./Actor";
 import { Mirror } from "./Device";
+import type { GameState } from "./GameState";
 
 export class PlayerCommandController extends InputController {
   private game: Game;
@@ -75,32 +76,13 @@ export class PlayerCommandController extends InputController {
       const robot = gs.player.hackedRobot;
 
       if (robot instanceof ForkLifter) {
-        const loc = `${gs.player.x},${gs.player.y}`;
-        if (robot.carriedDevice !== null) {
-          if (gs.devices[gs.currLevel][loc]) {
-            gs.addMessage("There is already something here.");
-          } else {
-            gs.devices[gs.currLevel][loc] = robot.carriedDevice;
-            gs.addMessage(`You place the ${robot.carriedDevice.name}.`);
-            robot.carriedDevice = null;
-            gs.player.endTurn();
-          }
-        } else {
-          const device = gs.devices[gs.currLevel][loc];
-          if (device instanceof Mirror) {
-            robot.carriedDevice = device;
-            delete gs.devices[gs.currLevel][loc];
-            gs.addMessage(`You pick up the ${device.name}. Press [r] to rotate it.`);
-            gs.player.endTurn();
-          } else if (device) {
-            gs.addMessage(`You can't pick up the ${device.name}.`);
-          } else {
-            gs.addMessage("There is nothing here to pick up.");
-          }
-        }
+        this.useForkliftFeature(robot, gs);
+      } else if (robot instanceof RepairBot) {
+        this.useRepairBotFeature(gs);
       } else {
         gs.addMessage("This bot has no extra functions.");
       }
+      
       return;
     } else if (e.key === "r") {
       const { gs } = this.game;
@@ -129,6 +111,49 @@ export class PlayerCommandController extends InputController {
       // A pass action
       this.game.gs.computeFov();
       this.game.gs.player.endTurn();
+    }
+  }
+
+  private useRepairBotFeature(gs: GameState): void {
+    this.game.pushInputController(new DirectionController(
+      this.game, "Repair which robot?", "(select direction)",
+      (x, y) => {
+        const rx = gs.player.x + x;
+        const ry = gs.player.y + y;
+        const target = gs.robots.find(r => r.level === gs.player.level && r.x === rx && r.y === ry);
+        if (target && target.currHull === target.maxHull) {
+          gs.addMessage(`The ${target.name} is already ship-shape!`);
+        } else if (target && target.currHull < target.maxHull) {
+          target.currHull = Math.min(target.currHull + 3, target.maxHull);
+          gs.addMessage(`You repair the ${target.name}.`);
+        }
+      }
+    ));
+  }
+
+  private useForkliftFeature(robot: ForkLifter, gs: GameState): void {
+    const loc = `${gs.player.x},${gs.player.y}`;
+    if (robot.carriedDevice !== null) {
+      if (gs.devices[gs.currLevel][loc]) {
+        gs.addMessage("There is already something here.");
+      } else {
+        gs.devices[gs.currLevel][loc] = robot.carriedDevice;
+        gs.addMessage(`You place the ${robot.carriedDevice.name}.`);
+        robot.carriedDevice = null;
+        gs.player.endTurn();
+      }
+    } else {
+      const device = gs.devices[gs.currLevel][loc];
+      if (device instanceof Mirror) {
+        robot.carriedDevice = device;
+        delete gs.devices[gs.currLevel][loc];
+        gs.addMessage(`You pick up the ${device.name}. Press [r] to rotate it.`);
+        gs.player.endTurn();
+      } else if (device) {
+        gs.addMessage(`You can't pick up the ${device.name}.`);
+      } else {
+        gs.addMessage("There is nothing here to pick up.");
+      }
     }
   }
 }
