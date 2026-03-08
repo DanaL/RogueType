@@ -1,8 +1,37 @@
 import { InputController } from "./InputController";
 import { Game } from "./Game";
 import { Popup } from "./Popup";
+import { Renderer } from "./Renderer";
 
-export type Examinable = { x: number; y: number; name: string; desc: string };
+export type Examinable = { x: number; y: number; name: string; desc: string; currHull?: number; maxHull?: number };
+
+const HULL_BAR_WIDTH = 15;
+
+class ExaminePopup extends Popup {
+  private currHull: number;
+  private maxHull: number;
+
+  constructor(title: string, text: string, row: number, col: number, maxWidth: number, currHull: number, maxHull: number) {
+    super(title, text, row, col, maxWidth);
+    this.currHull = currHull;
+    this.maxHull = maxHull;
+  }
+
+  protected drawContent(renderer: Renderer, row: number): number {
+    row = super.drawContent(renderer, row);
+    this.drawBlankRow(renderer, row++);
+    let col = this.openContentRow(renderer, row);
+    for (const ch of "hull: ") {
+      renderer.drawChar(row, col++, ch, "#009d4a", "#000");
+    }
+    const filled = Math.round(HULL_BAR_WIDTH * (this.currHull / this.maxHull));
+    for (let i = 0; i < HULL_BAR_WIDTH; i++) {
+      renderer.drawChar(row, col++, '=', i < filled ? "#ff004e" : "#4e6ea8", "#000");
+    }
+    this.closeContentRow(renderer, row++, col);
+    return row;
+  }
+}
 
 export class ExamineController extends InputController {
   private game: Game;
@@ -29,7 +58,8 @@ export class ExamineController extends InputController {
     const target = this.targets[this.index];
     const text = target.desc || "No description available.";
     const MAX_WIDTH = 40;
-    const popupH = this.calcPopupHeight(text, MAX_WIDTH);
+    const hasHull = target.currHull !== undefined && target.maxHull !== undefined;
+    const popupH = this.calcPopupHeight(text, MAX_WIDTH) + (hasHull ? 2 : 0);
     const { camX, camY, vpW } = this.game.renderer.cameraFor(this.game.gs);
     const sx = target.x - camX;
     const sy = target.y - camY;
@@ -37,6 +67,8 @@ export class ExamineController extends InputController {
     const popupRow = sy >= popupH ? sy + MAP_Y - popupH : sy + MAP_Y + 1;
     const popupCol = Math.max(0, Math.min(sx - Math.floor((MAX_WIDTH + 4) / 2), vpW - (MAX_WIDTH + 4)));
 
+    if (hasHull)
+      return new ExaminePopup(`[#fff ${target.name}]`, text, popupRow, popupCol, MAX_WIDTH, target.currHull!, target.maxHull!);
     return new Popup(`[#fff ${target.name}]`, text, popupRow, popupCol, MAX_WIDTH);
   }
 

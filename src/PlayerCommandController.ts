@@ -51,7 +51,7 @@ export class PlayerCommandController extends InputController {
         const key = `${robot.level},${robot.x},${robot.y}`;
         if (gs.visible[key]) {
           const n = capitalize(indefArticle(robot.name));
-          targets.push({ x: robot.x, y: robot.y, name: n, desc: robot.desc})
+          targets.push({ x: robot.x, y: robot.y, name: n, desc: robot.desc, currHull: robot.currHull, maxHull: robot.maxHull })
         }
       }
 
