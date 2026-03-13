@@ -59,6 +59,8 @@ export class SWManagementController extends InputController {
         this.popup.selection = this.row;
       }
     } else if (this.state === INSTALL_MENU && e.key === "Escape") {
+      this.row = 0;
+      this.popup.selection = 0;
       this.state = MAIN_MENU;
     } else if (this.state === INSTALL_MENU && (e.key === 'w' || e.key === 'ArrowUp' || e.key === 'k')) {
       if (this.gs.player.softwareArchive.length > 0) {

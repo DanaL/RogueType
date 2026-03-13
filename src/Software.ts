@@ -17,7 +17,7 @@ export class DataFile {
 
 export class Software extends DataFile {
   cat: SoftwareCategory;
-  firmware: boolean;
+  firmware: boolean = false;
   level: number;
   size: number;
 
